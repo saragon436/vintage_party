@@ -1,0 +1,21 @@
+<div class="login">
+  <form class="custom-form" (ngSubmit)="onSubmit()">
+    <h1>Login - Vintage Party</h1>
+    <input
+    type="text"
+    [(ngModel)]="username"
+      name="email"
+      placeholder="Email"
+      required="required"
+    />
+    <input
+    type="password"
+    [(ngModel)]="password"
+      slot=""
+      name="password"
+      placeholder="Password"
+      required="required"
+    />
+    <button type="submit" >Log in</button>
+  </form>
+</div>
