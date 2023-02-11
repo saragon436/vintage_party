@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient,HttpHeaders } from '@angular/common/http';
-import { Observable,of } from 'rxjs';
+import { catchError, map, Observable,of, tap } from 'rxjs';
 
 
 @Injectable({
@@ -13,14 +13,24 @@ export class AuthenticationService {
   sendPostRequest(body:any,headers: HttpHeaders): Observable<any>{
     var response:any;
 
-    this.http.post("http://localhost:3000/auth",body,{ headers }).subscribe(
-      data=>{
-        response= data;
-      },
-      error=>{
-        response= error;
-      })
-      return of(response);
+    // this.http.post("http://localhost:3000/auth",body,{ headers }).subscribe(
+    //   data=>{
+    //     response= data;
+        
+    //   },
+    //   error=>{
+    //     response= error;
+        
+    //   })
+    //   return of(response);
+    return this.http.post("http://localhost:3000/auth", body, { headers, observe: response }).pipe(
+      catchError( e => {
+        //implementar aca la logica del error        
+        console.error('Error de logueo', e)
+        throw (e)
+      }),
+      map( x => x),
+    )
   }
 
 }
