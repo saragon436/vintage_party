@@ -1,1 +1,81 @@
-<p>contract works!</p>
+<div id="formulario"> 
+    <div class="row" id="salto" >
+      <a>Crear Contrato</a>
+    </div>
+    <div class="row" id="salto" >
+      <div class="col-lg-6">
+        <div class="input-group">
+            <input [(ngModel)]="model" [ngbTypeahead]="search" class="form-control" placeholder="Buscar Cliente">
+        </div>
+      </div>
+      <div class="col-lg-2">
+        <div class="input-group">
+          <button type="button" (click)="openModal()" class="btn btn-primary">Agregar</button>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="number" class="form-control" placeholder="# de Contrato">
+        </div>
+      </div>
+      
+    </div>
+    <div class="row" id="salto" >
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="date" class="form-control" placeholder="Fecha Evento">
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="date" class="form-control" placeholder="Fecha Intalacion">
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label for="fe_recojo" id="salto-titulo">F. Recojo</label>
+          <input type="date" class="form-control" placeholder="Fecha Recojo" id="fe_recojo">
+        </div>
+      </div>
+    </div>
+    <div class="row" id="salto" >
+        <div class="col-lg-4">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="A cuenta">
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Saldo">
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="input-group">
+            <input type="text" id="disabledTextInput" class="form-control" placeholder="Total" disabled>
+          </div>
+        </div>
+    </div>
+    <div class="row" id="salto">
+      <div class="col-lg-12">
+        <div class="input-group">
+            <div class="form-floating">
+                <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px"></textarea>
+                <label for="floatingTextarea2">Comentarios</label>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="salto">
+      <div class="col-lg-4">
+        <div class="input-group">
+            <div class="form-floating">
+                <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px"></textarea>
+                <label for="floatingTextarea2">Comentarios</label>
+              </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="salto">
+      <button type="button" class="btn btn-primary">Agregar</button>
+    </div>
+  </div>

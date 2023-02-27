@@ -1,1 +1,91 @@
-<p>accessory works!</p>
+<div id="formulario" *ngIf="condicion ; else otraPlantilla"> 
+    <div class="row" id="salto" >
+      <a>Agregar Accesorio</a>
+    </div>
+    <div class="row" id="salto" >
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Descripcion"  [(ngModel)]="description" name="descripcion" required="required">
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Color" [(ngModel)]="color" name="color" required="required">
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="tel" class="form-control" placeholder="Diseño" [(ngModel)]="design" name="diseno" required="required">
+        </div>
+      </div>
+    </div>
+    <div class="row" id="salto" >
+        <div class="col-lg-4">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Largo" [(ngModel)]="large" name="largo" required="required">
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Alto" [(ngModel)]="high" name="alto" required="required">
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="input-group">
+            <input type="tel" class="form-control" placeholder="Fondo" [(ngModel)]="bottom" name="fondo" required="required">
+          </div>
+        </div>
+    </div>
+    <div class="row" id="salto">
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="number" class="form-control" placeholder="Stock" [(ngModel)]="stock" name="stock" required="required">
+        </div>
+      </div>
+    </div>
+    <div class="row" id="salto">
+      <div class="col-lg-3">
+          <button type="submit" (click)="onSubmit()" class="btn btn-primary">Agregar</button>
+          <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
+      </div>
+    </div>
+  
+  </div>
+
+  <ng-template #otraPlantilla>
+    <div id="formularioListado"> 
+      <div class="row" id="salto" >
+        <table>
+          <thead>
+            <tr>
+              <th>Descripcion</th>
+              <th>Color</th>
+              <th>Diseño</th>
+              <th>Largo</th>
+              <th>Profundidad</th>
+              <th>Alto</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of accesorys">
+              <td>{{ item.description }}</td>
+              <td>{{ item.color }}</td>
+              <td>{{ item.design }}</td>
+              <td>{{ item.large }}</td>
+              <td>{{ item.bottom }}</td>
+              <td>{{ item.high }}</td>
+              <td>{{ item.stock }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="row" id="salto" >
+        <form (ngSubmit)="onSubmitAdd()">
+          <div class="row" id="salto">
+            <button type="submit" class="btn btn-primary">Agregar Accesorio</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </ng-template>

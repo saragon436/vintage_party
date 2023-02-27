@@ -2,6 +2,7 @@ import { HttpHeaders } from '@angular/common/http';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { AuthenticationService } from '../Servicios/authentication.service';
 import { Router } from '@angular/router';
+import { AuthenticationToken } from '../Servicios/autentication-token.service'
 
 @Component({
   selector: 'app-login',
@@ -11,7 +12,7 @@ import { Router } from '@angular/router';
 
 export class LoginComponent {
   @Output() customEvent = new EventEmitter<any>();
-  constructor(private route: Router, private authenticationService: AuthenticationService) { }
+  constructor(private authenticationToken:AuthenticationToken,private route: Router, private authenticationService: AuthenticationService) { }
 
   username = '';
   password = '';
@@ -30,7 +31,9 @@ export class LoginComponent {
     this.authenticationService.sendPostRequest(payload, headers).subscribe(
       (data: any) => {
         if (data.status === undefined) {
-
+          console.log(data.token);
+          this.authenticationToken.myValue = data.token;
+          console.log('this.authenticationToken.myValue ',this.authenticationToken.myValue)
           console.log('informacion de validacion ', data.status)
           this.route.navigate(['dashboard']);
         }
