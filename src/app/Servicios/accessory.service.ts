@@ -31,4 +31,15 @@ export class AccessoryService {
       map( x => x),
     )
   }
+
+  listStockAccessory(headers: HttpHeaders, data: any): Observable<any>{
+    var response:any;
+    return this.http.post("http://localhost:3000/contract/stock", data, { headers, observe: response }).pipe(
+      catchError( e => {     
+        console.error('Error de agregar', e)
+        throw (e)
+      }),
+      map( x => x),
+    )
+  }
 }

@@ -1,11 +1,12 @@
-<div id="formulario"> 
-    <div class="row" id="salto" >
+<div id="formulario">
+  <form [formGroup]="form">
+    <div class="row" id="salto">
       <a>Crear Contrato</a>
     </div>
-    <div class="row" id="salto" >
+    <div class="row" id="salto">
       <div class="col-lg-6">
         <div class="input-group">
-            <input [(ngModel)]="model" [ngbTypeahead]="search" class="form-control" placeholder="Buscar Cliente">
+          <input formControlName="search" [ngbTypeahead]="searchs" class="form-control" placeholder="Buscar Cliente">
         </div>
       </div>
       <div class="col-lg-2">
@@ -15,67 +16,113 @@
       </div>
       <div class="col-lg-4">
         <div class="input-group">
-          <input type="number" class="form-control" placeholder="# de Contrato">
+          <input type="number" class="form-control" placeholder="# de Contrato" formControlName="number">
         </div>
       </div>
-      
+
     </div>
-    <div class="row" id="salto" >
+    <div class="row" id="salto">
       <div class="col-lg-4">
         <div class="input-group">
-          <input type="date" class="form-control" placeholder="Fecha Evento">
+          <label class="input-group-text" for="fe_evento" id="evento-titulo">F. Evento</label>
+          <input type="date" class="form-control" placeholder="Fecha Evento" id="fe_evento" formControlName="eventDate">
         </div>
       </div>
       <div class="col-lg-4">
         <div class="input-group">
-          <input type="date" class="form-control" placeholder="Fecha Intalacion">
+          <label class="input-group-text" for="fe_instalacion" id="instalacion-titulo">F. Instalación</label>
+          <input type="date" class="form-control" placeholder="Fecha Intalacion" id="fe_instalacion" formControlName="installDate">
         </div>
       </div>
       <div class="col-lg-4">
         <div class="input-group">
-          <label for="fe_recojo" id="salto-titulo">F. Recojo</label>
-          <input type="date" class="form-control" placeholder="Fecha Recojo" id="fe_recojo">
+          <label class="input-group-text" for="fe_recojo" id="salto-titulo">F. Recojo</label>
+          <input type="date" class="form-control" placeholder="Fecha Recojo" id="fe_recojo" formControlName="pickupDate">
         </div>
       </div>
     </div>
-    <div class="row" id="salto" >
-        <div class="col-lg-4">
-          <div class="input-group">
-            <input type="text" class="form-control" placeholder="A cuenta">
-          </div>
+    <div class="row" id="salto">
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="A cuenta" formControlName="onAccount">
         </div>
-        <div class="col-lg-4">
-          <div class="input-group">
-            <input type="text" class="form-control" placeholder="Saldo">
-          </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Saldo" formControlName="saldo">
         </div>
-        <div class="col-lg-4">
-          <div class="input-group">
-            <input type="text" id="disabledTextInput" class="form-control" placeholder="Total" disabled>
-          </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <input type="text" id="disabledTextInput" class="form-control" placeholder="Total" formControlName="amount" >
         </div>
+      </div>
     </div>
     <div class="row" id="salto">
       <div class="col-lg-12">
         <div class="input-group">
-            <div class="form-floating">
-                <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px"></textarea>
-                <label for="floatingTextarea2">Comentarios</label>
-              </div>
+          <div class="form-floating">
+            <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"  formControlName="comment"
+              style="height: 100px"></textarea>
+            <label for="floatingTextarea2">Comentarios</label>
+          </div>
         </div>
       </div>
     </div>
     <div class="row" id="salto">
-      <div class="col-lg-4">
-        <div class="input-group">
-            <div class="form-floating">
-                <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style="height: 100px"></textarea>
-                <label for="floatingTextarea2">Comentarios</label>
-              </div>
-        </div>
+      <div class="col-lg-12">
+        <h4>Accesorios</h4>
+      </div>
+      <div class="col-lg-10">
+        <select class="form-select" #ddlAccessory>
+          <option value="" selected>Seleccione Accesorio o elemento</option>
+          <option [value]="item._id" *ngFor="let item of accessories">{{ item.description}} {{item.color}} </option>
+        </select>
+      </div>
+      <div class="col-lg-2 d-grid gap-2 mb-3">
+        <button type="button" (click)="onAddItem(ddlAccessory)" class="btn btn-primary">Agregar selección</button>
+      </div>
+
+      <div class="col-lg-12">
+        <table id="dt_basic" class="table table-striped table-bordered table-hover" >
+          <thead>
+            <tr>
+              <th>#</th>
+              <th width="40%">Producto</th>
+              <th width="20%">Stock</th>
+              <th width="20%">Cantidad</th>
+              <th style="text-align:center;">Eliminar</th>
+            </tr>
+          </thead>
+          <tbody class="table-group-divider" formArrayName="listAccessories">
+            <tr *ngIf="arrayAccessory.controls.length == 0">
+              <td colspan="8" style="text-align: center">No Existen Registros</td>
+            </tr>
+            <tr *ngFor="let item of arrayAccessory.controls; let i = index;" [formGroupName]="i">
+              <td>{{ i + 1 }}</td>
+              <td>
+                {{ item.get('description')?.value }}
+              </td>
+              <td>
+                {{ item.get('stock')?.value }}
+              </td>
+              <td>
+                <input class="form-control" type="number" formControlName="amount" min="1"
+                [ngClass]="{'error': item.get('amount')?.errors}"  required>
+                
+              </td>
+              <td style="text-align: center;">
+
+                <button class='btn btn-md btn-default' title="Eliminar Registro" (click)="onDeleteItem(i)"><i
+                    class='fa-solid fa-trash'>X</i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
     <div class="row" id="salto">
-      <button type="button" class="btn btn-primary">Agregar</button>
+      <button type="button" class="btn btn-primary" [disabled] = 'form.status !== "VALID"' (click)="onSave()" >Registrar Contrato</button>
     </div>
-  </div>
+  </form>
+</div>

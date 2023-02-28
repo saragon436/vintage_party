@@ -9,3 +9,8 @@
 #salto-titulo{
   padding:5px;
 }
+
+.error {
+  border-color: red;
+  border-width: 2px ;
+}
