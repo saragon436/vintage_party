@@ -1,6 +1,6 @@
 import { HttpHeaders } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { debounceTime, distinctUntilChanged, filter, map, Observable, Subject, takeUntil, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, Observable, Subject, takeUntil } from 'rxjs';
 import { CustomerService } from '../Servicios/customer.service';
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
@@ -9,6 +9,7 @@ import { CustomerComponent } from '../customer/customer.component';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccessoryService } from '../Servicios/accessory.service';
 import { ContractService } from '../Servicios/contract.service';
+import { NgSelectComponent } from '@ng-select/ng-select/public-api';
 
 interface Customer {
   name: string;
@@ -38,7 +39,7 @@ export class ContractComponent {
 
   form: FormGroup;
   customer: Customer[];
-  accessories: Accessory[];
+  accessory$: Observable<Accessory[]>;
   public unsubscribe: Subject<void>;
 
   constructor(
@@ -51,9 +52,10 @@ export class ContractComponent {
     private formBuilder: FormBuilder) {
       this.unsubscribe = new Subject();
       this.customer = [];
-      this.accessories = [];
+      this.accessory$ = new Observable<Accessory[]>;
       this.form = this.formBuilder.group({
         search: new FormControl(''),
+        searchAccessory: new FormControl(''),
         number: new FormControl('', Validators.required),
         onAccount: new FormControl(0, Validators.required),
         saldo: new FormControl(0, Validators.required),
@@ -101,29 +103,29 @@ export class ContractComponent {
     return this.arrayAccessory.value as any[]
   }
 
-  onAddItem(element: HTMLSelectElement) {
+  onAddItem(element: NgSelectComponent) {
 
-    if (element.value !== '') {
+    const itemSelected = element.selectedValues[0] as Accessory;
+    if (itemSelected) {
 
-      if (this.arrayValuesAccessory.find(q => q.id === element.value)) {
-        element.value = "";
+      if (this.arrayValuesAccessory.find(x => x.id === itemSelected._id)) {
 
+        this.form.get('searchAccessory')?.patchValue([]);
         return;
       }
 
-      const item = this.accessories.find(x => x._id === element.value);
       this.arrayAccessory
         .push(
           this.formBuilder.group({
-            id: new FormControl(item?._id),
-            description: item?.description,
-            amount: new FormControl(1, [Validators.required, Validators.max(item?.stock || 0), Validators.min(1)]),
-            stock: new FormControl(item?.stock)
+            id: new FormControl(itemSelected?._id),
+            description: itemSelected?.description,
+            amount: new FormControl(1, [Validators.required, Validators.max(itemSelected?.stock || 0), Validators.min(1)]),
+            stock: new FormControl(itemSelected?.stock)
           })
         );
     }
 
-    element.value = "";
+    this.form.get('searchAccessory')?.patchValue([]);
   }
 
   onDeleteItem(index: number) {
@@ -156,17 +158,7 @@ export class ContractComponent {
           if (value.installDate !== '' && value.pickupDate !== '' && value.installDate < value.pickupDate) {
             this.arrayAccessory.clear();
             const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-            this.accessoryService.listStockAccessory(headers, { "installDate": value.installDate, "pickupDate": value.pickupDate }).subscribe(
-              (accessories) => {
-                this.accessories = accessories;
-              },
-              (error) => {
-                if (error.status === 401) {
-                  console.log('token invalido');
-                } else {
-                  console.log('error al obtener el stock', error);
-                }
-              });
+            this.accessory$ = this.accessoryService.listStockAccessory(headers, { "installDate": value.installDate, "pickupDate": value.pickupDate });
           }
         }
       );

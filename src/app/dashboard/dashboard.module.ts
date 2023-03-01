@@ -9,6 +9,7 @@ import { AccessoryComponent } from '../accessory/accessory.component';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgSelectModule } from '@ng-select/ng-select';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     ReactiveFormsModule,
     HttpClientModule,
     DashboardRoutingModule,
-    NgbModule
+    NgbModule,
+    NgSelectModule
   ],
   providers: [],
   bootstrap: []

@@ -74,10 +74,14 @@
         <h4>Accesorios</h4>
       </div>
       <div class="col-lg-10">
-        <select class="form-select" #ddlAccessory>
-          <option value="" selected>Seleccione Accesorio o elemento</option>
-          <option [value]="item._id" *ngFor="let item of accessories">{{ item.description}} {{item.color}} </option>
-        </select>
+        <ng-select          
+          [clearable]="false"
+          notFoundText = 'Para que se carguen los accesorios seleccione las fechas de instalación y recojo'
+          placeholder="Seleccione Accesorio o elemento"
+          formControlName="searchAccessory"
+          #ddlAccessory>
+          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}}</ng-option>
+        </ng-select>
       </div>
       <div class="col-lg-2 d-grid gap-2 mb-3">
         <button type="button" (click)="onAddItem(ddlAccessory)" class="btn btn-primary">Agregar selección</button>
