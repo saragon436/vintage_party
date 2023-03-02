@@ -13,6 +13,7 @@ interface Accesory {
   bottom: string;
   high: string;
   stock:number;
+  price:number;
 }
 
 @Component({
@@ -38,6 +39,7 @@ export class AccessoryComponent {
   status = true;
   descripcionItem = '';
   amountItem = 0;
+  price=0;
   items = [{description:'df',amount:1}];
   accesorys:Accesory[];
 
@@ -88,6 +90,7 @@ export class AccessoryComponent {
       bottom : this.bottom,
       stock : this.stock,
       items : this.items,
+      price:this.price,
       status: true
     };
     console.log('payload '+payload);
@@ -105,6 +108,7 @@ export class AccessoryComponent {
         this.high='';
         this.bottom='';
         this.stock='';
+        this.price=0;
         this.items=[];
         this.condicion=false;
       },

@@ -41,7 +41,13 @@
         <div class="input-group">
           <input type="number" class="form-control" placeholder="Stock" [(ngModel)]="stock" name="stock" required="required">
         </div>
+        
       </div>
+      <div class="col-lg-4">
+      <div class="input-group">
+        <input type="number" class="form-control" placeholder="Precio" [(ngModel)]="price" name="precio" required="required">
+      </div>
+    </div>
     </div>
     <div class="row" id="salto">
       <div class="col-lg-3">
@@ -65,6 +71,7 @@
               <th>Profundidad</th>
               <th>Alto</th>
               <th>Stock</th>
+              <th>Precio</th>
             </tr>
           </thead>
           <tbody>
@@ -76,6 +83,7 @@
               <td>{{ item.bottom }}</td>
               <td>{{ item.high }}</td>
               <td>{{ item.stock }}</td>
+              <td>{{ item.price }}</td>
             </tr>
           </tbody>
         </table>
