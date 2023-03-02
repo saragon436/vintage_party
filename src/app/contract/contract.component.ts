@@ -27,6 +27,7 @@ interface Accessory {
   bottom: string;
   high: string;
   stock: number;
+  price:number;
   status: boolean;
 }
 
@@ -78,11 +79,11 @@ export class ContractComponent {
         pickupDate: new FormControl('', Validators.required),
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
+        price: new FormControl(0, Validators.required),
         listAccessories: this.formBuilder.array([])
       });
   }
   condicion=false;
-
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
   }
@@ -120,9 +121,11 @@ export class ContractComponent {
             id: new FormControl(itemSelected?._id),
             description: itemSelected?.description,
             amount: new FormControl(1, [Validators.required, Validators.max(itemSelected?.stock || 0), Validators.min(1)]),
-            stock: new FormControl(itemSelected?.stock)
+            stock: new FormControl(itemSelected?.stock),
+            price: new FormControl(itemSelected?.price)
           })
         );
+        console.log('arreglo de accesorios ' ,this.arrayAccessory.value);
     }
 
     this.form.get('searchAccessory')?.patchValue([]);
@@ -140,7 +143,7 @@ export class ContractComponent {
 
     if (this.form.valid) {
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      const values = {...this.form.value, onAccount: [],}
+      const values = {...this.form.value, onAccount: []}
       console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => {

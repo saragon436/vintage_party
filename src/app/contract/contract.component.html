@@ -101,7 +101,8 @@
               <th>#</th>
               <th width="40%">Producto</th>
               <th width="20%">Stock</th>
-              <th width="20%">Cantidad</th>
+              <th width="10%">Cantidad</th>
+              <th width="10%">Precio</th>
               <th style="text-align:center;">Eliminar</th>
             </tr>
           </thead>
@@ -117,10 +118,14 @@
               <td>
                 {{ item.get('stock')?.value }}
               </td>
+              
               <td>
                 <input class="form-control" type="number" formControlName="amount" min="1"
                 [ngClass]="{'error': item.get('amount')?.errors}"  required>
                 
+              </td>
+              <td>
+                <input class="form-control" type="number" formControlName="price" value=" item.get('price')?.value }}">
               </td>
               <td style="text-align: center;">
 
