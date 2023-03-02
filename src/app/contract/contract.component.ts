@@ -30,15 +30,27 @@ interface Accessory {
   status: boolean;
 }
 
+interface Contract {
+  _id: string;
+  number: string;
+  createDate: string;
+  installDate: string;
+  eventDate: string;
+  pickupDate: string;
+  high: string;
+  stock: number;
+  status: boolean;
+}
+
 @Component({
   selector: 'app-contract',
   templateUrl: './contract.component.html',
   styleUrls: ['./contract.component.css']
 })
 export class ContractComponent {
-
+  contract:Contract[];
   form: FormGroup;
-  customer: Customer[];
+  customer$: Observable<Customer[]>;
   accessory$: Observable<Accessory[]>;
   public unsubscribe: Subject<void>;
 
@@ -50,12 +62,14 @@ export class ContractComponent {
     private authenticationToken: AuthenticationToken,
     private route: Router,
     private formBuilder: FormBuilder) {
+      this.contract = [];
       this.unsubscribe = new Subject();
-      this.customer = [];
+      this.customer$ = new Observable<Customer[]>;
       this.accessory$ = new Observable<Accessory[]>;
       this.form = this.formBuilder.group({
         search: new FormControl(''),
         searchAccessory: new FormControl(''),
+        customer: new FormControl(''),
         number: new FormControl('', Validators.required),
         onAccount: new FormControl(0, Validators.required),
         saldo: new FormControl(0, Validators.required),
@@ -67,7 +81,7 @@ export class ContractComponent {
         listAccessories: this.formBuilder.array([])
       });
   }
-
+  condicion=false;
 
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
@@ -76,23 +90,9 @@ export class ContractComponent {
   ngOnInit() {
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
     console.log('this.authenticationToken ' + this.authenticationToken)
-    this.customerService.listCustomer(headers).pipe(takeUntil(this.unsubscribe)).subscribe(
-      (customer) => {
-        this.customer = customer;
-        console.log('customer ' + this.customer);
-      },
-      (error) => {
-
-        if (error.status === 401) {
-
-          console.log('usuario o claves incorrectos');
-
-        } else {
-          console.log('error desconocido en el login');
-        }
-      });
-
+    this.customer$ = this.customerService.listCustomer(headers);
     this.searchStock();
+    this.findContract();
   }
 
   get arrayAccessory(): FormArray {
@@ -132,19 +132,46 @@ export class ContractComponent {
     this.arrayAccessory.removeAt(index);
   }
 
+  onSubmitAdd(){
+    this.condicion=true;
+  }
+
   onSave() {
 
     if (this.form.valid) {
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      const values = {...this.form.value, onAccount: []}
+      const values = {...this.form.value, onAccount: [],}
+      console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => {
+          this.findContract();
+          this.condicion=false;
           console.log('RESPUESTAs', resp);
         }
       )
     }
     console.log(222)
   }
+
+  findContract(){
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+    console.log('this.authenticationToken '+this.authenticationToken)
+    this.contractService.listContract( headers).subscribe(
+      (contract) => {
+         this.contract=contract;
+      },
+      (error) => {
+        
+        if( error.status === 401){
+        
+          console.log('usuario o claves incorrectos');
+  
+        }else{
+          console.log('error desconocido en el login');
+        }
+      });
+    }
 
   searchStock() {
     this.form.valueChanges
@@ -163,15 +190,6 @@ export class ContractComponent {
         }
       );
   }
-  
-  searchs = (text$: Observable<string>) =>
-    text$.pipe(
-      takeUntil(this.unsubscribe),
-      debounceTime(200),
-      distinctUntilChanged(),
-      map(term => term.length < 2 ? []
-        : Object.values(this.customer).filter(v => v.name.indexOf(term.toLowerCase()) > -1).slice(0, 10))
-    );
 
   ngOnDestroy(): void {
     this.unsubscribe.next();

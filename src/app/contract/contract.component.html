@@ -1,13 +1,18 @@
-<div id="formulario">
+<div id="formulario" *ngIf="condicion ; else otraPlantilla">
   <form [formGroup]="form">
     <div class="row" id="salto">
       <a>Crear Contrato</a>
     </div>
     <div class="row" id="salto">
       <div class="col-lg-6">
-        <div class="input-group">
-          <input formControlName="search" [ngbTypeahead]="searchs" class="form-control" placeholder="Buscar Cliente">
-        </div>
+          <ng-select
+          [clearable]="false"
+          notFoundText = 'seleccione clientes'
+          placeholder="Seleccione Cliente"
+          formControlName="customer"
+          >
+          <ng-option *ngFor="let item of customer$ | async" [value]="item" >{{item.documentNumber}} {{item.name}}</ng-option>
+        </ng-select>
       </div>
       <div class="col-lg-2">
         <div class="input-group">
@@ -22,16 +27,15 @@
 
     </div>
     <div class="row" id="salto">
+      <div class="col-lg-4"> <div class="input-group">
+        <label class="input-group-text" for="fe_instalacion" id="instalacion-titulo">F. Instalación</label>
+        <input type="date" class="form-control" placeholder="Fecha Intalacion" id="fe_instalacion" formControlName="installDate">
+      </div>
+    </div>
       <div class="col-lg-4">
         <div class="input-group">
           <label class="input-group-text" for="fe_evento" id="evento-titulo">F. Evento</label>
           <input type="date" class="form-control" placeholder="Fecha Evento" id="fe_evento" formControlName="eventDate">
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="input-group">
-          <label class="input-group-text" for="fe_instalacion" id="instalacion-titulo">F. Instalación</label>
-          <input type="date" class="form-control" placeholder="Fecha Intalacion" id="fe_instalacion" formControlName="installDate">
         </div>
       </div>
       <div class="col-lg-4">
@@ -44,16 +48,19 @@
     <div class="row" id="salto">
       <div class="col-lg-4">
         <div class="input-group">
-          <input type="text" class="form-control" placeholder="A cuenta" formControlName="onAccount">
+          <label class="input-group-text" for="a_cuenta" id="aCuenta">A Cuenta</label>
+          <input type="text" class="form-control" placeholder="A cuenta" id="a_cuenta" formControlName="onAccount">
         </div>
       </div>
       <div class="col-lg-4">
         <div class="input-group">
+          <label class="input-group-text" for="fe_evento" id="saldo">Saldo</label>
           <input type="text" class="form-control" placeholder="Saldo" formControlName="saldo">
         </div>
       </div>
       <div class="col-lg-4">
         <div class="input-group">
+          <label class="input-group-text" for="fe_evento" id="evento-titulo">Total</label>
           <input type="text" id="disabledTextInput" class="form-control" placeholder="Total" formControlName="amount" >
         </div>
       </div>
@@ -130,3 +137,37 @@
     </div>
   </form>
 </div>
+
+<ng-template #otraPlantilla>
+  <div id="formularioListado"> 
+    <div class="row" id="salto" >
+      <table>
+        <thead>
+          <tr>
+            <th>Numero</th>
+            <th>Fe. Creacion</th>
+            <th>Fe. Instalacion</th>
+            <th>Fe. Evento</th>
+            <th>Fe. Recojo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of contract">
+            <td>{{ item.number }}</td>
+            <td>{{ item.createDate }}</td>
+            <td>{{ item.installDate }}</td>
+            <td>{{ item.eventDate }}</td>
+            <td>{{ item.pickupDate }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="row" id="salto" >
+      <form (ngSubmit)="onSubmitAdd()">
+        <div class="row" id="salto">
+          <button type="submit" class="btn btn-primary">Agregar Contrato</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</ng-template>
