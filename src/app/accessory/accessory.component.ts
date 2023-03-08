@@ -4,6 +4,7 @@ import { AccessoryService } from '../Servicios/accessory.service';
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service'
 import { CommonModule } from '@angular/common';
+import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 
 interface Accesory {
   description: string;
@@ -16,17 +17,28 @@ interface Accesory {
   price:number;
 }
 
+interface Item {
+  description: string;
+  amount: string;
+}
+
 @Component({
   selector: 'app-accessory',
   templateUrl: './accessory.component.html',
   styleUrls: ['./accessory.component.css']
 })
 export class AccessoryComponent {  
-  
+  form: FormGroup;
   @Output() customEvent = new EventEmitter<any>();
-  constructor(private accessoryService:AccessoryService,private authenticationToken:AuthenticationToken, private route: Router) 
+  constructor(private accessoryService:AccessoryService,
+    private authenticationToken:AuthenticationToken, 
+    private route: Router,
+    private formBuilder: FormBuilder) 
   {
     this.accesorys = [];
+    this.form = this.formBuilder.group({
+      items: this.formBuilder.array([])
+    })
    }
   condicion=false;
   description = '';
@@ -40,8 +52,16 @@ export class AccessoryComponent {
   descripcionItem = '';
   amountItem = 0;
   price=0;
-  items = [{description:'df',amount:1}];
+  items=[];
   accesorys:Accesory[];
+
+  get arrayAccessory(): FormArray {
+    return this.form.controls['items'] as FormArray
+  }
+
+  get arrayValuesAccessory(): any[] {
+    return this.arrayAccessory.value as any[]
+  }
 
   ngOnInit() {
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
@@ -68,7 +88,16 @@ export class AccessoryComponent {
   }
 
   onSubmitExit(){
-    
+    this.description='';
+        this.color='';
+        this.design='';
+        this.large='';
+        this.high='';
+        this.bottom='';
+        this.stock='';
+        this.price=0;
+        this.items=[];
+        this.onDeleteItemAll();
     this.condicion=false;
   } 
 
@@ -80,7 +109,7 @@ export class AccessoryComponent {
     console.log('alto: ', this.high);
     console.log('fondo: ', this.bottom);
     console.log('stock: ', this.stock);
-
+    console.log('items',this.arrayAccessory.value);
     var payload = {
       description : this.description,
       color : this.color,
@@ -89,7 +118,7 @@ export class AccessoryComponent {
       high : this.high,
       bottom : this.bottom,
       stock : this.stock,
-      items : this.items,
+      items : this.arrayAccessory.value,
       price:this.price,
       status: true
     };
@@ -110,6 +139,7 @@ export class AccessoryComponent {
         this.stock='';
         this.price=0;
         this.items=[];
+        this.onDeleteItemAll();
         this.condicion=false;
       },
       (error) => {
@@ -123,4 +153,34 @@ export class AccessoryComponent {
         }
       });
   }
+
+  onAddItem(element: string){
+    
+
+      this.arrayAccessory
+        .push(
+          this.formBuilder.group({
+            description: "",
+            amount: element
+          })
+        );
+        console.log('arreglo de accesorios ' ,this.arrayAccessory.value);
+    
+
+    this.form.get('searchAccessory')?.patchValue([]);
+  }
+
+  onDeleteItemAll() {
+    for (let i = 0; i < this.arrayAccessory.length; i++) {
+      this.arrayAccessory.removeAt(i);
+    }
+
+  }
+
+  onDeleteItem(index: number) {
+    this.arrayAccessory.removeAt(index);
+  }
+
+  
+
 }

@@ -31,9 +31,14 @@ interface Accessory {
   status: boolean;
 }
 
+interface onAccount{
+  number:string;
+  amount:number;
+}
+
 interface Contract {
   _id: string;
-  number: string;
+  codContract: string;
   createDate: string;
   installDate: string;
   eventDate: string;
@@ -54,7 +59,9 @@ export class ContractComponent {
   customer$: Observable<Customer[]>;
   accessory$: Observable<Accessory[]>;
   public unsubscribe: Subject<void>;
-
+  total=0;
+  totalOnAccount=0;
+  onAccount=0;
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -70,9 +77,9 @@ export class ContractComponent {
       this.form = this.formBuilder.group({
         search: new FormControl(''),
         searchAccessory: new FormControl(''),
-        customer: new FormControl(''),
-        number: new FormControl('', Validators.required),
-        onAccount: new FormControl(0, Validators.required),
+        customer: new FormControl('', Validators.required),
+        //number: new FormControl('', Validators.required),
+        onAccountvalues: new FormControl(0, Validators.required),
         saldo: new FormControl(0, Validators.required),
         installDate: new FormControl('', Validators.required),
         eventDate: new FormControl('', Validators.required),
@@ -80,7 +87,8 @@ export class ContractComponent {
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
         price: new FormControl(0, Validators.required),
-        listAccessories: this.formBuilder.array([])
+        listAccessories: this.formBuilder.array([]),
+        onAccount: this.formBuilder.array([])
       });
   }
   condicion=false;
@@ -104,6 +112,14 @@ export class ContractComponent {
     return this.arrayAccessory.value as any[]
   }
 
+  get arrayOnAccount(): FormArray {
+    return this.form.controls['onAccount'] as FormArray
+  }
+
+  get arrayValuesOnAccount(): any[] {
+    return this.arrayOnAccount.value as any[]
+  }
+
   onAddItem(element: NgSelectComponent) {
 
     const itemSelected = element.selectedValues[0] as Accessory;
@@ -120,6 +136,11 @@ export class ContractComponent {
           this.formBuilder.group({
             id: new FormControl(itemSelected?._id),
             description: itemSelected?.description,
+            color:itemSelected?.color,
+            design:itemSelected?.design,
+            large:itemSelected?.large,
+            bottom:itemSelected?.bottom,
+            high:itemSelected?.high,
             amount: new FormControl(1, [Validators.required, Validators.max(itemSelected?.stock || 0), Validators.min(1)]),
             stock: new FormControl(itemSelected?.stock),
             price: new FormControl(itemSelected?.price)
@@ -129,10 +150,53 @@ export class ContractComponent {
     }
 
     this.form.get('searchAccessory')?.patchValue([]);
+    this.sumarValores();
+    this.sumarValoresOnAccount();
+  }
+
+  onAddItemOnAccount(element: number) {
+      this.arrayOnAccount
+        .push(
+          this.formBuilder.group({
+            number: "",
+            amount: element
+          })
+        );
+        console.log('arreglo de en cuenta ' ,this.arrayOnAccount.value);
+        this.onAccount=0;
+        this.sumarValoresOnAccount();
+  }
+
+  sumarValores() {
+    let arregloAccesory=this.arrayAccessory;
+    this.total=0
+    for (let i = 0; i < arregloAccesory.length; i++) {
+      this.total += ((arregloAccesory.at(i)?.get('price')?.value ?? 0) * (arregloAccesory.at(i)?.get('amount')?.value ?? 0));
+    }
+    arregloAccesory=this.formBuilder.array([]);
+    //total += myFormArray.at(i).get('nombreDeLaColumna').value;
+    this.sumarValoresOnAccount();
+  }
+
+  sumarValoresOnAccount() {
+    let arregloOnAccount=this.arrayOnAccount;
+    this.totalOnAccount=0
+    for (let i = 0; i < arregloOnAccount.length; i++) {
+      this.totalOnAccount += (arregloOnAccount.at(i)?.get('amount')?.value ?? 0);
+    }
+    this.totalOnAccount=this.total-this.totalOnAccount;
+    arregloOnAccount=this.formBuilder.array([]);
+    //total += myFormArray.at(i).get('nombreDeLaColumna').value;
   }
 
   onDeleteItem(index: number) {
     this.arrayAccessory.removeAt(index);
+    this.sumarValores();
+  }
+
+  onDeleteItemOnAccount(index: number) {
+    this.arrayOnAccount.removeAt(index);
+    this.sumarValoresOnAccount();
   }
 
   onSubmitAdd(){
@@ -143,7 +207,7 @@ export class ContractComponent {
 
     if (this.form.valid) {
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      const values = {...this.form.value, onAccount: []}
+      const values = {...this.form.value}
       console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => {
@@ -192,6 +256,24 @@ export class ContractComponent {
           }
         }
       );
+  }
+
+  onSubmitExit(){
+
+    this.formBuilder.group({
+      description: "",
+      color:"",
+      design:"",
+      large:0,
+      bottom:0,
+      high:0,
+      amount:0,
+      stock: 0,
+      price: 0
+    })
+
+    this.condicion=false;
+    
   }
 
   ngOnDestroy(): void {

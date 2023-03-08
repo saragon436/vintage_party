@@ -21,7 +21,7 @@
       </div>
       <div class="col-lg-4">
         <div class="input-group">
-          <input type="number" class="form-control" placeholder="# de Contrato" formControlName="number">
+          <!--<input type="number" class="form-control" placeholder="# de Contrato" formControlName="number">-->
         </div>
       </div>
 
@@ -45,40 +45,10 @@
         </div>
       </div>
     </div>
-    <div class="row" id="salto">
-      <div class="col-lg-4">
-        <div class="input-group">
-          <label class="input-group-text" for="a_cuenta" id="aCuenta">A Cuenta</label>
-          <input type="text" class="form-control" placeholder="A cuenta" id="a_cuenta" formControlName="onAccount">
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="input-group">
-          <label class="input-group-text" for="fe_evento" id="saldo">Saldo</label>
-          <input type="text" class="form-control" placeholder="Saldo" formControlName="saldo">
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="input-group">
-          <label class="input-group-text" for="fe_evento" id="evento-titulo">Total</label>
-          <input type="text" id="disabledTextInput" class="form-control" placeholder="Total" formControlName="amount" >
-        </div>
-      </div>
-    </div>
+    
     <div class="row" id="salto">
       <div class="col-lg-12">
-        <div class="input-group">
-          <div class="form-floating">
-            <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"  formControlName="comment"
-              style="height: 100px"></textarea>
-            <label for="floatingTextarea2">Comentarios</label>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row" id="salto">
-      <div class="col-lg-12">
-        <h4>Accesorios</h4>
+        <h4>Mobiliario</h4>
       </div>
       <div class="col-lg-10">
         <ng-select          
@@ -87,7 +57,7 @@
           placeholder="Seleccione Accesorio o elemento"
           formControlName="searchAccessory"
           #ddlAccessory>
-          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}}</ng-option>
+          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} {{item.large}} {{item.bottom}} {{item.high}}</ng-option>
         </ng-select>
       </div>
       <div class="col-lg-2 d-grid gap-2 mb-3">
@@ -113,19 +83,18 @@
             <tr *ngFor="let item of arrayAccessory.controls; let i = index;" [formGroupName]="i">
               <td>{{ i + 1 }}</td>
               <td>
-                {{ item.get('description')?.value }}
+                <label>{{ item.get('description')?.value }} {{ item.get('color')?.value }} {{ item.get('design')?.value }} {{ item.get('large')?.value }} {{ item.get('bottom')?.value }} {{ item.get('high')?.value }} </label> 
               </td>
               <td>
                 {{ item.get('stock')?.value }}
               </td>
-              
               <td>
-                <input class="form-control" type="number" formControlName="amount" min="1"
-                [ngClass]="{'error': item.get('amount')?.errors}"  required>
+                <input class="form-control" type="number" formControlName="amount" min="1" 
+                [ngClass]="{'error': item.get('amount')?.errors}" (input)="sumarValores()" required>
                 
               </td>
               <td>
-                <input class="form-control" type="number" formControlName="price" value=" item.get('price')?.value }}">
+                <input class="form-control" type="number" formControlName="price" value="{{ item.get('price')?.value }}" (input)="sumarValores()">
               </td>
               <td style="text-align: center;">
 
@@ -137,8 +106,74 @@
         </table>
       </div>
     </div>
+
+    <div class="row" id="salto">
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="a_cuenta" id="aCuenta">A Cuenta</label>
+          <input type="number" class="form-control" placeholder="A cuenta" id="a_cuenta" formControlName="onAccountvalues" [(ngModel)]="onAccount">
+          <button type="button" (click)="onAddItemOnAccount(this.onAccount)" class="btn btn-primary">Agregar a en Cuenta</button>
+        </div>
+        <div>
+          <table id="dt_onAccount" class="table table-striped table-bordered table-hover" >
+            <thead>
+              <tr>
+                <th>#</th>
+                <th width="40%">Numero</th>
+                <th width="20%">Cantidad</th>
+                <th style="text-align:center;">Eliminar</th>
+              </tr>
+            </thead>
+            <tbody class="table-group-divider" formArrayName="onAccount">
+              <tr *ngIf="arrayOnAccount.controls.length == 0">
+                <td colspan="8" style="text-align: center">No Existen Registros</td>
+              </tr>
+              <tr *ngFor="let item of arrayOnAccount.controls; let i = index;" [formGroupName]="i">
+                <td>{{ i + 1 }}</td>
+                <td>
+                  <input class="form-control" type="text" formControlName="number"  >
+                </td>
+                <td>
+                  <input class="form-control" type="number" formControlName="onAccountValue"  value="{{ item.get('amount')?.value }}" >
+                </td>
+                <td style="text-align: center;">
+  
+                  <button class='btn btn-md btn-default' title="Eliminar Registro" (click)="onDeleteItemOnAccount(i)"><i
+                      class='fa-solid fa-trash'>X</i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="fe_evento" id="saldo">Saldo</label>
+          <input type="text" class="form-control" placeholder="Saldo" formControlName="saldo" [(ngModel)]="this.totalOnAccount" readonly>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="fe_evento" id="evento-titulo">Total</label>
+          <input type="text" id="disabledTextInput" class="form-control" placeholder="Total" formControlName="amount" value="{{this.total}}" readonly>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="salto">
+      <div class="col-lg-12">
+        <div class="input-group">
+          <div class="form-floating">
+            <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"  formControlName="comment"
+              style="height: 100px"></textarea>
+            <label for="floatingTextarea2">Comentarios</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="row" id="salto">
       <button type="button" class="btn btn-primary" [disabled] = 'form.status !== "VALID"' (click)="onSave()" >Registrar Contrato</button>
+      <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
     </div>
   </form>
 </div>
@@ -149,7 +184,7 @@
       <table>
         <thead>
           <tr>
-            <th>Numero</th>
+            <th>Co. Contrato</th>
             <th>Fe. Creacion</th>
             <th>Fe. Instalacion</th>
             <th>Fe. Evento</th>
@@ -158,7 +193,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of contract">
-            <td>{{ item.number }}</td>
+            <td>{{ item.codContract }}</td>
             <td>{{ item.createDate }}</td>
             <td>{{ item.installDate }}</td>
             <td>{{ item.eventDate }}</td>
@@ -170,7 +205,7 @@
     <div class="row" id="salto" >
       <form (ngSubmit)="onSubmitAdd()">
         <div class="row" id="salto">
-          <button type="submit" class="btn btn-primary">Agregar Contrato</button>
+          <button type="submit"  class="btn btn-primary">Agregar Contrato</button>
         </div>
       </form>
     </div>
