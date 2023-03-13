@@ -233,7 +233,7 @@ export class ContractComponent {
         if( error.status === 401){
         
           console.log('usuario o claves incorrectos');
-  
+          this.route.navigate(['/app-login']);
         }else{
           console.log('error desconocido en el login');
         }

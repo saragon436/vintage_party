@@ -5,16 +5,19 @@
   <div class="row" id="salto" >
     <div class="col-lg-4">
       <div class="input-group">
-        <input type="text" class="form-control" [(ngModel)]="name" name="name" placeholder="Nombre y Apellido">
+        <label class="input-group-text" for="nombreApellido" id="nombreA">Nom. y Ap.</label>
+        <input type="text" class="form-control" [(ngModel)]="name" id="nombreApellido" name="name" placeholder="Nombre y Apellido">
       </div>
     </div>
     <div class="col-lg-4">
       <div class="input-group">
-        <input type="number" class="form-control" [(ngModel)]="documentNumber" name="documentNumber" placeholder="DNI">
+        <label class="input-group-text" for="documentNumber" id="nombreA">DNI/RUC/CE</label>
+        <input type="text" class="form-control" [(ngModel)]="documentNumber" maxlength="11" name="documentNumber" placeholder="DNI/RUC/CE">
       </div>
     </div>
     <div class="col-lg-4">
       <div class="input-group">
+        <label class="input-group-text" for="phone" id="nombreA">Celular</label>
         <input type="tel" class="form-control" [(ngModel)]="phone" name="phone" placeholder="Celular">
       </div>
     </div>
@@ -22,6 +25,7 @@
   <div class="row" id="salto">
     <div class="col-lg-12">
       <div class="input-group">
+        <label class="input-group-text" for="address" id="nombreA">Direccion</label>
         <input type="text" class="form-control" [(ngModel)]="address" name="address" placeholder="Direccion">
       </div>
     </div>

@@ -6,16 +6,19 @@
     <div class="row" id="salto" >
       <div class="col-lg-4">
         <div class="input-group">
+          <label class="input-group-text" for="description" id="nombreA">Descripcion</label>
           <input type="text" class="form-control" placeholder="Descripcion"  [(ngModel)]="description" name="descripcion" required="required">
         </div>
       </div>
       <div class="col-lg-4">
         <div class="input-group">
+          <label class="input-group-text" for="color" id="nombreA">Color</label>
           <input type="text" class="form-control" placeholder="Color" [(ngModel)]="color" name="color" required="required">
         </div>
       </div>
       <div class="col-lg-4">
         <div class="input-group">
+          <label class="input-group-text" for="design" id="nombreA">Diseño</label>
           <input type="tel" class="form-control" placeholder="Diseño" [(ngModel)]="design" name="diseno" required="required">
         </div>
       </div>
@@ -23,16 +26,19 @@
     <div class="row" id="salto" >
         <div class="col-lg-4">
           <div class="input-group">
+            <label class="input-group-text" for="large" id="nombreA">Largo</label>
             <input type="number" class="form-control" placeholder="Largo" [(ngModel)]="large" name="largo" required="required">
           </div>
         </div>
         <div class="col-lg-4">
           <div class="input-group">
+            <label class="input-group-text" for="high" id="nombreA">Alto</label>
             <input type="number" class="form-control" placeholder="Alto" [(ngModel)]="high" name="alto" required="required">
           </div>
         </div>
         <div class="col-lg-4">
           <div class="input-group">
+            <label class="input-group-text" for="bottom" id="nombreA">Fondo</label>
             <input type="number" class="form-control" placeholder="Fondo" [(ngModel)]="bottom" name="fondo" required="required">
           </div>
         </div>
@@ -40,12 +46,21 @@
     <div class="row" id="salto">
       <div class="col-lg-4">
         <div class="input-group">
+          <label class="input-group-text" for="width" id="nombreA">Ancho</label>
+          <input type="number" class="form-control" placeholder="Ancho" [(ngModel)]="width" name="width" required="required">
+        </div>
+        
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="stock" id="nombreA">Stock</label>
           <input type="number" class="form-control" placeholder="Stock" [(ngModel)]="stock" name="stock" required="required">
         </div>
         
       </div>
       <div class="col-lg-4">
       <div class="input-group">
+        <label class="input-group-text" for="price" id="nombreA">Precio s/</label>
         <input type="number" class="form-control" placeholder="Precio" [(ngModel)]="price" name="precio" required="required">
       </div>
     </div>
@@ -59,7 +74,7 @@
       <div class="col-lg-10">
       </div>
       <div class="col-lg-2 d-grid gap-2 mb-3">
-        <button type="button" (click)="onAddItem('ejemplo')" class="btn btn-primary">Agregar Accesorio</button>
+        <button type="button" (click)="onAddItem('ejemplo')" class="btn btn-primary">Agregar Parte</button>
       </div>
 
       <div class="col-lg-12">
@@ -114,6 +129,7 @@
               <th>Largo</th>
               <th>Profundidad</th>
               <th>Alto</th>
+              <th>Ancho</th>
               <th>Stock</th>
               <th>Precio</th>
             </tr>
@@ -126,6 +142,7 @@
               <td>{{ item.large }}</td>
               <td>{{ item.bottom }}</td>
               <td>{{ item.high }}</td>
+              <td>{{ item.width }}</td>
               <td>{{ item.stock }}</td>
               <td>{{ item.price }}</td>
             </tr>
