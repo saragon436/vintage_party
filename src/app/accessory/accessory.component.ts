@@ -15,6 +15,7 @@ interface Accesory {
   high: string;
   stock:number;
   price:number;
+  width:number;
 }
 
 interface Item {
@@ -52,6 +53,7 @@ export class AccessoryComponent {
   descripcionItem = '';
   amountItem = 0;
   price=0;
+  width='';
   items=[];
   accesorys:Accesory[];
 
@@ -76,7 +78,7 @@ export class AccessoryComponent {
         if( error.status === 401){
         
           console.log('usuario o claves incorrectos');
-  
+          this.route.navigate(['/app-login']);
         }else{
           console.log('error desconocido en el login');
         }
@@ -95,6 +97,7 @@ export class AccessoryComponent {
         this.high='';
         this.bottom='';
         this.stock='';
+        this.width='';
         this.price=0;
         this.items=[];
         this.onDeleteItemAll();
@@ -120,6 +123,7 @@ export class AccessoryComponent {
       stock : this.stock,
       items : this.arrayAccessory.value,
       price:this.price,
+      width:this.width,
       status: true
     };
     console.log('payload '+payload);
@@ -137,6 +141,7 @@ export class AccessoryComponent {
         this.high='';
         this.bottom='';
         this.stock='';
+        this.width='';
         this.price=0;
         this.items=[];
         this.onDeleteItemAll();
@@ -147,7 +152,7 @@ export class AccessoryComponent {
         if( error.status === 401){
         
           console.log('usuario o claves incorrectos');
-  
+          this.route.navigate(['/app-login']);
         }else{
           console.log('error desconocido en el login');
         }
