@@ -96,12 +96,39 @@ export class ContractComponent {
     this.modalService.open(CustomerComponent, { centered: true });
   }
 
+  limpiar(){
+    //this.contract = [];
+    //this.unsubscribe = new Subject();
+    this.customer$ = new Observable<Customer[]>;
+    this.accessory$ = new Observable<Accessory[]>;
+    this.form = this.formBuilder.group({
+      search: new FormControl(''),
+      searchAccessory: new FormControl(''),
+      customer: new FormControl('', Validators.required),
+      //number: new FormControl('', Validators.required),
+      onAccountvalues: new FormControl(0, Validators.required),
+      saldo: new FormControl(0, Validators.required),
+      installDate: new FormControl('', Validators.required),
+      eventDate: new FormControl('', Validators.required),
+      pickupDate: new FormControl('', Validators.required),
+      amount: new FormControl(0, Validators.required),
+      comment: new FormControl('', Validators.required),
+      price: new FormControl(0, Validators.required),
+      listAccessories: this.formBuilder.array([]),
+      onAccount: this.formBuilder.array([])
+    });
+  }
+
   ngOnInit() {
+    this.findClient();
+    this.searchStock();
+    this.findContract();
+  }
+
+  findClient(){
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
     console.log('this.authenticationToken ' + this.authenticationToken)
     this.customer$ = this.customerService.listCustomer(headers);
-    this.searchStock();
-    this.findContract();
   }
 
   get arrayAccessory(): FormArray {
@@ -212,6 +239,9 @@ export class ContractComponent {
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => {
           this.findContract();
+          this.limpiar();
+          this.findClient();
+          this.searchStock();
           this.condicion=false;
           console.log('RESPUESTAs', resp);
         }
@@ -249,7 +279,7 @@ export class ContractComponent {
       )
       .subscribe(
         (value) => {
-          if (value.installDate !== '' && value.pickupDate !== '' && value.installDate < value.pickupDate) {
+          if (value.installDate !== '' && value.pickupDate !== '' && value.installDate <= value.pickupDate) {
             this.arrayAccessory.clear();
             const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
             this.accessory$ = this.accessoryService.listStockAccessory(headers, { "installDate": value.installDate, "pickupDate": value.pickupDate });
@@ -260,17 +290,7 @@ export class ContractComponent {
 
   onSubmitExit(){
 
-    this.formBuilder.group({
-      description: "",
-      color:"",
-      design:"",
-      large:0,
-      bottom:0,
-      high:0,
-      amount:0,
-      stock: 0,
-      price: 0
-    })
+    this.limpiar();
 
     this.condicion=false;
     

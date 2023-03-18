@@ -42,7 +42,7 @@
       <div class="col-lg-4">
         <div class="input-group">
           <label class="input-group-text" for="fe_recojo" id="salto-titulo">F. Recojo</label>
-          <input type="date" class="form-control" placeholder="Fecha Recojo" id="fe_recojo" formControlName="pickupDate">
+          <input type="date" class="form-control" placeholder="Fecha Recojo" id="fe_recojo" formControlName="pickupDate" >
         </div>
       </div>
     </div>
@@ -58,7 +58,7 @@
           placeholder="Seleccione Accesorio o elemento"
           formControlName="searchAccessory"
           #ddlAccessory>
-          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} {{item.large}} {{item.bottom}} {{item.high}}</ng-option>
+          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} {{item.large}} {{item.bottom}} {{item.high}} - stock : {{item.stock}}</ng-option>
         </ng-select>
       </div>
       <div class="col-lg-2 d-grid gap-2 mb-3">
