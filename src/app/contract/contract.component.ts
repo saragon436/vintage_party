@@ -28,6 +28,7 @@ interface Accessory {
   high: string;
   stock: number;
   price:number;
+  items?: any[]
   status: boolean;
 }
 
@@ -61,6 +62,7 @@ export class ContractComponent {
   public unsubscribe: Subject<void>;
   total=0;
   totalOnAccount=0;
+  totalBalance=0;
   onAccount=0;
   constructor(
     private modalService: NgbModal,
@@ -69,7 +71,7 @@ export class ContractComponent {
     private contractService: ContractService,
     private authenticationToken: AuthenticationToken,
     private route: Router,
-    private formBuilder: FormBuilder) {
+    private formBuilder: FormBuilder) {      
       this.contract = [];
       this.unsubscribe = new Subject();
       this.customer$ = new Observable<Customer[]>;
@@ -81,6 +83,7 @@ export class ContractComponent {
         //number: new FormControl('', Validators.required),
         onAccountvalues: new FormControl(0, Validators.required),
         saldo: new FormControl(0, Validators.required),
+        createDate: new FormControl(new Date(), Validators.required),
         installDate: new FormControl('', Validators.required),
         eventDate: new FormControl('', Validators.required),
         pickupDate: new FormControl('', Validators.required),
@@ -170,7 +173,8 @@ export class ContractComponent {
             high:itemSelected?.high,
             amount: new FormControl(1, [Validators.required, Validators.max(itemSelected?.stock || 0), Validators.min(1)]),
             stock: new FormControl(itemSelected?.stock),
-            price: new FormControl(itemSelected?.price)
+            price: new FormControl(itemSelected?.price),
+            items: [itemSelected?.items]
           })
         );
         console.log('arreglo de accesorios ' ,this.arrayAccessory.value);
@@ -195,25 +199,13 @@ export class ContractComponent {
   }
 
   sumarValores() {
-    let arregloAccesory=this.arrayAccessory;
-    this.total=0
-    for (let i = 0; i < arregloAccesory.length; i++) {
-      this.total += ((arregloAccesory.at(i)?.get('price')?.value ?? 0) * (arregloAccesory.at(i)?.get('amount')?.value ?? 0));
-    }
-    arregloAccesory=this.formBuilder.array([]);
-    //total += myFormArray.at(i).get('nombreDeLaColumna').value;
+    this.total = this.arrayValuesAccessory.reduce(( sum, item ) => sum + ((item.price * item.amount)), 0)
     this.sumarValoresOnAccount();
   }
 
-  sumarValoresOnAccount() {
-    let arregloOnAccount=this.arrayOnAccount;
-    this.totalOnAccount=0
-    for (let i = 0; i < arregloOnAccount.length; i++) {
-      this.totalOnAccount += (arregloOnAccount.at(i)?.get('amount')?.value ?? 0);
-    }
-    this.totalOnAccount=this.total-this.totalOnAccount;
-    arregloOnAccount=this.formBuilder.array([]);
-    //total += myFormArray.at(i).get('nombreDeLaColumna').value;
+  sumarValoresOnAccount() {    
+    this.totalOnAccount = this.arrayValuesOnAccount.reduce(( sum, item ) => sum +  item.amount, 0)    
+    this.totalBalance = this.total - this.totalOnAccount;
   }
 
   onDeleteItem(index: number) {
@@ -238,6 +230,7 @@ export class ContractComponent {
       console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => {
+          window.print();
           this.findContract();
           this.limpiar();
           this.findClient();
