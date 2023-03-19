@@ -14,3 +14,26 @@
   border-color: red;
   border-width: 2px ;
 }
+
+.label-total{
+  justify-content: end;
+  text-align: right;
+}
+
+.label-date{
+  width: 120px;
+}
+
+.pagePrint {
+  display: none;
+}
+
+@media print {
+  .pagePrint {
+    display: block;
+  }
+
+  #formulario {
+    display: none;
+  }
+}
