@@ -32,7 +32,8 @@
   </div>
   <div class="row" id="salto">
     <div class="col-lg-3">
-      <button type="submit" (click)="onSubmit()" class="btn btn-primary">Agregar</button>
+      <button type="submit" (click)="onSubmit()" class="btn btn-primary" *ngIf="mostrarBotones">Agregar</button>
+      <button type="submit" (click)="updateCustomer()" class="btn btn-primary" *ngIf="!mostrarBotones">Actualizar</button>
       <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
   </div>
   </div>
@@ -44,6 +45,7 @@
       <table>
         <thead>
           <tr>
+            <th>Seleccionar</th>
             <th>Nombre</th>
             <th>DNI</th>
             <th>Direccion</th>
@@ -52,6 +54,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of customer">
+            <td><button type="button" class="btn btn-primary" (click)="findCustomerById(item.documentNumber)">seleccionar Cliente</button></td>
             <td>{{ item.name }}</td>
             <td>{{ item.documentNumber }}</td>
             <td>{{ item.address }}</td>
@@ -61,9 +64,9 @@
       </table>
     </div>
     <div class="row" id="salto" >
-      <form (ngSubmit)="onSubmitAdd()">
+      <form >
         <div class="row" id="salto">
-          <button type="submit" class="btn btn-primary">Agregar Cliente</button>
+          <button type="submit"  (click)="onSubmitAdd()" class="btn btn-primary">Agregar Cliente</button>
         </div>
       </form>
     </div>

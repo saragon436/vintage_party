@@ -10,6 +10,8 @@ import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@ang
 import { AccessoryService } from '../Servicios/accessory.service';
 import { ContractService } from '../Servicios/contract.service';
 import { NgSelectComponent } from '@ng-select/ng-select/public-api';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 interface Customer {
   name: string;
@@ -46,6 +48,7 @@ interface Contract {
   high: string;
   stock: number;
   status: boolean;
+  listAccessories:[];
 }
 
 @Component({
@@ -54,6 +57,7 @@ interface Contract {
   styleUrls: ['./contract.component.css']
 })
 export class ContractComponent {
+  fechaActual: string="";
   contract:Contract[];
   form: FormGroup;
   customer$: Observable<Customer[]>;
@@ -84,6 +88,7 @@ export class ContractComponent {
         installDate: new FormControl('', Validators.required),
         eventDate: new FormControl('', Validators.required),
         pickupDate: new FormControl('', Validators.required),
+        createDate: new FormControl('', Validators.required),
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
         price: new FormControl(0, Validators.required),
@@ -94,6 +99,30 @@ export class ContractComponent {
   condicion=false;
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
+  }
+
+  exportToExcel(): void {
+    this.contract.forEach(item => {
+      Object.assign(item, item.listAccessories);
+      
+    });
+
+    const headers = ['createDate','installDate','eventDate','pickupDate','amount','onAccount','listAccessories'];
+    headers.forEach((header, index) => {
+      headers[index] = header.toString();
+      // O usando la plantilla literal de ES6:
+      // headers[index] = `${header}`;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(this.contract);
+    XLSX.utils.sheet_add_json(worksheet, this.contract, { header: headers, skipHeader: true, origin: 'A2'});
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    FileSaver.saveAs(excelBlob, 'data.xlsx');
+  
   }
 
   limpiar(){
@@ -120,6 +149,11 @@ export class ContractComponent {
   }
 
   ngOnInit() {
+    const fecha = new Date();
+    const dia = fecha.getDate().toString().padStart(2, '0');
+    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const anio = fecha.getFullYear().toString();
+    this.fechaActual = `${anio}-${mes}-${dia}`;
     this.findClient();
     this.searchStock();
     this.findContract();

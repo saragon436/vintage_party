@@ -22,7 +22,8 @@
       <div class="col-lg-4">
         <div class="input-group">
           <!--<input type="number" class="form-control" placeholder="# de Contrato" formControlName="number">-->
-          
+          <label class="input-group-text" for="fe_creacion" id="instalacion-titulo">F. Creacion</label>
+        <input type="text" class="form-control" placeholder="Fecha Creacion" id="fe_creacion" formControlName="createDate" [(ngModel)]="fechaActual" [value]="fechaActual" readonly>
         </div>
       </div>
 
@@ -174,7 +175,7 @@
 
     <div class="row" id="salto">
       <button type="button" class="btn btn-primary" [disabled] = 'form.status !== "VALID"' (click)="onSave()" >Registrar Contrato</button>
-      <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
+      <button type="submit" (click)="onSubmitExit()" class="btn btn-danger" >Volver</button>
     </div>
   </form>
 </div>
@@ -204,9 +205,10 @@
       </table>
     </div>
     <div class="row" id="salto" >
-      <form (ngSubmit)="onSubmitAdd()">
+      <form>
         <div class="row" id="salto">
-          <button type="submit"  class="btn btn-primary">Agregar Contrato</button>
+          <button type="submit" (click)="onSubmitAdd()" class="btn btn-primary">Agregar Contrato</button>
+          <button type="submit" (click)="exportToExcel()" class="btn btn-md" >Descargar</button>
         </div>
       </form>
     </div>
