@@ -21,6 +21,18 @@ export class AccessoryService {
     )
   }
 
+  updateAccessory(body:any,headers: HttpHeaders): Observable<any>{
+    var response:any;
+    return this.http.put("http://localhost:3000/accessory", body, { headers, observe: response }).pipe(
+      catchError( e => {
+        //implementar aca la logica del error        
+        console.error('Error de agregar', e)
+        throw (e)
+      }),
+      map( x => x),
+    )
+  }
+
   listAccessory(headers: HttpHeaders): Observable<any>{
     var response:any;
     return this.http.get("http://localhost:3000/accessory", { headers, observe: response }).pipe(

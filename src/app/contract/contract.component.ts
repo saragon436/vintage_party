@@ -68,6 +68,7 @@ export class ContractComponent {
   totalOnAccount=0;
   totalBalance=0;
   onAccount=0;
+  customerName="";
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -87,7 +88,7 @@ export class ContractComponent {
         //number: new FormControl('', Validators.required),
         onAccountvalues: new FormControl(0, Validators.required),
         saldo: new FormControl(0, Validators.required),
-        createDate: new FormControl(new Date(), Validators.required),
+        createDate: new FormControl('', Validators.required),
         installDate: new FormControl('', Validators.required),
         eventDate: new FormControl('', Validators.required),
         pickupDate: new FormControl('', Validators.required),
@@ -152,14 +153,18 @@ export class ContractComponent {
   }
 
   ngOnInit() {
+    this.finDate();
+    this.findClient();
+    this.searchStock();
+    this.findContract();
+  }
+
+  finDate(){
     const fecha = new Date();
     const dia = fecha.getDate().toString().padStart(2, '0');
     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const anio = fecha.getFullYear().toString();
     this.fechaActual = `${anio}-${mes}-${dia}`;
-    this.findClient();
-    this.searchStock();
-    this.findContract();
   }
 
   findClient(){
@@ -219,6 +224,18 @@ export class ContractComponent {
     this.sumarValoresOnAccount();
   }
 
+  onAddCustomer(element: NgSelectComponent) {
+
+    const itemSelected = element.selectedValues[0] as Customer;
+    if (itemSelected) {
+      this.customerName=itemSelected?.name;
+    }
+
+    this.form.get('searchAccessory')?.patchValue([]);
+    this.sumarValores();
+    this.sumarValoresOnAccount();
+  }
+
   onAddItemOnAccount(element: number) {
       this.arrayOnAccount
         .push(
@@ -269,6 +286,7 @@ export class ContractComponent {
           this.limpiar();
           this.findClient();
           this.searchStock();
+          this.finDate();
           this.condicion=false;
           console.log('RESPUESTAs', resp);
         }
@@ -296,6 +314,8 @@ export class ContractComponent {
         }
       });
     }
+
+    
 
   searchStock() {
     this.form.valueChanges

@@ -60,13 +60,20 @@
       </div>
       <div class="col-lg-4">
       <div class="input-group">
-        <label class="input-group-text" for="price" id="nombreA">Precio s/</label>
-        <input type="number" class="form-control" placeholder="Precio" [(ngModel)]="price" name="precio" required="required">
+        <label class="input-group-text" for="diameter" id="nombreA">Diametro</label>
+        <input type="number" class="form-control" placeholder="Diametro" [(ngModel)]="diameter" name="diametro" required="required">
+      </div>
+    </div>
+    <div class="row" id="salto">
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="price" id="nombreA">Precio s/</label>
+          <input type="number" class="form-control" placeholder="Precio" [(ngModel)]="price" name="precio" required="required">
+        </div>
       </div>
     </div>
     </div>
-    
-  <form [formGroup]="form">
+    <form [formGroup]="form">
     <div class="row" id="salto">
       <div class="col-lg-12">
         <h4>Partes</h4>
@@ -111,7 +118,8 @@
     </form>
     <div class="row" id="salto">
       <div class="col-lg-3">
-          <button type="submit" (click)="onSubmit()" class="btn btn-primary">Agregar</button>
+        <button type="submit" (click)="onSubmit()" class="btn btn-primary" *ngIf="mostrarBotones">Agregar</button>
+        <button type="submit" (click)="onUpdate()" class="btn btn-primary" *ngIf="!mostrarBotones">Actualizar</button>
           <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
       </div>
     </div>
@@ -123,6 +131,7 @@
         <table>
           <thead>
             <tr>
+              <th>Seleccionar</th>
               <th>Descripcion</th>
               <th>Color</th>
               <th>Diseño</th>
@@ -136,6 +145,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let item of accesorys">
+              <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">seleccionar</button></td>
               <td>{{ item.description }}</td>
               <td>{{ item.color }}</td>
               <td>{{ item.design }}</td>
