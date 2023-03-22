@@ -69,6 +69,7 @@ export class ContractComponent {
   totalBalance=0;
   onAccount=0;
   customerName="";
+  numberContract="";
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -230,7 +231,7 @@ export class ContractComponent {
     if (itemSelected) {
       this.customerName=itemSelected?.name;
     }
-
+    console.log("this.customerName ",this.customerName);
     this.form.get('searchAccessory')?.patchValue([]);
     this.sumarValores();
     this.sumarValoresOnAccount();
@@ -273,6 +274,18 @@ export class ContractComponent {
     this.condicion=true;
   }
 
+  startTimer() {
+    setTimeout(() => {
+      window.print();
+          this.findContract();
+          this.limpiar();
+          this.findClient();
+          this.searchStock();
+          this.finDate();
+      this.condicion=false;
+    }, 100); // 1000 milisegundos = 1 segundo
+  }
+
   onSave() {
 
     if (this.form.valid) {
@@ -280,19 +293,27 @@ export class ContractComponent {
       const values = {...this.form.value}
       console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
-        (resp) => {
-          window.print();
-          this.findContract();
-          this.limpiar();
-          this.findClient();
-          this.searchStock();
-          this.finDate();
-          this.condicion=false;
+        (resp) => { 
+          this.numberContract=resp.codContract;
+          console.log('this.numberContract', this.numberContract);
+          //window.print();
+          this.startTimer();
+          //this.findContract();
+          //this.limpiar();
+          //this.findClient();
+          //this.searchStock();
+          //this.finDate();
+          //this.condicion=false;
+         
           console.log('RESPUESTAs', resp);
         }
       )
     }
     console.log(222)
+  }
+
+  printDocument(){
+    window.print();
   }
 
   findContract(){
@@ -337,7 +358,11 @@ export class ContractComponent {
 
   onSubmitExit(){
 
+    this.findContract();
     this.limpiar();
+    this.findClient();
+    this.searchStock();
+    this.finDate();
 
     this.condicion=false;
     

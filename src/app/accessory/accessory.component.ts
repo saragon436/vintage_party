@@ -172,6 +172,10 @@ export class AccessoryComponent {
   }
 
   findAccesoryById(valor:string){
+    this.items=[];
+    this.onDeleteItemAll();
+    this.arrayAccessory.clear();
+    console.log("this.arrayAccessory ",[this.arrayAccessory.value]);
     this.accesorys.forEach((response)=>{
       if(response._id==valor){
         this._id=response._id;
@@ -224,6 +228,7 @@ export class AccessoryComponent {
     this.accessoryService.updateAccessory(payload, headers).subscribe(
       (data: any) => {
         console.log('ejemplo de actualizar')
+        this.onDeleteItemAll();
         this.ngOnInit();
         this.description='';
         this.color='';
@@ -236,7 +241,7 @@ export class AccessoryComponent {
         this.price=0;
         this.items=[];
         this.diameter='';
-        this.onDeleteItemAll();
+        
         this.condicion=false;
         this.mostrarBotones=true;
       },
@@ -272,7 +277,8 @@ export class AccessoryComponent {
     for (let i = 0; i < this.arrayAccessory.length; i++) {
       this.arrayAccessory.removeAt(i);
     }
-
+    console.log("this.arrayAccessory.length eliminar", this.arrayAccessory.length);
+    console.log("this.arrayAccessory eliminar", [this.arrayAccessory.value]);
   }
 
   onDeleteItem(index: number) {
