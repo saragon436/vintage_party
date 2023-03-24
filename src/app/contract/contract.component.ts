@@ -107,20 +107,26 @@ export class ContractComponent {
   }
 
   exportToExcel(): void {
-    this.contract.forEach(item => {
-      Object.assign(item, item.listAccessories);
-      
+    let listExport: any[] = [];
+    this.contract.forEach((item: any) => {
+      listExport = [ ...listExport, ...item.listAccessories.map( (ele: any) => {
+        return {
+          "Contrato": item.codContract,
+          "F Creacion": item.createDate,
+          "F Instalacion": item.installDate,
+          "F Evento": item.eventDate,
+          "F Recojo": item.pickupDate,
+          "Descripcion": ele.description,
+          "Cantidad": ele.amount,
+          "Precio": ele.price
+        };
+      }), { "Cantidad": "Total", "Precio": item.amount } ]
     });
 
-    const headers = ['createDate','installDate','eventDate','pickupDate','amount','onAccount','listAccessories'];
-    headers.forEach((header, index) => {
-      headers[index] = header.toString();
-      // O usando la plantilla literal de ES6:
-      // headers[index] = `${header}`;
-    });
+    const headers = ['Contrato','F Creacion','F Instalacion','F Evento','F Recojo','Descripcion','Cantidad', "Precio"];
 
-    const worksheet = XLSX.utils.json_to_sheet(this.contract);
-    XLSX.utils.sheet_add_json(worksheet, this.contract, { header: headers, skipHeader: true, origin: 'A2'});
+    const worksheet = XLSX.utils.json_to_sheet(listExport);
+    XLSX.utils.sheet_add_json(worksheet, listExport, { header: headers, skipHeader: true, origin: 'A2'});
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
@@ -252,6 +258,7 @@ export class ContractComponent {
 
   sumarValores() {
     this.total = this.arrayValuesAccessory.reduce(( sum, item ) => sum + ((item.price * item.amount)), 0)
+    this.form.get('amount')?.setValue(this.total);
     this.sumarValoresOnAccount();
   }
 
