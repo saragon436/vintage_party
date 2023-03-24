@@ -23,7 +23,7 @@ export class ContractService {
 
   listContract(headers: HttpHeaders): Observable<any>{
     var response:any;
-    return this.http.get("http://localhost:3000/contract", { headers, observe: response }).pipe(
+    return this.http.get("http://146.190.40.162:3000/contract", { headers, observe: response }).pipe(
       catchError( e => {
         //implementar aca la logica del error        
         console.error('Error de agregar', e)
