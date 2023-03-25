@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service'
 import { HttpHeaders } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 
 interface Customer {
   _id: string
@@ -20,9 +21,11 @@ interface Customer {
 })
 export class CustomerComponent { 
   customer:Customer[];
-
+  title = 'appBootstrap';
+    
+  closeResult: string = '';
   @Output() customEvent = new EventEmitter<any>();
-  constructor(private customerService:CustomerService,private authenticationToken:AuthenticationToken, private route: Router) 
+  constructor(private customerService:CustomerService,private authenticationToken:AuthenticationToken, private route: Router,private modalService: NgbModal) 
   {
     this.customer = [];
   }
@@ -33,7 +36,7 @@ export class CustomerComponent {
   documentNumber='';
   address='';
   phone='';
-
+  idItemDelete='';
   ngOnInit() {
     this.findCustomer();
   }
@@ -70,6 +73,27 @@ export class CustomerComponent {
     })
     this.condicion=true;
     this.mostrarBotones=false;
+  }
+
+  deleteAccesosry(){
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+    console.log('this.authenticationToken '+this.authenticationToken)
+    this.customerService.deleteCustomer(this.idItemDelete, headers).subscribe(
+      (data:any) => {
+        console.log("eliminar accesorios ",data);
+         this.ngOnInit();
+      },
+      (error) => {
+        
+        if( error.status === 401){
+        
+          console.log('usuario o claves incorrectos');
+          this.route.navigate(['/app-login']);
+        }else{
+          console.log('error desconocido en el login');
+        }
+      });
   }
 
   onSubmitAdd(){
@@ -159,4 +183,23 @@ export class CustomerComponent {
     this.mostrarBotones=true;
     this.condicion=false;
   } 
+
+  open(content:any,valor:string) {
+    this.idItemDelete=valor;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  } 
+
+  private getDismissReason(reason: any): string {
+    if (reason === ModalDismissReasons.ESC) {
+      return 'by pressing ESC';
+    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
+      return 'by clicking on a backdrop';
+    } else {
+      return  `with: ${reason}`;
+    }
+  }
 }

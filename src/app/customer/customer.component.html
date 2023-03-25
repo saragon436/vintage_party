@@ -45,6 +45,7 @@
       <table>
         <thead>
           <tr>
+            <th>Eliminar</th>
             <th>Seleccionar</th>
             <th>Nombre</th>
             <th>DNI</th>
@@ -54,6 +55,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of customer">
+            <td><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)">Eliminar</button></td>
             <td><button type="button" class="btn btn-primary" (click)="findCustomerById(item.documentNumber)">seleccionar</button></td>
             <td>{{ item.name }}</td>
             <td>{{ item.documentNumber }}</td>
@@ -72,4 +74,18 @@
     </div>
   </div>
 </ng-template>
-
+<ng-template #mymodal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Eliminar Cliente</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    Desea Eliminar un Cliente?
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-success-" (click)="deleteAccesosry();modal.close('Save click')">SI</button>
+    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
+  </div>
+</ng-template>

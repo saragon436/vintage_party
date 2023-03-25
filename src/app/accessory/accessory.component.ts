@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service'
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 
 interface Accesory {
   _id: string;
@@ -34,10 +35,14 @@ interface Item {
 export class AccessoryComponent {  
   form: FormGroup;
   @Output() customEvent = new EventEmitter<any>();
+  title = 'appBootstrap';
+    
+  closeResult: string = '';
   constructor(private accessoryService:AccessoryService,
     private authenticationToken:AuthenticationToken, 
     private route: Router,
-    private formBuilder: FormBuilder) 
+    private formBuilder: FormBuilder,
+    private modalService: NgbModal) 
   {
     this.accesorys = [];
     this.form = this.formBuilder.group({
@@ -62,6 +67,7 @@ export class AccessoryComponent {
   items=[];
   accesorys:Accesory[];
   mostrarBotones=true;
+  idItemDelete='';
 
   get arrayAccessory(): FormArray {
     return this.form.controls['items'] as FormArray
@@ -71,6 +77,25 @@ export class AccessoryComponent {
     return this.arrayAccessory.value as any[]
   }
 
+  open(content:any,valor:string) {
+    this.idItemDelete=valor;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  } 
+
+  private getDismissReason(reason: any): string {
+    if (reason === ModalDismissReasons.ESC) {
+      return 'by pressing ESC';
+    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
+      return 'by clicking on a backdrop';
+    } else {
+      return  `with: ${reason}`;
+    }
+  }
+
   ngOnInit() {
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
     //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
@@ -78,6 +103,28 @@ export class AccessoryComponent {
     this.accessoryService.listAccessory( headers).subscribe(
       (accesorys) => {
          this.accesorys=accesorys;
+      },
+      (error) => {
+        
+        if( error.status === 401){
+        
+          console.log('usuario o claves incorrectos');
+          this.route.navigate(['/app-login']);
+        }else{
+          console.log('error desconocido en el login');
+        }
+      });
+  }
+
+  deleteAccesosry(){
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+    console.log('this.authenticationToken '+this.authenticationToken)
+    this.accessoryService.deleteAccessory( headers,this.idItemDelete).subscribe(
+      (accesorys) => {
+        console.log("eliminar accesorios ",accesorys);
+         this.accesorys=accesorys;
+         this.ngOnInit();
       },
       (error) => {
         

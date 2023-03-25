@@ -54,4 +54,15 @@ export class AccessoryService {
       map( x => x),
     )
   }
+
+  deleteAccessory(headers: HttpHeaders, data: any): Observable<any>{
+    var response:any;
+    return this.http.delete("http://146.190.40.162:3000/accessory/"+data, { headers, observe: response }).pipe(
+      catchError( e => {     
+        console.error('Error de eliminar', e)
+        throw (e)
+      }),
+      map( x => x),
+    )
+  }
 }

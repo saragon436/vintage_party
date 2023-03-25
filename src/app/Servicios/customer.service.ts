@@ -43,4 +43,15 @@ export class CustomerService {
       map( x => x),
     )
   }
+  deleteCustomer(body:string,headers: HttpHeaders): Observable<any>{
+    var response:any;
+    return this.http.delete("http://146.190.40.162:3000/customer/"+body, { headers, observe: response }).pipe(
+      catchError( e => {
+        //implementar aca la logica del error        
+        console.error('Error de eliminar', e)
+        throw (e)
+      }),
+      map( x => x),
+    )
+  }
 }
