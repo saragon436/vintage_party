@@ -227,7 +227,7 @@ export class AccessoryComponent {
       if(response._id==valor){
         this._id=response._id;
         this.description=response.description;
-        this.color=response.description;
+        this.color=response.color;
         this.design=response.design;
         this.large=response.large;
         this.high=response.high;
