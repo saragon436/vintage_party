@@ -49,6 +49,7 @@ interface Contract {
   high: string;
   stock: number;
   status: boolean;
+  address: string;
   listAccessories:[];
 }
 
@@ -93,6 +94,7 @@ export class ContractComponent {
         installDate: new FormControl('', Validators.required),
         eventDate: new FormControl('', Validators.required),
         pickupDate: new FormControl('', Validators.required),
+        address: new FormControl('', Validators.required),
         //createDate: new FormControl('', Validators.required),
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
@@ -153,10 +155,12 @@ export class ContractComponent {
       pickupDate: new FormControl('', Validators.required),
       amount: new FormControl(0, Validators.required),
       comment: new FormControl('', Validators.required),
+      address: new FormControl('', Validators.required),
       price: new FormControl(0, Validators.required),
       listAccessories: this.formBuilder.array([]),
       onAccount: this.formBuilder.array([])
     });
+    this.totalBalance=0;
   }
 
   ngOnInit() {

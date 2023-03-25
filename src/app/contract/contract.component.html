@@ -48,7 +48,17 @@
         </div>
       </div>
     </div>
-    
+    <div class="row" id="salto">
+      <div class="col-lg-12">
+        <div class="input-group">
+          <div class="form-floating">
+            <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"  formControlName="address"
+              style="height: 100px"></textarea>
+            <label for="floatingTextarea2">Direccion</label>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="row" id="salto">
       <div class="col-lg-12">
         <h4>Mobiliario</h4>
@@ -231,6 +241,15 @@
           <label class="input-group-text">#</label>
           <label class="form-control label-total">{{this.numberContract}}</label>
         </div>
+      </div>
+    </div>
+  </div>
+  <div id="salto"></div>
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="input-group">
+        <label class="input-group-text">Direccion</label>
+        <label class="form-control label-total">{{ form.controls['address'].value }}</label>
       </div>
     </div>
   </div>
