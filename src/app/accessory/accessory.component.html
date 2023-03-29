@@ -126,10 +126,17 @@
   </div>
 
   <ng-template #otraPlantilla>
+    <div class="row" id="salto" >
+      <form (ngSubmit)="onSubmitAdd()">
+        <div class="row" id="salto">
+          <button type="submit" class="btn btn-primary">Agregar Mobiliario</button>
+        </div>
+      </form>
+    </div>
     <div id="formularioListado"> 
       <div class="row" id="salto" >
         <table>
-          <thead>
+          <thead sticky>
             <tr>
               <th>Eliminar</th>
               <th>Seleccionar</th>
@@ -162,13 +169,6 @@
             </tr>
           </tbody>
         </table>
-      </div>
-      <div class="row" id="salto" >
-        <form (ngSubmit)="onSubmitAdd()">
-          <div class="row" id="salto">
-            <button type="submit" class="btn btn-primary">Agregar Mobiliario</button>
-          </div>
-        </form>
       </div>
     </div>
   </ng-template>

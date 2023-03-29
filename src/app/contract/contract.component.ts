@@ -104,6 +104,7 @@ export class ContractComponent {
       });
   }
   condicion=false;
+  mostrarBotones=false;
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
   }
@@ -166,6 +167,9 @@ export class ContractComponent {
   ngOnInit() {
     this.finDate();
     this.findClient();
+    // if(this.mostrarBotones==true){
+    //   this.searchStock();
+    // }
     this.searchStock();
     this.findContract();
   }
@@ -228,6 +232,8 @@ export class ContractComponent {
           })
         );
         console.log('arreglo de accesorios ' ,this.arrayAccessory.value);
+        console.log('this.arrayAccessory.controls.length ' ,this.arrayAccessory.controls.length);
+        console.log('this.arrayAccessory.controls ' ,this.arrayAccessory.controls);
     }
 
     this.form.get('searchAccessory')?.patchValue([]);
@@ -282,6 +288,7 @@ export class ContractComponent {
   }
 
   onSubmitAdd(){
+    
     this.condicion=true;
   }
 
@@ -347,6 +354,46 @@ export class ContractComponent {
       });
     }
 
+    findAccesoryById(valor:string){
+      //this.items=[];
+      console.log("valor ",valor);
+      // this.arrayAccessory.clear();
+      console.log("this.arrayAccessory ",[this.arrayAccessory.value]);
+      this.contract.forEach((response)=>{
+        if(response._id==valor){
+          console.log("response ",response)
+          this.form.controls['address'].setValue(response.address);
+          this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
+          this.form.controls['eventDate'].setValue(response.eventDate.slice(0,10));
+          this.form.controls['pickupDate'].setValue(response.pickupDate.slice(0,10));
+          response.listAccessories.forEach((res:any)=>{
+            this.arrayAccessory
+            .push(
+              this.formBuilder.group({
+                id: res._id,
+                description: res.description,
+                color:res.color,
+                design:res.design,
+                large:res.large,
+                bottom:res.bottom,
+                high:res.high,
+                amount: res.amount,
+                stock: res.stock,
+                price: res.price,
+                items: res.items
+              })
+            );
+          })
+          console.log("response.arrayAccessory ",this.arrayAccessory.value)
+          console.log("response.listAccesories ",response.listAccessories)
+          console.log('this.arrayAccessory.controls.length ' ,this.arrayAccessory.controls);
+        }
+      })
+      this.condicion=true;
+      //this.printDocument();
+      this.mostrarBotones=false;
+    }
+
     
 
   searchStock() {
@@ -359,7 +406,7 @@ export class ContractComponent {
       .subscribe(
         (value) => {
           if (value.installDate !== '' && value.pickupDate !== '' && value.installDate <= value.pickupDate) {
-            this.arrayAccessory.clear();
+            //this.arrayAccessory.clear();
             const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
             this.accessory$ = this.accessoryService.listStockAccessory(headers, { "installDate": value.installDate, "pickupDate": value.pickupDate });
           }
@@ -382,5 +429,9 @@ export class ContractComponent {
   ngOnDestroy(): void {
     this.unsubscribe.next();
     this.unsubscribe.complete();
+  }
+
+  imprimir(valor:string){
+
   }
 }

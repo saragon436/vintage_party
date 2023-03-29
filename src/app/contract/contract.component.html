@@ -197,6 +197,7 @@
       <table>
         <thead>
           <tr>
+            <th>Visualizar</th>
             <th>Co. Contrato</th>
             <th>Fe. Creacion</th>
             <th>Fe. Instalacion</th>
@@ -206,6 +207,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of contract">
+            <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">seleccionar</button></td>
             <td>{{ item.codContract }}</td>
             <td>{{ item.createDate }}</td>
             <td>{{ item.installDate }}</td>
