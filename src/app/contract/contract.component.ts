@@ -50,7 +50,10 @@ interface Contract {
   stock: number;
   status: boolean;
   address: string;
+  comment: string;
   listAccessories:[];
+  onAccount:[];
+  customer:[];
 }
 
 @Component({
@@ -71,6 +74,7 @@ export class ContractComponent {
   onAccount=0;
   customerName="";
   numberContract="";
+  cliente: any;
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -362,10 +366,13 @@ export class ContractComponent {
       this.contract.forEach((response)=>{
         if(response._id==valor){
           console.log("response ",response)
+          //this.numberContract=response.codContract;
           this.form.controls['address'].setValue(response.address);
+          this.form.controls['comment'].setValue(response.comment);
           this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
           this.form.controls['eventDate'].setValue(response.eventDate.slice(0,10));
           this.form.controls['pickupDate'].setValue(response.pickupDate.slice(0,10));
+          this.form.controls['customer'].setValue(response.customer);
           response.listAccessories.forEach((res:any)=>{
             this.arrayAccessory
             .push(
@@ -384,11 +391,22 @@ export class ContractComponent {
               })
             );
           })
+          response.onAccount.forEach((res:any)=>{
+            this.arrayOnAccount
+            .push(
+              this.formBuilder.group({
+                amount: res.amount,
+                number: res.number
+              })
+            );
+          })
           console.log("response.arrayAccessory ",this.arrayAccessory.value)
           console.log("response.listAccesories ",response.listAccessories)
           console.log('this.arrayAccessory.controls.length ' ,this.arrayAccessory.controls);
         }
       })
+      this.sumarValores();
+      this.sumarValoresOnAccount();
       this.condicion=true;
       //this.printDocument();
       this.mostrarBotones=false;

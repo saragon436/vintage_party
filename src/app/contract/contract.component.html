@@ -194,6 +194,14 @@
 <ng-template #otraPlantilla>
   <div id="formularioListado"> 
     <div class="row" id="salto" >
+      <form>
+        <div class="row" id="salto">
+          <button type="submit" (click)="onSubmitAdd()" class="btn btn-primary">Agregar Contrato</button>
+          <button type="submit" (click)="exportToExcel()" class="btn btn-md" >Descargar</button>
+        </div>
+      </form>
+    </div>
+    <div class="row" id="salto" >
       <table>
         <thead>
           <tr>
@@ -217,14 +225,7 @@
         </tbody>
       </table>
     </div>
-    <div class="row" id="salto" >
-      <form>
-        <div class="row" id="salto">
-          <button type="submit" (click)="onSubmitAdd()" class="btn btn-primary">Agregar Contrato</button>
-          <button type="submit" (click)="exportToExcel()" class="btn btn-md" >Descargar</button>
-        </div>
-      </form>
-    </div>
+    
   </div>
 </ng-template>
 
