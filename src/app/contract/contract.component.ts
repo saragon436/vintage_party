@@ -1,10 +1,10 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { debounceTime, distinctUntilChanged, map, Observable, Subject, takeUntil } from 'rxjs';
 import { CustomerService } from '../Servicios/customer.service';
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { CustomerComponent } from '../customer/customer.component';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { AccessoryService } from '../Servicios/accessory.service';
@@ -37,6 +37,7 @@ interface Accessory {
 interface onAccount{
   number:string;
   amount:number;
+  createdDate:string;
 }
 
 interface Contract {
@@ -53,7 +54,7 @@ interface Contract {
   comment: string;
   listAccessories:[];
   onAccount:[];
-  customer:[];
+  customer:{name:string,documentNumber:string};
 }
 
 @Component({
@@ -64,6 +65,7 @@ interface Contract {
 export class ContractComponent {
   fechaActual: string="";
   contract:Contract[];
+  contract2:Contract[];
   form: FormGroup;
   customer$: Observable<Customer[]>;
   accessory$: Observable<Accessory[]>;
@@ -75,6 +77,10 @@ export class ContractComponent {
   customerName="";
   numberContract="";
   cliente: any;
+  idItemDelete='';
+  closeResult: string = '';
+  searchValue:string = '';
+  selectedCustomer = { documentNumber: '12345', name: 'John Doe' };
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -84,6 +90,7 @@ export class ContractComponent {
     private route: Router,
     private formBuilder: FormBuilder) {      
       this.contract = [];
+      this.contract2 = [];
       this.unsubscribe = new Subject();
       this.customer$ = new Observable<Customer[]>;
       this.accessory$ = new Observable<Accessory[]>;
@@ -109,6 +116,16 @@ export class ContractComponent {
   }
   condicion=false;
   mostrarBotones=false;
+
+  filterPeople(searchTerm: string) {
+    console.log("searchTerm",searchTerm)
+    this.contract2 = this.contract.filter(contra => {
+      return contra.customer.name.toLowerCase().includes(this.searchValue.toLowerCase());
+    });
+
+    console.log("lisar contrato de busqueda",this.contract2)
+  }
+
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
   }
@@ -294,6 +311,26 @@ export class ContractComponent {
   onSubmitAdd(){
     
     this.condicion=true;
+    this.mostrarBotones=true;
+  }
+
+  open(content:any,valor:string) {
+    this.idItemDelete=valor;
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  } 
+
+  private getDismissReason(reason: any): string {
+    if (reason === ModalDismissReasons.ESC) {
+      return 'by pressing ESC';
+    } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
+      return 'by clicking on a backdrop';
+    } else {
+      return  `with: ${reason}`;
+    }
   }
 
   startTimer() {
@@ -342,9 +379,12 @@ export class ContractComponent {
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
     //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
     console.log('this.authenticationToken '+this.authenticationToken)
-    this.contractService.listContract( headers).subscribe(
+    this.contractService
+    .listContract( headers)
+    .subscribe(
       (contract) => {
-         this.contract=contract;
+          this.contract=contract;
+          console.log("contract ",this.contract)
       },
       (error) => {
         
@@ -365,14 +405,17 @@ export class ContractComponent {
       console.log("this.arrayAccessory ",[this.arrayAccessory.value]);
       this.contract.forEach((response)=>{
         if(response._id==valor){
-          console.log("response ",response)
-          //this.numberContract=response.codContract;
+          console.log("response ",response.customer.name)
+          //this.form.controls.get('customer')?.setValue(response.customer);
+          this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
+          this.numberContract=response.codContract;
           this.form.controls['address'].setValue(response.address);
           this.form.controls['comment'].setValue(response.comment);
           this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
           this.form.controls['eventDate'].setValue(response.eventDate.slice(0,10));
           this.form.controls['pickupDate'].setValue(response.pickupDate.slice(0,10));
-          this.form.controls['customer'].setValue(response.customer);
+          //this.form.controls['customer'].setValue(response.customer);
+          this.customerName=response.customer.name;
           response.listAccessories.forEach((res:any)=>{
             this.arrayAccessory
             .push(
@@ -396,13 +439,15 @@ export class ContractComponent {
             .push(
               this.formBuilder.group({
                 amount: res.amount,
-                number: res.number
+                number: res.number,
+                createdDate: response.installDate.slice(0,10)
               })
             );
           })
           console.log("response.arrayAccessory ",this.arrayAccessory.value)
           console.log("response.listAccesories ",response.listAccessories)
           console.log('this.arrayAccessory.controls.length ' ,this.arrayAccessory.controls);
+          console.log('this.arrayOnAccount ' ,this.arrayOnAccount);
         }
       })
       this.sumarValores();
@@ -430,6 +475,32 @@ export class ContractComponent {
           }
         }
       );
+  }
+
+  deleteContract(){
+    var payload = {
+      _id : this.idItemDelete,
+      onAccount:[],
+      status:'Anulado'
+    };
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+    console.log('this.authenticationToken '+this.authenticationToken)
+    this.contractService.updateContract(payload, headers).subscribe(
+      (data:any) => {
+        console.log("eliminar accesorios ",data);
+         this.ngOnInit();
+      },
+      (error) => {
+        
+        if( error.status === 401){
+        
+          console.log('usuario o claves incorrectos');
+          this.route.navigate(['/app-login']);
+        }else{
+          console.log('error desconocido en el login');
+        }
+      });
   }
 
   onSubmitExit(){

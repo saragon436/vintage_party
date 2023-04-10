@@ -4,7 +4,7 @@
       <a>Crear Contrato</a>
     </div>
     <div class="row" id="salto">
-      <div class="col-lg-6">
+      <div class="col-lg-6" >
           <ng-select
           [clearable]="false"
           notFoundText = 'seleccione clientes'
@@ -185,14 +185,21 @@
     </div>
 
     <div class="row" id="salto">
-      <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' (click)="onAddCustomer(ddlcustomer);onSave()" >Registrar Contrato</button>
-      <button type="button" class="btn btn-warning" [disabled] = 'form.status !== "VALID"' (click)="onAddCustomer(ddlcustomer);printDocument()" >Imprimir Guia</button>
+      <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' *ngIf="mostrarBotones" (click)="onAddCustomer(ddlcustomer);onSave()" >Registrar Contrato</button>
+      <button type="button" class="btn btn-warning" [disabled] = 'form.status !== "VALID"' (click)="printDocument()" >Imprimir Guia</button>
       <button type="submit" (click)="onSubmitExit()" class="btn btn-danger" >Volver</button>
     </div>
   </form>
 </div>
 <ng-template #otraPlantilla>
   <div id="formularioListado"> 
+    <div class="row" id="salto" >
+      <form>
+        <div class="row" id="salto">
+          <input type="text" [(ngModel)]="searchValue" (input)="filterPeople(searchValue)">
+        </div>
+      </form>
+    </div>
     <div class="row" id="salto" >
       <form>
         <div class="row" id="salto">
@@ -205,8 +212,10 @@
       <table>
         <thead>
           <tr>
+            <th>Eliminar</th>
             <th>Visualizar</th>
             <th>Co. Contrato</th>
+            <th>Cliente</th>
             <th>Fe. Creacion</th>
             <th>Fe. Instalacion</th>
             <th>Fe. Evento</th>
@@ -215,8 +224,10 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of contract">
-            <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">seleccionar</button></td>
+            <td><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)">Eliminar</button></td>
+            <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">Visualizar</button></td>
             <td>{{ item.codContract }}</td>
+            <td>{{ item.customer.name }}</td>
             <td>{{ item.createDate }}</td>
             <td>{{ item.installDate }}</td>
             <td>{{ item.eventDate }}</td>
@@ -228,6 +239,22 @@
     
   </div>
 </ng-template>
+<ng-template #mymodal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Eliminar Cliente</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    Desea aular un Contrato?
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-success-" (click)="deleteContract();modal.close('Save click')">SI</button>
+    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
+  </div>
+</ng-template>
+
 
 <!-- Area de Impresion -->
 <div class="pagePrint">
