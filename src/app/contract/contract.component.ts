@@ -1,5 +1,5 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { debounceTime, distinctUntilChanged, map, Observable, Subject, takeUntil } from 'rxjs';
 import { CustomerService } from '../Servicios/customer.service';
 import { Router } from '@angular/router';
@@ -116,15 +116,6 @@ export class ContractComponent {
   }
   condicion=false;
   mostrarBotones=false;
-
-  filterPeople(searchTerm: string) {
-    console.log("searchTerm",searchTerm)
-    this.contract2 = this.contract.filter(contra => {
-      return contra.customer.name.toLowerCase().includes(this.searchValue.toLowerCase());
-    });
-
-    console.log("lisar contrato de busqueda",this.contract2)
-  }
 
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });

@@ -25,6 +25,7 @@
 }
 
 .pagePrint {
+  zoom: 0.5;
   display: none;
 }
 
