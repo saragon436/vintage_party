@@ -28,11 +28,11 @@
   zoom: 0.4;
   display: none;
 
-  position: absolute;
+  /* position: absolute;
   top: 30%;
-  left: 25%; /* 210mm es el ancho de una hoja A4 */
+  left: 25%; 
   width: 45%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%); */
 }
 
 @media print {
@@ -44,9 +44,9 @@
     display: none;
   }
 
-  @page{
+  /* @page{
     size: landscape;
-  }
+  } */
 }
 
 #mi-div {
