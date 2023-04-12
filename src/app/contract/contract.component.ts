@@ -49,12 +49,13 @@ interface Contract {
   pickupDate: string;
   high: string;
   stock: number;
-  status: boolean;
+  status: string;
   address: string;
   comment: string;
   listAccessories:[];
   onAccount:[];
-  customer:{name:string,documentNumber:string};
+  customer:{name:string,documentNumber:string,phone:string};
+  userCreate:{userName:string};
 }
 
 @Component({
@@ -64,6 +65,7 @@ interface Contract {
 })
 export class ContractComponent {
   fechaActual: string="";
+  fechaCreacion: string="";
   contract:Contract[];
   contract2:Contract[];
   form: FormGroup;
@@ -81,6 +83,8 @@ export class ContractComponent {
   closeResult: string = '';
   searchValue:string = '';
   selectedCustomer = { documentNumber: '12345', name: 'John Doe' };
+  phone='';
+  documentNumber="";
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -116,7 +120,7 @@ export class ContractComponent {
   }
   condicion=false;
   mostrarBotones=false;
-
+  codUser='';
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
   }
@@ -165,6 +169,7 @@ export class ContractComponent {
       saldo: new FormControl(0, Validators.required),
       installDate: new FormControl('', Validators.required),
       eventDate: new FormControl('', Validators.required),
+      createDate: new FormControl('', Validators.required),
       pickupDate: new FormControl('', Validators.required),
       amount: new FormControl(0, Validators.required),
       comment: new FormControl('', Validators.required),
@@ -177,7 +182,6 @@ export class ContractComponent {
   }
 
   ngOnInit() {
-    this.finDate();
     this.findClient();
     // if(this.mostrarBotones==true){
     //   this.searchStock();
@@ -192,6 +196,7 @@ export class ContractComponent {
     const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
     const anio = fecha.getFullYear().toString();
     this.fechaActual = `${anio}-${mes}-${dia}`;
+    this.form.controls['createDate'].setValue(this.fechaActual);
   }
 
   findClient(){
@@ -300,7 +305,7 @@ export class ContractComponent {
   }
 
   onSubmitAdd(){
-    
+    this.finDate();
     this.condicion=true;
     this.mostrarBotones=true;
   }
@@ -331,7 +336,7 @@ export class ContractComponent {
           this.limpiar();
           this.findClient();
           this.searchStock();
-          this.finDate();
+          //this.finDate();
       this.condicion=false;
     }, 100); // 1000 milisegundos = 1 segundo
   }
@@ -346,6 +351,10 @@ export class ContractComponent {
         (resp) => { 
           this.numberContract=resp.codContract;
           console.log('this.numberContract', this.numberContract);
+          this.codUser=this.authenticationToken.user;
+          this.customerName=resp.customer.name;
+          this.phone=resp.customer.phone;
+          this.documentNumber=resp.customer.documentNumber;
           //window.print();
           this.startTimer();
           //this.findContract();
@@ -396,7 +405,7 @@ export class ContractComponent {
       console.log("this.arrayAccessory ",[this.arrayAccessory.value]);
       this.contract.forEach((response)=>{
         if(response._id==valor){
-          console.log("response ",response.customer.name)
+          console.log("response ",response)
           //this.form.controls.get('customer')?.setValue(response.customer);
           this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
           this.numberContract=response.codContract;
@@ -405,8 +414,13 @@ export class ContractComponent {
           this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
           this.form.controls['eventDate'].setValue(response.eventDate.slice(0,10));
           this.form.controls['pickupDate'].setValue(response.pickupDate.slice(0,10));
-          //this.form.controls['customer'].setValue(response.customer);
+          this.form.controls['createDate']?.setValue(response.createDate.slice(0,10));
+          this.fechaCreacion=response.createDate.slice(0,10);
+          //this.fechaActual=response.createDate.slice(0,10);
           this.customerName=response.customer.name;
+          this.phone=response.customer.phone;
+          this.documentNumber=response.customer.documentNumber;
+          this.codUser=response?.userCreate?.userName;
           response.listAccessories.forEach((res:any)=>{
             this.arrayAccessory
             .push(
@@ -500,7 +514,7 @@ export class ContractComponent {
     this.limpiar();
     this.findClient();
     this.searchStock();
-    this.finDate();
+    //this.finDate();
 
     this.condicion=false;
     

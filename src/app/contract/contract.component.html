@@ -24,7 +24,7 @@
         <div class="input-group">
           <!--<input type="number" class="form-control" placeholder="# de Contrato" formControlName="number">-->
           <label class="input-group-text" for="fe_creacion" id="instalacion-titulo">F. Creacion</label>
-        <input type="text" class="form-control" placeholder="Fecha Creacion" id="fe_creacion" formControlName="createDate" [(ngModel)]="fechaActual" [value]="fechaActual" readonly>
+        <input type="date" class="form-control" placeholder="Fecha Creacion" id="fe_creacion" formControlName="createDate">
         </div>
       </div>
 
@@ -186,7 +186,7 @@
 
     <div class="row" id="salto">
       <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' *ngIf="mostrarBotones" (click)="onAddCustomer(ddlcustomer);onSave()" >Registrar Contrato</button>
-      <button type="button" class="btn btn-warning" [disabled] = 'form.status !== "VALID"' (click)="printDocument()" >Imprimir Guia</button>
+      <button type="button" class="btn btn-warning" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones"(click)="printDocument()" >Imprimir Guia</button>
       <button type="submit" (click)="onSubmitExit()" class="btn btn-danger" >Volver</button>
     </div>
   </form>
@@ -213,6 +213,7 @@
             <th>Fe. Instalacion</th>
             <th>Fe. Evento</th>
             <th>Fe. Recojo</th>
+            <th>Estado</th>
           </tr>
         </thead>
         <tbody>
@@ -225,6 +226,7 @@
             <td>{{ item.installDate }}</td>
             <td>{{ item.eventDate }}</td>
             <td>{{ item.pickupDate }}</td>
+            <td>{{ item.status }}</td>
           </tr>
         </tbody>
       </table>
@@ -251,28 +253,90 @@
 
 <!-- Area de Impresion -->
 <div class="pagePrint">
+  <!-- inicio cabecera -->
   <div class="col-lg-12">
+
+    <!-- parte de titulo -->
+   <div class="row">
+      <div class="col-4">
+        <div id="mi-div" >
+          <img src="./assets/vintage.png" id="mi-imagen" alt="Mi imagen">
+        </div>
+        <div> 
+          <pre>
+      Cal. Casuarinas Mz C Lote 32 
+            Coop. Uranmarca
+   Lima - Lima - San juan de Miraflores
+            </pre>
+        </div>
+      </div>    
+      <div class="col-4" rowspan="2">
+        <pre>
+        ALQUILER Y VENTA DE ACCESORIOS
+           MOBILIARIO PARA ENVENTOS
+
+              RUC 20603879016
+           VINTAGE PARTY E.I.R.L.
+
+         vintageparty2016@gmail.com
+              Cel: 936942342    
+                  944566160
+                </pre>
+      </div>
+      <div class="col-4">
+        <div class="input-group">
+          <label class="input-group-text">N - Contrato: </label>
+          <label class="form-control">{{this.numberContract}}</label>
+        </div>
+        <div id="salto"></div>
+        <div class="input-group">
+          <label class="input-group-text">Fecha Creacion: </label>
+          <label class="form-control">{{form.controls['createDate'].value}}</label>
+        </div>
+      </div>
+    </div>
+    <!-- fin de titulo -->
+    <!-- <div id="salto"></div> -->
+    <!-- <div class="row">
+      <div class="col-4"></div>    
+      <div class="col-4"></div>
+      <div class="col-4">
+        <div class="input-group">
+          <label class="input-group-text">Fecha Creacion: </label>
+          <label class="form-control">{{this.fechaCreacion}}</label>
+        </div>
+      </div>
+    </div> -->
+    <div id="salto"></div>
     <div class="row">    
       <div class="col-8">
         <div class="input-group">
-          <label class="input-group-text">Cliente</label>
-          <label class="form-control label-total">{{this.customerName}}</label>
+          <label class="input-group-text">Señor(es): </label>
+          <label class="form-control">{{this.customerName}}</label>
         </div>
       </div>
       <div class="col-4">
         <div class="input-group">
-          <label class="input-group-text">#</label>
-          <label class="form-control label-total">{{this.numberContract}}</label>
+          <label class="input-group-text">RUC/DNI: </label>
+          <label class="form-control">{{this.documentNumber}}</label>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- fin cabecera -->
   <div id="salto"></div>
   <div class="row">
-    <div class="col-lg-12">
+    <div class="col-8">
       <div class="input-group">
-        <label class="input-group-text">Direccion</label>
-        <label class="form-control label-total">{{ form.controls['address'].value }}</label>
+        <label class="input-group-text">Direccion: </label>
+        <label class="form-control">{{ form.controls['address'].value }}</label>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="input-group">
+        <label class="input-group-text">Telefono: </label>
+        <label class="form-control">{{ this.phone }}</label>
       </div>
     </div>
   </div>
@@ -280,23 +344,23 @@
   <div class="col-lg-12">
     <table class="table table-striped table-bordered table-hover" >
       <thead>
-        <tr>          
+        <tr>
+          <th width="40%">Descripción</th>          
           <th width="10%">Cant.</th>
-          <th width="40%">Descripción</th>
           <th width="10%">P. Unit.</th>
           <th width="20%">Importe</th>
         </tr>
       </thead>
       <tbody class="table-group-divider">        
         <tr *ngFor="let item of arrayValuesAccessory;let ind = index">
-          <td>
-            <label>{{ item.amount }}</label>            
-          </td>
           <td>            
             <label>{{ item.description }} {{ item.color }} {{ item.design }} {{ item.large }} {{ item.bottom }} {{ item.high }} </label>
             <ul>
               <li *ngFor="let ele of item.items">{{ ele.description }} ( {{ ele.amount * item.amount }} )</li>
             </ul>
+          </td>
+          <td>
+            <label>{{ item.amount }}</label>            
           </td>          
           <td>
             <label>{{ item.price }}</label>
@@ -313,7 +377,7 @@
     <div class="col-lg-12">
       <div class="input-group">
         <label class="input-group-text">Comentario</label>
-        <label class="form-control label-total">{{ form.controls['comment'].value }}</label>
+        <label class="form-control"><pre>{{ form.controls['comment'].value }}</pre></label>
       </div>
     </div>
   </div>
@@ -342,7 +406,14 @@
   <!-- FECHAS -->
   <div id="salto"></div>
   <div class="row">
-    <div class="col-7"></div>
+    <div class="col-7">
+      <div class="col-12">
+        <div class="input-group">
+          <label class="input-group-text label-date">usuario</label>
+          <label class="form-control">{{ this.codUser }}</label>
+        </div>
+      </div>
+    </div>
     <div class="col-5">
       <div class="col-12">
         <div class="input-group">
