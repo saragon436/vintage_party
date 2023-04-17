@@ -127,6 +127,7 @@ export class ContractComponent {
   _idContrat="";
   A_cuenta_fecha_1="";
   selectStatus="";
+  A_cuenta_2=0;
 
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
@@ -346,6 +347,16 @@ export class ContractComponent {
   }
 
   addAcount(){
+    
+    
+    var saldo=(this.A_cuenta_2-this.A_cuenta_1);
+    if(saldo==0){
+      console.log("entro a la condicional");
+      this.selectStatus='Pagado';
+    }
+
+    console.log("this.totalBalance ",this.totalBalance)
+    console.log("this.selectStatus ",this.selectStatus)
     var payload = {
       _id : this._idContrat,
       onAccount : [{amount: parseInt(this.A_cuenta_1.toString()),number:this.operacion_1,createdDate:this.A_cuenta_fecha_1}],
@@ -362,6 +373,7 @@ export class ContractComponent {
         this.A_cuenta_1=0;
         this.A_cuenta_fecha_1='';
         this.operacion_1='';
+        this.A_cuenta_2=0;
         console.log('ejemplo de actualizar')
         this.onSubmitExit();
       },
@@ -431,24 +443,29 @@ export class ContractComponent {
       //pickupDate: this.form.controls['pickupDate'].value
     };
     console.log('payload '+payload);
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken '+this.authenticationToken)
-    this.contractService.updateContract(payload, headers).subscribe(
-      (data: any) => {
-        console.log('ejemplo de cambiar estado')
-        this.findContract();
-      },
-      (error) => {
-        
-        if( error.status === 401){
-        
-          console.log('usuario o claves incorrectos');
-          this.route.navigate(['/app-login']);
-        }else{
-          console.log('error desconocido en el login');
-        }
-      });
+    if(status!="Anulado"){
+      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+      console.log('this.authenticationToken '+this.authenticationToken)
+      this.contractService.updateContract(payload, headers).subscribe(
+        (data: any) => {
+          console.log('ejemplo de cambiar estado')
+          this.findContract();
+        },
+        (error) => {
+          
+          if( error.status === 401){
+          
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          }else{
+            console.log('error desconocido en el login');
+          }
+        });
+    }else{
+
+    }
+    
   }
 
   findContract(){
@@ -536,6 +553,7 @@ export class ContractComponent {
       })
       this.sumarValores();
       this.sumarValoresOnAccount();
+      this.A_cuenta_2=this.totalBalance;
       this.condicion=true;
       //this.printDocument();
       this.mostrarBotones=false;
@@ -599,7 +617,7 @@ export class ContractComponent {
     this.A_cuenta_fecha_1='';
     this.operacion_1='';
     this.condicion=false;
-    
+    this.A_cuenta_2=0;
   }
 
   ngOnDestroy(): void {

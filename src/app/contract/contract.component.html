@@ -227,15 +227,18 @@
             <td>{{ item.installDate | date:'dd-MM-yyyy'}}</td>
             <td>{{ item.eventDate | date:'dd-MM-yyyy'}}</td>
             <td>{{ item.pickupDate | date:'dd-MM-yyyy'}}</td>
-            <td>
-              <select [(ngModel)]="item.status" (change)="onOptionChange(item._id,item.status)">
+            <td *ngIf="item.status=='Anulado'">
+              {{ item.status }}
+            </td>
+            <td *ngIf="item.status!='Anulado'">
+              <select [(ngModel)]="item.status" (change)="onOptionChange(item._id,item.status)" >
               <option value="Por Pagar">Por Pagar</option>
               <option value="En Almacen">En Almacen</option>
               <option value="Pagado">Pagado</option>
               <option value="Archivado">Archivado</option>
               <option value="Anulado">Anulado</option>
             </select>
-          </td>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -273,6 +276,11 @@
     <div class="input-group">
       <label class="input-group-text" for="A_cuenta_1" id="operacion_1"># Operacion</label>
       <input type="text" class="form-control" placeholder="a Cuenta" [(ngModel)]="operacion_1">
+    </div>
+    <div id="salto"></div>
+    <div class="input-group">
+      <label class="input-group-text" for="A_cuenta_2" id="A_cuenta_2" >Total Pendiente</label>
+      <input type="text" class="form-control" placeholder="a Cuenta" [(ngModel)]="A_cuenta_2" readonly>
     </div>
     <div id="salto"></div>
     <div class="input-group">
