@@ -28,6 +28,7 @@ interface Accessory {
   large: string;
   bottom: string;
   high: string;
+  width: string;
   stock: number;
   price:number;
   items?: any[]
@@ -85,6 +86,8 @@ export class ContractComponent {
   selectedCustomer = { documentNumber: '12345', name: 'John Doe' };
   phone='';
   documentNumber="";
+  operacion_1="";
+  A_cuenta_1=0;
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -121,6 +124,10 @@ export class ContractComponent {
   condicion=false;
   mostrarBotones=false;
   codUser='';
+  _idContrat="";
+  A_cuenta_fecha_1="";
+  selectStatus="";
+
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
   }
@@ -242,6 +249,7 @@ export class ContractComponent {
             large:itemSelected?.large,
             bottom:itemSelected?.bottom,
             high:itemSelected?.high,
+            width: itemSelected?.width,
             amount: new FormControl(1, [Validators.required, Validators.max(itemSelected?.stock || 0), Validators.min(1)]),
             stock: new FormControl(itemSelected?.stock),
             price: new FormControl(itemSelected?.price),
@@ -310,6 +318,14 @@ export class ContractComponent {
     this.mostrarBotones=true;
   }
 
+  openAcount(content:any) {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((result) => {
+      this.closeResult = `Closed with: ${result}`;
+    }, (reason) => {
+      this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
+    });
+  } 
+
   open(content:any,valor:string) {
     this.idItemDelete=valor;
     this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((result) => {
@@ -327,6 +343,38 @@ export class ContractComponent {
     } else {
       return  `with: ${reason}`;
     }
+  }
+
+  addAcount(){
+    var payload = {
+      _id : this._idContrat,
+      onAccount : [{amount: parseInt(this.A_cuenta_1.toString()),number:this.operacion_1,createdDate:this.A_cuenta_fecha_1}],
+      //pickupDate: this.form.controls['pickupDate'].value
+      status: this.selectStatus
+    };
+    console.log('payload '+payload);
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+    console.log('this.authenticationToken '+this.authenticationToken)
+    this.contractService.updateContract(payload, headers).subscribe(
+      (data: any) => {
+        this._idContrat='';
+        this.A_cuenta_1=0;
+        this.A_cuenta_fecha_1='';
+        this.operacion_1='';
+        console.log('ejemplo de actualizar')
+        this.onSubmitExit();
+      },
+      (error) => {
+        
+        if( error.status === 401){
+        
+          console.log('usuario o claves incorrectos');
+          this.route.navigate(['/app-login']);
+        }else{
+          console.log('error desconocido en el login');
+        }
+      });
   }
 
   startTimer() {
@@ -375,12 +423,40 @@ export class ContractComponent {
     window.print();
   }
 
+  onOptionChange(id:string,status:string){
+    var payload = {
+      _id : id,
+      status : status,
+      onAccount: []
+      //pickupDate: this.form.controls['pickupDate'].value
+    };
+    console.log('payload '+payload);
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+    console.log('this.authenticationToken '+this.authenticationToken)
+    this.contractService.updateContract(payload, headers).subscribe(
+      (data: any) => {
+        console.log('ejemplo de cambiar estado')
+        this.findContract();
+      },
+      (error) => {
+        
+        if( error.status === 401){
+        
+          console.log('usuario o claves incorrectos');
+          this.route.navigate(['/app-login']);
+        }else{
+          console.log('error desconocido en el login');
+        }
+      });
+  }
+
   findContract(){
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
     //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
     console.log('this.authenticationToken '+this.authenticationToken)
     this.contractService
-    .listContract( headers)
+    .listContract(headers)
     .subscribe(
       (contract) => {
           this.contract=contract;
@@ -407,6 +483,7 @@ export class ContractComponent {
         if(response._id==valor){
           console.log("response ",response)
           //this.form.controls.get('customer')?.setValue(response.customer);
+          this._idContrat=valor;
           this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
           this.numberContract=response.codContract;
           this.form.controls['address'].setValue(response.address);
@@ -421,6 +498,7 @@ export class ContractComponent {
           this.phone=response.customer.phone;
           this.documentNumber=response.customer.documentNumber;
           this.codUser=response?.userCreate?.userName;
+          this.selectStatus=response.status;
           response.listAccessories.forEach((res:any)=>{
             this.arrayAccessory
             .push(
@@ -432,6 +510,7 @@ export class ContractComponent {
                 large:res.large,
                 bottom:res.bottom,
                 high:res.high,
+                width:res.width,
                 amount: res.amount,
                 stock: res.stock,
                 price: res.price,
@@ -515,7 +594,10 @@ export class ContractComponent {
     this.findClient();
     this.searchStock();
     //this.finDate();
-
+    this._idContrat='';
+    this.A_cuenta_1=0;
+    this.A_cuenta_fecha_1='';
+    this.operacion_1='';
     this.condicion=false;
     
   }

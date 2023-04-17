@@ -70,7 +70,7 @@
           placeholder="Seleccione Accesorio o elemento"
           formControlName="searchAccessory"
           #ddlAccessory>
-          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} {{item.large}} {{item.bottom}} {{item.high}} - stock : {{item.stock}}</ng-option>
+          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} {{item.large}} {{item.bottom}} {{item.high}} {{item.width}} - stock : {{item.stock}}</ng-option>
         </ng-select>
       </div>
       <div class="col-lg-2 d-grid gap-2 mb-3">
@@ -96,7 +96,7 @@
             <tr *ngFor="let item of arrayAccessory.controls; let i = index;" [formGroupName]="i">
               <td>{{ i + 1 }}</td>
               <td>
-                <label>{{ item.get('description')?.value }} {{ item.get('color')?.value }} {{ item.get('design')?.value }} {{ item.get('large')?.value }} {{ item.get('bottom')?.value }} {{ item.get('high')?.value }} </label> 
+                <label>{{ item.get('description')?.value }} {{ item.get('color')?.value }} {{ item.get('design')?.value }} Largo= {{ item.get('large')?.value }} Fondo= {{ item.get('bottom')?.value }} Alto= {{ item.get('high')?.value }} Ancho= {{ item.get('width')?.value }} </label> 
               </td>
               <td>
                 {{ item.get('stock')?.value }}
@@ -125,7 +125,8 @@
         <div class="input-group">
           <label class="input-group-text" for="a_cuenta" id="aCuenta">A Cuenta</label>
           <input type="number" class="form-control" placeholder="A cuenta" id="a_cuenta" formControlName="onAccountvalues" [(ngModel)]="onAccount">
-          <button type="button" (click)="onAddCustomer(ddlcustomer);onAddItemOnAccount(this.onAccount)" class="btn btn-primary">Agregar a en Cuenta</button>
+          <button type="button" (click)="onAddCustomer(ddlcustomer);onAddItemOnAccount(this.onAccount)" class="btn btn-primary" *ngIf="mostrarBotones">Agregar a en Cuenta</button>
+          <button type="button" (click)="openAcount(myAcounnt)" class="btn btn-primary" *ngIf="!mostrarBotones">Agregar a en Cuenta</button>
         </div>
         <div>
           <table id="dt_onAccount" class="table table-striped table-bordered table-hover" >
@@ -222,11 +223,19 @@
             <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">Visualizar</button></td>
             <td>{{ item.codContract }}</td>
             <td>{{ item.customer.name }}</td>
-            <td>{{ item.createDate }}</td>
-            <td>{{ item.installDate }}</td>
-            <td>{{ item.eventDate }}</td>
-            <td>{{ item.pickupDate }}</td>
-            <td>{{ item.status }}</td>
+            <td>{{ item.createDate | date:'dd-MM-yyyy'}}</td>
+            <td>{{ item.installDate | date:'dd-MM-yyyy'}}</td>
+            <td>{{ item.eventDate | date:'dd-MM-yyyy'}}</td>
+            <td>{{ item.pickupDate | date:'dd-MM-yyyy'}}</td>
+            <td>
+              <select [(ngModel)]="item.status" (change)="onOptionChange(item._id,item.status)">
+              <option value="Por Pagar">Por Pagar</option>
+              <option value="En Almacen">En Almacen</option>
+              <option value="Pagado">Pagado</option>
+              <option value="Archivado">Archivado</option>
+              <option value="Anulado">Anulado</option>
+            </select>
+          </td>
           </tr>
         </tbody>
       </table>
@@ -250,6 +259,38 @@
   </div>
 </ng-template>
 
+<ng-template #myAcounnt let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Agregar a Cuenta</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+   Agregar A cuenta del Contrato
+   <div>
+    <div id="salto"></div>
+    <div class="input-group">
+      <label class="input-group-text" for="A_cuenta_1" id="operacion_1"># Operacion</label>
+      <input type="text" class="form-control" placeholder="a Cuenta" [(ngModel)]="operacion_1">
+    </div>
+    <div id="salto"></div>
+    <div class="input-group">
+      <label class="input-group-text" for="A_cuenta_1" id="a_cuenta_1">A Cuenta</label>
+      <input type="text" class="form-control" placeholder="a Cuenta" [(ngModel)]="A_cuenta_1">
+    </div>
+    <div id="salto"></div>
+    <div class="input-group">
+      <label class="input-group-text" for="A_cuenta_1" id="A_cuenta_fecha_1">Fecha</label>
+      <input type="date" class="form-control" placeholder="a Cuenta" [(ngModel)]="A_cuenta_fecha_1">
+    </div>
+   </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-success-" (click)="addAcount();modal.close('Save click')">SI</button>
+    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
+  </div>
+</ng-template>
 
 <!-- Area de Impresion -->
 <div class="pagePrint">
@@ -354,7 +395,7 @@
       <tbody class="table-group-divider">        
         <tr *ngFor="let item of arrayValuesAccessory;let ind = index">
           <td>            
-            <label>{{ item.description }} {{ item.color }} {{ item.design }} {{ item.large }} {{ item.bottom }} {{ item.high }} </label>
+            <label>{{ item.description }} {{ item.color }} {{ item.design }} Largo= {{ item.large }} Fondo= {{ item.bottom }} Alto= {{ item.high }} Ancho={{ item.width }} </label>
             <ul>
               <li *ngFor="let ele of item.items">{{ ele.description }} ( {{ ele.amount * item.amount }} )</li>
             </ul>
