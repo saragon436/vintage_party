@@ -25,6 +25,7 @@
 }
 
 .pagePrint {
+  font-size: 25px;
   zoom: 0.4;
   display: none;
 

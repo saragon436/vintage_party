@@ -224,10 +224,10 @@
             <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">Visualizar</button></td>
             <td>{{ item.codContract }}</td>
             <td>{{ item.customer.name }}</td>
-            <td>{{ item.createDate | date:'dd-MM-yyyy'}}</td>
-            <td>{{ item.installDate | date:'dd-MM-yyyy'}}</td>
-            <td>{{ item.eventDate | date:'dd-MM-yyyy'}}</td>
-            <td>{{ item.pickupDate | date:'dd-MM-yyyy'}}</td>
+            <td>{{ item.createDate.slice(0,10) }}</td>
+            <td>{{ item.installDate.slice(0,10) }}</td>
+            <td>{{ item.eventDate.slice(0,10) }}</td>
+            <td>{{ item.pickupDate.slice(0,10) }}</td>
             <td *ngIf="item.status=='Anulado'">
               {{ item.status }}
             </td>
