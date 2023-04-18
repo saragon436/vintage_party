@@ -139,18 +139,20 @@ export class ContractComponent {
       listExport = [ ...listExport, ...item.listAccessories.map( (ele: any) => {
         return {
           "Contrato": item.codContract,
-          "F Creacion": item.createDate,
-          "F Instalacion": item.installDate,
-          "F Evento": item.eventDate,
-          "F Recojo": item.pickupDate,
+          "Cliente": item.customer.name,
+          "F Creacion": item.createDate.slice(0,10),
+          "F Instalacion": item.installDate.slice(0,10),
+          "F Evento": item.eventDate.slice(0,10),
+          "F Recojo": item.pickupDate.slice(0,10),
           "Descripcion": ele.description,
           "Cantidad": ele.amount,
-          "Precio": ele.price
+          "Precio": ele.price,
+          "Estado":item.status
         };
       }), { "Cantidad": "Total", "Precio": item.amount } ]
     });
 
-    const headers = ['Contrato','F Creacion','F Instalacion','F Evento','F Recojo','Descripcion','Cantidad', "Precio"];
+    const headers = ['Contrato','Cliente','F Creacion','F Instalacion','F Evento','F Recojo','Descripcion','Cantidad', "Precio","Estado"];
 
     const worksheet = XLSX.utils.json_to_sheet(listExport);
     XLSX.utils.sheet_add_json(worksheet, listExport, { header: headers, skipHeader: true, origin: 'A2'});
