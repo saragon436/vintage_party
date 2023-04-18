@@ -144,7 +144,7 @@ export class ContractComponent {
           "F Instalacion": item.installDate.slice(0,10),
           "F Evento": item.eventDate.slice(0,10),
           "F Recojo": item.pickupDate.slice(0,10),
-          "Descripcion": ele.description,
+          "Descripcion": ele.description + " Largo= " +ele.large+ " Fondo= " +ele.bottom+ " Alto= " +ele.high+ " ",
           "Cantidad": ele.amount,
           "Precio": ele.price,
           "Estado":item.status
