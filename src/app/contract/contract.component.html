@@ -218,8 +218,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of contract">
-            <td><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)">Eliminar</button></td>
+          <tr *ngFor="let item of contract" >
+            <td *ngIf="item.status!='Anulado'"><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)" >Eliminar</button></td>
+            <td *ngIf="item.status=='Anulado'"><button type="button" class="btn btn-danger"   disabled>Eliminar</button></td>
             <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">Visualizar</button></td>
             <td>{{ item.codContract }}</td>
             <td>{{ item.customer.name }}</td>
@@ -236,7 +237,6 @@
               <option value="En Almacen">En Almacen</option>
               <option value="Pagado">Pagado</option>
               <option value="Archivado">Archivado</option>
-              <option value="Anulado">Anulado</option>
             </select>
             </td>
           </tr>
