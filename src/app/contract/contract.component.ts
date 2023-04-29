@@ -128,6 +128,8 @@ export class ContractComponent {
   A_cuenta_fecha_1="";
   selectStatus="";
   A_cuenta_2=0;
+  isDisabled=false;
+  listarDetalle=false;
 
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
@@ -140,19 +142,23 @@ export class ContractComponent {
         return {
           "Contrato": item.codContract,
           "Cliente": item.customer.name,
+          "Direccion":item.address,
+          "Mes Contrato": item.createDate.slice(5,7),
           "F Creacion": item.createDate.slice(0,10),
           "F Instalacion": item.installDate.slice(0,10),
           "F Evento": item.eventDate.slice(0,10),
           "F Recojo": item.pickupDate.slice(0,10),
-          "Descripcion": ele.description + " Largo= " +ele.large+ " Fondo= " +ele.bottom+ " Alto= " +ele.high+ " ",
+          "Descripcion": ele.description + " " + ele.design + " Largo= " +ele.large+ " Fondo= " +ele.bottom+ " Alto= " +ele.high+ " ",
           "Cantidad": ele.amount,
           "Precio": ele.price,
+          "Total":ele.amount*ele.price,
+          "Comentario":item.comment,
           "Estado":item.status
         };
-      }), { "Cantidad": "Total", "Precio": item.amount } ]
+      }), { "Contrato": item.codContract,"Cliente": item.customer.name,"Mes Contrato": item.createDate.slice(5,7),"F Creacion": item.createDate.slice(0,10),"Precio": "Total", "Total": item.amount,"Estado":item.status } ]
     });
 
-    const headers = ['Contrato','Cliente','F Creacion','F Instalacion','F Evento','F Recojo','Descripcion','Cantidad', "Precio","Estado"];
+    const headers = ['Contrato','Cliente',"Direccion","Mes Contrato",'F Creacion','F Instalacion','F Evento','F Recojo','Descripcion','Cantidad', "Precio", "Total","Comentario","Estado"];
 
     const worksheet = XLSX.utils.json_to_sheet(listExport);
     XLSX.utils.sheet_add_json(worksheet, listExport, { header: headers, skipHeader: true, origin: 'A2'});
@@ -162,6 +168,39 @@ export class ContractComponent {
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     FileSaver.saveAs(excelBlob, 'data.xlsx');
+  
+  }
+
+  exportToExcelAccount(): void {
+    let listExport: any[] = [];
+    this.contract.forEach((item: any) => {
+      listExport = [ ...listExport, ...item.onAccount.map( (ele: any) => {
+        return {
+          "Contrato": item.codContract,
+          "Cliente": item.customer.name,
+          "Mes Contrato": item.createDate.slice(5,7),
+          "F Creacion": item.createDate.slice(0,10),
+          "F Instalacion": item.installDate.slice(0,10),
+          "F Evento": item.eventDate.slice(0,10),
+          "F Recojo": item.pickupDate.slice(0,10),
+          "Cantidad": ele.amount,
+          "Fecha Pago": ele.createdDate.slice(0,10),
+          "# Comprobante":ele.number,
+          "Estado":item.status
+        };
+      }), { "Contrato": item.codContract,"Cliente": item.customer.name,"Mes Contrato": item.createDate.slice(5,7),"F Creacion": item.createDate.slice(0,10),"F Recojo": "Total", "Cantidad": item.amount,"Estado":item.status } ]
+    });
+
+    const headers = ['Contrato','Cliente',"Mes Contrato",'F Creacion','F Instalacion','F Evento','F Recojo','Cantidad','Fecha Pago', "# Comprobante","Estado"];
+
+    const worksheet = XLSX.utils.json_to_sheet(listExport);
+    XLSX.utils.sheet_add_json(worksheet, listExport, { header: headers, skipHeader: true, origin: 'A2'});
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    FileSaver.saveAs(excelBlob, 'vintageAcuenta.xlsx');
   
   }
 
@@ -189,6 +228,15 @@ export class ContractComponent {
       onAccount: this.formBuilder.array([])
     });
     this.totalBalance=0;
+    this._idContrat="";
+    this.fechaCreacion="";
+    this.numberContract="";
+          //this.fechaActual=response.createDate.slice(0,10);
+    this.customerName="";
+    this.phone="";
+    this.documentNumber="";
+    //this.codUser="";
+    this.selectStatus="";
   }
 
   ngOnInit() {
@@ -319,6 +367,9 @@ export class ContractComponent {
     this.finDate();
     this.condicion=true;
     this.mostrarBotones=true;
+    this.isDisabled=false;
+    this.listarDetalle=false;
+    this.codUser=this.authenticationToken.user;
   }
 
   openAcount(content:any) {
@@ -400,17 +451,18 @@ export class ContractComponent {
           this.searchStock();
           //this.finDate();
       this.condicion=false;
+      
     }, 100); // 1000 milisegundos = 1 segundo
   }
 
   onSave() {
-
-    if (this.form.valid) {
+    if (this.form.valid &&  this.isDisabled==false) {
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
       const values = {...this.form.value}
       console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => { 
+          this.isDisabled=true;
           this.numberContract=resp.codContract;
           console.log('this.numberContract', this.numberContract);
           this.codUser=this.authenticationToken.user;
@@ -434,7 +486,20 @@ export class ContractComponent {
   }
 
   printDocument(){
+    this.listarDetalle=false;
+    setTimeout(() => {
+      
     window.print();
+    }, 200);
+  }
+
+  printDocumentDetalle(){
+    this.listarDetalle=true;
+    setTimeout(() => {
+      
+    window.print();
+    }, 200);
+    
   }
 
   onOptionChange(id:string,status:string){
@@ -503,6 +568,7 @@ export class ContractComponent {
           console.log("response ",response)
           //this.form.controls.get('customer')?.setValue(response.customer);
           this._idContrat=valor;
+          this.idItemDelete=valor;
           this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
           this.numberContract=response.codContract;
           this.form.controls['address'].setValue(response.address);
@@ -533,7 +599,8 @@ export class ContractComponent {
                 amount: res.amount,
                 stock: res.stock,
                 price: res.price,
-                items: res.items
+                items: [res.items]
+                //items: {description:res.items.description,amount:res.items.amount}
               })
             );
           })
@@ -543,7 +610,7 @@ export class ContractComponent {
               this.formBuilder.group({
                 amount: res.amount,
                 number: res.number,
-                createdDate: response.installDate.slice(0,10)
+                createdDate: res.createdDate.slice(0,10)
               })
             );
           })
@@ -602,7 +669,7 @@ export class ContractComponent {
           console.log('usuario o claves incorrectos');
           this.route.navigate(['/app-login']);
         }else{
-          console.log('error desconocido en el login');
+          console.log('error desconocido en el eliminar');
         }
       });
   }
@@ -620,6 +687,7 @@ export class ContractComponent {
     this.operacion_1='';
     this.condicion=false;
     this.A_cuenta_2=0;
+    this.listarDetalle=false;
   }
 
   ngOnDestroy(): void {

@@ -68,6 +68,7 @@ export class AccessoryComponent {
   accesorys:Accesory[];
   mostrarBotones=true;
   idItemDelete='';
+  isactive=false;
 
   get arrayAccessory(): FormArray {
     return this.form.controls['items'] as FormArray
@@ -142,6 +143,7 @@ export class AccessoryComponent {
     this.onDeleteItemAll();
     this.condicion=true;
     this.mostrarBotones=true;
+    this.isactive=false;
   }
 
   onSubmitExit(){
@@ -161,64 +163,68 @@ export class AccessoryComponent {
   } 
 
   onSubmit(){
-    console.log('descripcion: ', this.description);
-    console.log('color: ', this.color);
-    console.log('diseño: ', this.design);
-    console.log('largo: ', this.large);
-    console.log('alto: ', this.high);
-    console.log('fondo: ', this.bottom);
-    console.log('stock: ', this.stock);
-    console.log('items',this.arrayAccessory.value);
-    var payload = {
-      description : this.description,
-      color : this.color,
-      design : this.design,
-      large : this.large,
-      high : this.high,
-      bottom : this.bottom,
-      stock : this.stock,
-      items : this.arrayAccessory.value,
-      price:this.price,
-      width:this.width,
-      diameter:this.diameter,
-      status: true
-    };
-    console.log('payload '+payload);
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken '+this.authenticationToken)
-    this.accessoryService.addAccessory(payload, headers).subscribe(
-      (data: any) => {
-        console.log('ejemplo de guardar')
-        this.ngOnInit();
-        this.description='';
-        this.color='';
-        this.design='';
-        this.large='';
-        this.high='';
-        this.bottom='';
-        this.stock=0;
-        this.width='';
-        this.price=0;
-        this.items=[];
-        this.onDeleteItemAll();
-        this.condicion=false;
-        this.mostrarBotones=true;
-        this.diameter='';
-      },
-      (error) => {
-        
-        if( error.status === 401){
-        
-          console.log('usuario o claves incorrectos');
-          this.route.navigate(['/app-login']);
-        }else{
-          console.log('error desconocido en el login');
-        }
-      });
+    if(this.isactive==false){
+      this.isactive=true;
+      console.log('descripcion: ', this.description);
+      console.log('color: ', this.color);
+      console.log('diseño: ', this.design);
+      console.log('largo: ', this.large);
+      console.log('alto: ', this.high);
+      console.log('fondo: ', this.bottom);
+      console.log('stock: ', this.stock);
+      console.log('items',this.arrayAccessory.value);
+      var payload = {
+        description : this.description,
+        color : this.color,
+        design : this.design,
+        large : this.large,
+        high : this.high,
+        bottom : this.bottom,
+        stock : this.stock,
+        items : this.arrayAccessory.value,
+        price:this.price,
+        width:this.width,
+        diameter:this.diameter,
+        status: true
+      };
+      console.log('payload '+payload);
+      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+      console.log('this.authenticationToken '+this.authenticationToken)
+      this.accessoryService.addAccessory(payload, headers).subscribe(
+        (data: any) => {
+          console.log('ejemplo de guardar')
+          this.ngOnInit();
+          this.description='';
+          this.color='';
+          this.design='';
+          this.large='';
+          this.high='';
+          this.bottom='';
+          this.stock=0;
+          this.width='';
+          this.price=0;
+          this.items=[];
+          this.onDeleteItemAll();
+          this.condicion=false;
+          this.mostrarBotones=true;
+          this.diameter='';
+        },
+        (error) => {
+          
+          if( error.status === 401){
+          
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          }else{
+            console.log('error desconocido en el login');
+          }
+        });
+    }
   }
 
   findAccesoryById(valor:string){
+    
     this.items=[];
     this.onDeleteItemAll();
     this.arrayAccessory.clear();
