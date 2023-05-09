@@ -4,7 +4,7 @@
       <a>Crear Contrato</a>
     </div>
     <div class="row" id="salto">
-      <div class="col-lg-6" >
+      <div class="col-lg-4" >
           <ng-select
           [clearable]="false"
           notFoundText = 'seleccione clientes'
@@ -15,9 +15,11 @@
           <ng-option *ngFor="let item of customer$ | async" [value]="item" >{{item.documentNumber}} {{item.name}}</ng-option>
         </ng-select>
       </div>
-      <div class="col-lg-2">
+      <div class="col-lg-4">
         <div class="input-group">
-          <button type="button" (click)="openModal()" class="btn btn-primary">Agregar</button>
+          <!-- <button type="button" (click)="openModal()" class="btn btn-primary">Agregar</button> -->
+          <label class="input-group-text" for="co-contrato" id="co-contrato"># Contrato</label>
+        <input type="text" class="form-control" placeholder="# Contrato" id="co-contrato" value="{{this.numberContract}}" readonly>
         </div>
       </div>
       <div class="col-lg-4">
@@ -70,7 +72,7 @@
           placeholder="Seleccione Accesorio o elemento"
           formControlName="searchAccessory"
           #ddlAccessory>
-          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} {{item.large}} {{item.bottom}} {{item.high}} {{item.width}} - stock : {{item.stock}}</ng-option>
+          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} Largo= {{item.large}} Fondo= {{item.bottom}} Alto= {{item.high}} Ancho= {{item.width}} Diametro= {{item.diameter}} - stock : {{item.stock}}</ng-option>
         </ng-select>
       </div>
       <div class="col-lg-2 d-grid gap-2 mb-3">
@@ -96,7 +98,17 @@
             <tr *ngFor="let item of arrayAccessory.controls; let i = index;" [formGroupName]="i">
               <td>{{ i + 1 }}</td>
               <td>
-                <label>{{ item.get('description')?.value }} {{ item.get('color')?.value }} {{ item.get('design')?.value }} Largo= {{ item.get('large')?.value }} Fondo= {{ item.get('bottom')?.value }} Alto= {{ item.get('high')?.value }} Ancho= {{ item.get('width')?.value }} </label> 
+                <!-- <label>{{ item.get('description')?.value }} {{ item.get('color')?.value }} {{ item.get('design')?.value }} Largo= {{ item.get('large')?.value }} Fondo= {{ item.get('bottom')?.value }} Alto= {{ item.get('high')?.value }} Ancho= {{ item.get('width')?.value }} </label>  -->
+                <label>
+                  <ng-container *ngIf="item.get('description')?.value">{{ item.get('description')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('color')?.value">{{ item.get('color')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('design')?.value">{{ item.get('design')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('large')?.value != 0">Largo= {{ item.get('large')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('bottom')?.value != 0">Fondo= {{ item.get('bottom')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('high')?.value != 0">Alto= {{ item.get('high')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('width')?.value != 0">Ancho= {{ item.get('width')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('diameter')?.value != 0">Diametro= {{ item.get('diameter')?.value }} </ng-container>
+                </label>
               </td>
               <td>
                 {{ item.get('stock')?.value }}
@@ -148,7 +160,7 @@
                   <input class="form-control" type="text" formControlName="number"  >
                 </td>
                 <td>
-                  <input class="form-control" type="number" formControlName="onAccountValue"  value="{{ item.get('amount')?.value }}" >
+                  <input class="form-control" type="number"  value="{{ item.get('amount')?.value }}" >
                 </td>
                 <td style="text-align: center;">
   
@@ -186,7 +198,7 @@
     </div>
 
     <div class="row" id="salto">
-      <!-- <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones" (click)="onAddCustomer(ddlcustomer);onSave();deleteContract()" >Actualizar Contrato</button> -->
+      <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones" (click)="onAddCustomer(ddlcustomer);onSave();deleteContract()" >Actualizar Contrato</button>
       <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' *ngIf="mostrarBotones" (click)="onAddCustomer(ddlcustomer);onSave()" >Registrar Contrato</button>
       <button type="button" class="btn btn-warning" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones"(click)="printDocument()" >Imprimir Guia</button>
       <button type="button" class="btn btn-primary" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones"(click)="printDocumentDetalle()" >Imprimir Detalle</button>
@@ -418,6 +430,7 @@
               <ng-container *ngIf="item.bottom != 0">Fondo= {{ item.bottom }} </ng-container>
               <ng-container *ngIf="item.high != 0">Alto= {{ item.high }} </ng-container>
               <ng-container *ngIf="item.width != 0">Ancho= {{ item.width }} </ng-container>
+              <ng-container *ngIf="item.diameter != 0">Diametro= {{ item.diameter }} </ng-container>
             </label>
             <ul *ngIf="listarDetalle">
               <li *ngFor="let ele of item.items">{{ ele.description }} ( {{ ele.amount * item.amount }} )</li>
