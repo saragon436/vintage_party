@@ -29,6 +29,7 @@ interface Accessory {
   bottom: string;
   high: string;
   width: string;
+  diameter: string;
   stock: number;
   price:number;
   items?: any[]
@@ -83,7 +84,7 @@ export class ContractComponent {
   idItemDelete='';
   closeResult: string = '';
   searchValue:string = '';
-  selectedCustomer = { documentNumber: '12345', name: 'John Doe' };
+  selectedCustomer = {};
   phone='';
   documentNumber="";
   operacion_1="";
@@ -301,6 +302,7 @@ export class ContractComponent {
             bottom:itemSelected?.bottom,
             high:itemSelected?.high,
             width: itemSelected?.width,
+            diameter: itemSelected?.diameter,
             amount: new FormControl(1, [Validators.required, Validators.max(itemSelected?.stock || 0), Validators.min(1)]),
             stock: new FormControl(itemSelected?.stock),
             price: new FormControl(itemSelected?.price),
@@ -457,6 +459,39 @@ export class ContractComponent {
 
   onSave() {
     if (this.form.valid &&  this.isDisabled==false) {
+      if(!this.mostrarBotones){
+        this.form.controls['customer'].setValue(this.selectedCustomer)
+      }
+      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+      const values = {...this.form.value}
+      console.log('values ',values);
+      this.contractService.saveContract(values, headers).subscribe(
+        (resp) => { 
+          this.isDisabled=true;
+          this.numberContract=resp.codContract;
+          console.log('this.numberContract', this.numberContract);
+          this.codUser=this.authenticationToken.user;
+          this.customerName=resp.customer.name;
+          this.phone=resp.customer.phone;
+          this.documentNumber=resp.customer.documentNumber;
+          //window.print();
+          this.startTimer();
+          //this.findContract();
+          //this.limpiar();
+          //this.findClient();
+          //this.searchStock();
+          //this.finDate();
+          //this.condicion=false;
+         
+          console.log('RESPUESTAs', resp);
+        }
+      )
+    }
+    console.log(222)
+  }
+
+  onUpdate() {
+    if (this.form.valid &&  this.isDisabled==false) {
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
       const values = {...this.form.value}
       console.log('values ',values);
@@ -560,6 +595,7 @@ export class ContractComponent {
 
     findAccesoryById(valor:string){
       //this.items=[];
+      this.isDisabled=false;
       console.log("valor ",valor);
       // this.arrayAccessory.clear();
       console.log("this.arrayAccessory ",[this.arrayAccessory.value]);
@@ -569,8 +605,12 @@ export class ContractComponent {
           //this.form.controls.get('customer')?.setValue(response.customer);
           this._idContrat=valor;
           this.idItemDelete=valor;
+          //this.form.controls['customer'].setValue(response.customer);
+          this.selectedCustomer=response.customer;
           this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
+          console.log("cliente",[response.customer]);
           this.numberContract=response.codContract;
+          //this.form.controls['co-contrato'].setValue(response.codContract);
           this.form.controls['address'].setValue(response.address);
           this.form.controls['comment'].setValue(response.comment);
           this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
@@ -588,7 +628,7 @@ export class ContractComponent {
             this.arrayAccessory
             .push(
               this.formBuilder.group({
-                id: res._id,
+                id: res.id,
                 description: res.description,
                 color:res.color,
                 design:res.design,
