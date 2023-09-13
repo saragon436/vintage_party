@@ -88,7 +88,8 @@ export class ContractComponent {
   phone='';
   documentNumber="";
   operacion_1="";
-  A_cuenta_1=0;
+  A_cuenta_1=0.0;
+
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -414,7 +415,7 @@ export class ContractComponent {
     console.log("this.selectStatus ",this.selectStatus)
     var payload = {
       _id : this._idContrat,
-      onAccount : [{amount: parseInt(this.A_cuenta_1.toString()),number:this.operacion_1,createdDate:this.A_cuenta_fecha_1}],
+      onAccount : [{amount: parseFloat(this.A_cuenta_1.toString()),number:this.operacion_1,createdDate:this.A_cuenta_fecha_1}],
       //pickupDate: this.form.controls['pickupDate'].value
       status: this.selectStatus
     };
@@ -576,6 +577,11 @@ export class ContractComponent {
     console.log('this.authenticationToken '+this.authenticationToken)
     this.contractService
     .listContract(headers)
+    .pipe(
+      map( contracts => {
+        return contracts.sort((a:any, b:any) => new Date(b.createDate).getTime() - new Date(a.createDate).getTime());
+      })
+    )
     .subscribe(
       (contract) => {
           this.contract=contract;
