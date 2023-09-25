@@ -579,7 +579,7 @@ export class ContractComponent {
     .listContract(headers)
     .pipe(
       map( contracts => {
-        return contracts.sort((a:any, b:any) => new Date(b.createDate).getTime() - new Date(a.createDate).getTime());
+        return contracts.sort((a:any, b:any) => b.numberContract - a.numberContract);
       })
     )
     .subscribe(
