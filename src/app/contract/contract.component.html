@@ -72,7 +72,7 @@
           placeholder="Seleccione Accesorio o elemento"
           formControlName="searchAccessory"
           #ddlAccessory>
-          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} Largo= {{item.large}} Fondo= {{item.bottom}} Alto= {{item.high}} Ancho= {{item.width}} Diametro= {{item.diameter}} - stock : {{item.stock}}</ng-option>
+          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} Alto= {{item.high}} Ancho= {{item.width}} Largo= {{item.large}} Diametro= {{item.diameter}} Fondo= {{item.bottom}} - stock : {{item.stock}}</ng-option>
         </ng-select>
       </div>
       <div class="col-lg-2 d-grid gap-2 mb-3">
@@ -103,11 +103,11 @@
                   <ng-container *ngIf="item.get('description')?.value">{{ item.get('description')?.value }} </ng-container>
                   <ng-container *ngIf="item.get('color')?.value">{{ item.get('color')?.value }} </ng-container>
                   <ng-container *ngIf="item.get('design')?.value">{{ item.get('design')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('large')?.value != 0">Largo= {{ item.get('large')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('bottom')?.value != 0">Fondo= {{ item.get('bottom')?.value }} </ng-container>
                   <ng-container *ngIf="item.get('high')?.value != 0">Alto= {{ item.get('high')?.value }} </ng-container>
                   <ng-container *ngIf="item.get('width')?.value != 0">Ancho= {{ item.get('width')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('large')?.value != 0">Largo= {{ item.get('large')?.value }} </ng-container>
                   <ng-container *ngIf="item.get('diameter')?.value != 0">Diametro= {{ item.get('diameter')?.value }} </ng-container>
+                  <ng-container *ngIf="item.get('bottom')?.value != 0">Fondo= {{ item.get('bottom')?.value }} </ng-container>  
                 </label>
               </td>
               <td>
@@ -270,7 +270,7 @@
     </button>
   </div>
   <div class="modal-body">
-    Desea aular un Contrato?
+    Desea anular un Contrato?
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-outline-success-" (click)="deleteContract();modal.close('Save click')">SI</button>
@@ -426,11 +426,11 @@
               <ng-container *ngIf="item.description">{{ item.description }} </ng-container>
               <ng-container *ngIf="item.color">{{ item.color }} </ng-container>
               <ng-container *ngIf="item.design">{{ item.design }} </ng-container>
-              <ng-container *ngIf="item.large != 0">Largo= {{ item.large }} </ng-container>
-              <ng-container *ngIf="item.bottom != 0">Fondo= {{ item.bottom }} </ng-container>
               <ng-container *ngIf="item.high != 0">Alto= {{ item.high }} </ng-container>
               <ng-container *ngIf="item.width != 0">Ancho= {{ item.width }} </ng-container>
+              <ng-container *ngIf="item.large != 0">Largo= {{ item.large }} </ng-container>
               <ng-container *ngIf="item.diameter != 0">Diametro= {{ item.diameter }} </ng-container>
+              <ng-container *ngIf="item.bottom != 0">Fondo= {{ item.bottom }} </ng-container>
             </label>
             <ul *ngIf="listarDetalle">
               <li *ngFor="let ele of item.items">{{ ele.description }} ( {{ ele.amount * item.amount }} )</li>
