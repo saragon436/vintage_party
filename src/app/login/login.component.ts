@@ -33,6 +33,7 @@ export class LoginComponent {
         if (data.status === undefined) {
           console.log(data.token);
           this.authenticationToken.myValue = data.token;
+          this.authenticationToken.user=this.username;
           console.log('this.authenticationToken.myValue ',this.authenticationToken.myValue)
           console.log('informacion de validacion ', data.status)
           this.route.navigate(['dashboard']);

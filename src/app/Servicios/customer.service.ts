@@ -11,7 +11,7 @@ export class CustomerService {
 
   addCustomer(body:any,headers: HttpHeaders): Observable<any>{
     var response:any;
-    return this.http.post("http://localhost:3000/customer", body, { headers, observe: response }).pipe(
+    return this.http.post("http://146.190.40.162:3000/customer", body, { headers, observe: response }).pipe(
       catchError( e => {
         //implementar aca la logica del error        
         console.error('Error de agregar', e)
@@ -23,9 +23,32 @@ export class CustomerService {
 
   listCustomer(headers: HttpHeaders): Observable<any>{
     var response:any;
-    return this.http.get("http://localhost:3000/customer", { headers, observe: response }).pipe(
+    return this.http.get("http://146.190.40.162:3000/customer", { headers, observe: response }).pipe(
       catchError( e => {     
         console.error('Error de agregar', e)
+        throw (e)
+      }),
+      map( x => x),
+    )
+  }
+
+  updateCustomer(body:any,headers: HttpHeaders): Observable<any>{
+    var response:any;
+    return this.http.put("http://146.190.40.162:3000/customer", body, { headers, observe: response }).pipe(
+      catchError( e => {
+        //implementar aca la logica del error        
+        console.error('Error de agregar', e)
+        throw (e)
+      }),
+      map( x => x),
+    )
+  }
+  deleteCustomer(body:string,headers: HttpHeaders): Observable<any>{
+    var response:any;
+    return this.http.delete("http://146.190.40.162:3000/customer/"+body, { headers, observe: response }).pipe(
+      catchError( e => {
+        //implementar aca la logica del error        
+        console.error('Error de eliminar', e)
         throw (e)
       }),
       map( x => x),

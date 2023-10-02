@@ -13,7 +13,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module'
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CommonModule } from '@angular/common';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @NgModule({
   declarations: [
@@ -28,7 +28,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap'
     HttpClientModule,
     AppRoutingModule,
     DashboardModule,
-    CommonModule
+    CommonModule,
+    NgbModule
   ],
   providers: [AuthenticationService,AuthenticationToken,AccessoryService,CustomerService],
   bootstrap: [AppComponent]

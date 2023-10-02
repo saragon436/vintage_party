@@ -60,13 +60,20 @@
       </div>
       <div class="col-lg-4">
       <div class="input-group">
-        <label class="input-group-text" for="price" id="nombreA">Precio s/</label>
-        <input type="number" class="form-control" placeholder="Precio" [(ngModel)]="price" name="precio" required="required">
+        <label class="input-group-text" for="diameter" id="nombreA">Diametro</label>
+        <input type="number" class="form-control" placeholder="Diametro" [(ngModel)]="diameter" name="diametro" required="required">
+      </div>
+    </div>
+    <div class="row" id="salto">
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="price" id="nombreA">Precio s/</label>
+          <input type="number" class="form-control" placeholder="Precio" [(ngModel)]="price" name="precio" required="required">
+        </div>
       </div>
     </div>
     </div>
-    
-  <form [formGroup]="form">
+    <form [formGroup]="form">
     <div class="row" id="salto">
       <div class="col-lg-12">
         <h4>Partes</h4>
@@ -111,18 +118,28 @@
     </form>
     <div class="row" id="salto">
       <div class="col-lg-3">
-          <button type="submit" (click)="onSubmit()" class="btn btn-primary">Agregar</button>
+        <button type="submit" (click)="onSubmit()" class="btn btn-primary" *ngIf="mostrarBotones">Agregar</button>
+        <button type="submit" (click)="onUpdate()" class="btn btn-primary" *ngIf="!mostrarBotones">Actualizar</button>
           <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
       </div>
     </div>
   </div>
 
   <ng-template #otraPlantilla>
+    <div class="row" id="salto" >
+      <form (ngSubmit)="onSubmitAdd()">
+        <div class="row" id="salto">
+          <button type="submit" class="btn btn-primary">Agregar Mobiliario</button>
+        </div>
+      </form>
+    </div>
     <div id="formularioListado"> 
       <div class="row" id="salto" >
         <table>
-          <thead>
+          <thead sticky>
             <tr>
+              <th>Eliminar</th>
+              <th>Seleccionar</th>
               <th>Descripcion</th>
               <th>Color</th>
               <th>Diseño</th>
@@ -130,12 +147,15 @@
               <th>Profundidad</th>
               <th>Alto</th>
               <th>Ancho</th>
+              <th>Diametro</th>
               <th>Stock</th>
               <th>Precio</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let item of accesorys">
+              <td><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)">Eliminar</button></td>
+              <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">seleccionar</button></td>
               <td>{{ item.description }}</td>
               <td>{{ item.color }}</td>
               <td>{{ item.design }}</td>
@@ -143,18 +163,27 @@
               <td>{{ item.bottom }}</td>
               <td>{{ item.high }}</td>
               <td>{{ item.width }}</td>
+              <td>{{ item.diameter }}</td>
               <td>{{ item.stock }}</td>
               <td>{{ item.price }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <div class="row" id="salto" >
-        <form (ngSubmit)="onSubmitAdd()">
-          <div class="row" id="salto">
-            <button type="submit" class="btn btn-primary">Agregar Mobiliario</button>
-          </div>
-        </form>
-      </div>
+    </div>
+  </ng-template>
+  <ng-template #mymodal let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-basic-title">Eliminar Mobiliario</h4>
+      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+        <span aria-hidden="true">×</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      Desea Eliminar un Mobiliario?
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-success-" (click)="deleteAccesosry();modal.close('Save click')">SI</button>
+      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
     </div>
   </ng-template>

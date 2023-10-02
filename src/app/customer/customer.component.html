@@ -18,7 +18,7 @@
     <div class="col-lg-4">
       <div class="input-group">
         <label class="input-group-text" for="phone" id="nombreA">Celular</label>
-        <input type="tel" class="form-control" [(ngModel)]="phone" name="phone" placeholder="Celular">
+        <input type="tel" class="form-control" [(ngModel)]="phone" name="phone" maxlength="9" placeholder="Celular">
       </div>
     </div>
   </div>
@@ -32,7 +32,8 @@
   </div>
   <div class="row" id="salto">
     <div class="col-lg-3">
-      <button type="submit" (click)="onSubmit()" class="btn btn-primary">Agregar</button>
+      <button type="submit" (click)="onSubmit()" class="btn btn-primary" *ngIf="mostrarBotones">Agregar</button>
+      <button type="submit" (click)="updateCustomer()" class="btn btn-primary" *ngIf="!mostrarBotones">Actualizar</button>
       <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
   </div>
   </div>
@@ -41,9 +42,18 @@
 <ng-template #otraPlantilla>
   <div id="formularioListado"> 
     <div class="row" id="salto" >
+      <form >
+        <div class="row" id="salto">
+          <button type="submit"  (click)="onSubmitAdd()" class="btn btn-primary">Agregar Cliente</button>
+        </div>
+      </form>
+    </div>
+    <div class="row" id="salto" >
       <table>
         <thead>
           <tr>
+            <th>Eliminar</th>
+            <th>Seleccionar</th>
             <th>Nombre</th>
             <th>DNI</th>
             <th>Direccion</th>
@@ -52,6 +62,8 @@
         </thead>
         <tbody>
           <tr *ngFor="let item of customer">
+            <td><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)">Eliminar</button></td>
+            <td><button type="button" class="btn btn-primary" (click)="findCustomerById(item.documentNumber)">seleccionar</button></td>
             <td>{{ item.name }}</td>
             <td>{{ item.documentNumber }}</td>
             <td>{{ item.address }}</td>
@@ -60,12 +72,21 @@
         </tbody>
       </table>
     </div>
-    <div class="row" id="salto" >
-      <form (ngSubmit)="onSubmitAdd()">
-        <div class="row" id="salto">
-          <button type="submit" class="btn btn-primary">Agregar Cliente</button>
-        </div>
-      </form>
-    </div>
+    
+  </div>
+</ng-template>
+<ng-template #mymodal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Eliminar Cliente</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">×</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    Desea Eliminar un Cliente?
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-success-" (click)="deleteAccesosry();modal.close('Save click')">SI</button>
+    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
   </div>
 </ng-template>
