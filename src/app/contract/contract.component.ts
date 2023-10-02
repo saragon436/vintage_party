@@ -88,7 +88,8 @@ export class ContractComponent {
   phone='';
   documentNumber="";
   operacion_1="";
-  A_cuenta_1=0;
+  A_cuenta_1=0.0;
+
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -149,7 +150,7 @@ export class ContractComponent {
           "F Instalacion": item.installDate.slice(0,10),
           "F Evento": item.eventDate.slice(0,10),
           "F Recojo": item.pickupDate.slice(0,10),
-          "Descripcion": ele.description + " " + ele.design + " Largo= " +ele.large+ " Fondo= " +ele.bottom+ " Alto= " +ele.high+ " ",
+          "Descripcion": ele.description + " " + ele.color + " " + ele.design + " Largo= " +ele.large+ " Fondo= " +ele.bottom+ " Alto= " +ele.high+ " ",
           "Cantidad": ele.amount,
           "Precio": ele.price,
           "Total":ele.amount*ele.price,
@@ -298,11 +299,11 @@ export class ContractComponent {
             description: itemSelected?.description,
             color:itemSelected?.color,
             design:itemSelected?.design,
-            large:itemSelected?.large,
-            bottom:itemSelected?.bottom,
             high:itemSelected?.high,
             width: itemSelected?.width,
+            large:itemSelected?.large,
             diameter: itemSelected?.diameter,
+            bottom:itemSelected?.bottom,
             amount: new FormControl(1, [Validators.required, Validators.max(itemSelected?.stock || 0), Validators.min(1)]),
             stock: new FormControl(itemSelected?.stock),
             price: new FormControl(itemSelected?.price),
@@ -414,7 +415,7 @@ export class ContractComponent {
     console.log("this.selectStatus ",this.selectStatus)
     var payload = {
       _id : this._idContrat,
-      onAccount : [{amount: parseInt(this.A_cuenta_1.toString()),number:this.operacion_1,createdDate:this.A_cuenta_fecha_1}],
+      onAccount : [{amount: parseFloat(this.A_cuenta_1.toString()),number:this.operacion_1,createdDate:this.A_cuenta_fecha_1}],
       //pickupDate: this.form.controls['pickupDate'].value
       status: this.selectStatus
     };
@@ -576,6 +577,11 @@ export class ContractComponent {
     console.log('this.authenticationToken '+this.authenticationToken)
     this.contractService
     .listContract(headers)
+    .pipe(
+      map( contracts => {
+        return contracts.sort((a:any, b:any) => b.numberContract - a.numberContract);
+      })
+    )
     .subscribe(
       (contract) => {
           this.contract=contract;
@@ -632,10 +638,10 @@ export class ContractComponent {
                 description: res.description,
                 color:res.color,
                 design:res.design,
-                large:res.large,
-                bottom:res.bottom,
                 high:res.high,
                 width:res.width,
+                large:res.large,
+                bottom:res.bottom,
                 amount: res.amount,
                 stock: res.stock,
                 price: res.price,
