@@ -1,0 +1,53 @@
+<div id="formulario">
+  <div class="vertical-container">
+    <table>
+      <tr>
+        <th width="10%">Día</th>
+        <th width="15%">Código de Contrato</th>
+        <th width="20%">Usuario</th>
+        <th width="10%">Horario</th>
+        <th width="50%">Direccion</th>
+      </tr>
+      <tr *ngFor="let day of week">
+        <td>{{ day | date: 'EEEE, MMMM d, yyyy' }}</td>
+        <td>
+
+          <li *ngFor="let contract of getContractsForDay(day)">
+            <ul>
+              <div class="contract">{{ contract.codContract}}</div>
+            </ul>
+          </li>
+
+        </td>
+        <td>
+
+          <li *ngFor="let contract of getContractsForDay(day)">
+            <ul>
+              <div class="contract">{{ contract.customer.name }}</div>
+            </ul>
+          </li>
+
+        </td>
+        <td>
+
+          <li *ngFor="let contract of getContractsForDay(day)">
+            <ul>
+              <div class="contract">{{contract.hourIni}}-{{contract.hourFin}}</div>
+            </ul>
+          </li>
+
+        </td>
+        <td>
+
+          <li *ngFor="let contract of getContractsForDay(day)">
+            <ul>
+              <div class="contract">{{ contract.address }}</div>
+            </ul>
+          </li>
+
+        </td>
+
+      </tr>
+    </table>
+  </div>
+</div>

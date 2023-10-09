@@ -6,6 +6,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { DashboardComponent } from './dashboard.component';
 import { ContractComponent } from '../contract/contract.component';
 import { AccessoryComponent } from '../accessory/accessory.component';
+import { CalendarComponent } from '../calendar/calendar.component';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -15,7 +16,8 @@ import { NgSelectModule } from '@ng-select/ng-select';
   declarations: [
     DashboardComponent,
     ContractComponent,
-    AccessoryComponent
+    AccessoryComponent,
+    CalendarComponent
   ],
   imports: [
     CommonModule,    

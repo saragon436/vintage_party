@@ -53,6 +53,8 @@ interface Contract {
   stock: number;
   status: string;
   address: string;
+  hourIni: string;
+  hourFin: string;
   comment: string;
   listAccessories:[];
   onAccount:[];
@@ -115,6 +117,8 @@ export class ContractComponent {
         eventDate: new FormControl('', Validators.required),
         pickupDate: new FormControl('', Validators.required),
         address: new FormControl('', Validators.required),
+        hourIni: new FormControl('', Validators.required), 
+        hourFin: new FormControl('', Validators.required),
         //createDate: new FormControl('', Validators.required),
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
@@ -225,6 +229,8 @@ export class ContractComponent {
       amount: new FormControl(0, Validators.required),
       comment: new FormControl('', Validators.required),
       address: new FormControl('', Validators.required),
+      hourIni: new FormControl('', Validators.required),
+      hourFin: new FormControl('', Validators.required),
       price: new FormControl(0, Validators.required),
       listAccessories: this.formBuilder.array([]),
       onAccount: this.formBuilder.array([])
@@ -617,6 +623,8 @@ export class ContractComponent {
           console.log("cliente",[response.customer]);
           this.numberContract=response.codContract;
           //this.form.controls['co-contrato'].setValue(response.codContract);
+          this.form.controls['hourIni'].setValue(response.hourIni);
+          this.form.controls['hourFin'].setValue(response.hourFin);
           this.form.controls['address'].setValue(response.address);
           this.form.controls['comment'].setValue(response.comment);
           this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
