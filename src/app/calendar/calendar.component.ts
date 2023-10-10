@@ -1,11 +1,11 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,ElementRef,ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { ContractService } from '../Servicios/contract.service';
 import * as dateFns from 'date-fns';
 
-import { DatePipe } from '@angular/common';
+import * as XLSX from 'xlsx';
 
 interface Contract {
   _id: string;
@@ -35,7 +35,7 @@ interface Contract {
   styleUrls: ['./calendar.component.css']
 })
 export class CalendarComponent implements OnInit {
-
+  @ViewChild('table') table!: ElementRef; // Obtén una referencia a la tabla HTML
   week: Date[] = [];
   contract: Contract[];
    constructor(private route: Router,
@@ -44,10 +44,47 @@ export class CalendarComponent implements OnInit {
        this.contract = [];
    }
 
+   public nombresDias: string[] = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+    "Domingo"
+  ];
+
+  public nombresMeses: string[] = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre"
+  ];
+
+  
+
+  exportToExcel(): void {
+    const tableToExport = this.table.nativeElement;
+    const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(tableToExport);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Hoja1');
+    
+    // Guarda el archivo Excel
+    XLSX.writeFile(wb, 'Programacion.xlsx');
+  }
+
   ngOnInit(): void {
     const currentDate = new Date();
     this.week = this.calculateWeek(currentDate);
-    console.log('weekkkkkkk ',this.week)
     this.findContract();
   }
 
