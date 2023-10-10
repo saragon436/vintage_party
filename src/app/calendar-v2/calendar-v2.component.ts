@@ -5,8 +5,6 @@ import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { ContractService } from '../Servicios/contract.service';
 import * as dateFns from 'date-fns';
 
-import * as XLSX from 'xlsx';
-
 interface Contract {
   _id: string;
   codContract: string;
@@ -28,15 +26,17 @@ interface Contract {
   userCreate:{userName:string};
 }
 
-
 @Component({
-  selector: 'app-calendar',
-  templateUrl: './calendar.component.html',
-  styleUrls: ['./calendar.component.css']
+  selector: 'app-calendar-v2',
+  templateUrl: './calendar-v2.component.html',
+  styleUrls: ['./calendar-v2.component.css']
 })
-export class CalendarComponent implements OnInit {
+export class CalendarV2Component {
+
+  selectedDate: Date = new Date(); // Inicializa con la fecha actual por defecto
   @ViewChild('table') table!: ElementRef; // Obtén una referencia a la tabla HTML
   week: Date[] = [];
+  weeks: Date[][] = [];
   contract: Contract[];
    constructor(private route: Router,
      private authenticationToken: AuthenticationToken,
@@ -52,7 +52,6 @@ export class CalendarComponent implements OnInit {
     "Jueves",
     "Viernes",
     "Sábado",
-    "Domingo"
   ];
 
   public nombresMeses: string[] = [
@@ -70,23 +69,14 @@ export class CalendarComponent implements OnInit {
     "Diciembre"
   ];
 
-  
 
-  exportToExcel(): void {
-    const tableToExport = this.table.nativeElement;
-    const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(tableToExport);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Hoja1');
-    
-    // Guarda el archivo Excel
-    XLSX.writeFile(wb, 'Programacion.xlsx');
-  }
 
   ngOnInit(): void {
     const currentDate = new Date();
     this.week = this.calculateWeek(currentDate);
     console.log("semansa : " , this.week)
     this.findContract();
+    this.updateCalendar();
   }
 
   calculateWeek(currentDate: Date): Date[] {
@@ -135,5 +125,82 @@ export class CalendarComponent implements OnInit {
       });
     }
   
+    filterContracts(): void {
+      // Filtra los contratos para el mes y año seleccionados
+      const filteredContracts = this.contract.filter((contract) => {
+        const installDate = new Date(contract.installDate);
+        return (
+          installDate.getMonth() === this.selectedDate.getMonth() &&
+          installDate.getFullYear() === this.selectedDate.getFullYear()
+        );
+      });
+    
+      // Haz algo con los contratos filtrados (por ejemplo, asignarlos a una propiedad del componente)
+      //this.filteredContracts = filteredContracts;
+    }
 
+    previousMonth() {
+      this.selectedDate = dateFns.subMonths(this.selectedDate, 1);
+      this.updateCalendar();
+    }
+    
+    nextMonth() {
+      this.selectedDate = dateFns.addMonths(this.selectedDate, 1);
+      this.updateCalendar();
+    }
+    
+    updateCalendar() {
+      this.weeks = this.calculateMonth(this.selectedDate);
+    }
+
+    // calculateMonth(selectedDate: Date): Date[][] {
+    //   const startOfMonth = dateFns.startOfMonth(selectedDate);
+    //   const endOfMonth = dateFns.endOfMonth(selectedDate);
+    
+    //   const weeks: Date[][] = [];
+    //   let currentWeek: Date[] = [];
+    //   let currentDate = startOfMonth;
+    
+    //   while (currentDate <= endOfMonth) {
+    //     if (currentWeek.length === 7) {
+    //       weeks.push(currentWeek);
+    //       currentWeek = [];
+    //     }
+    //     currentWeek.push(currentDate);
+    //     currentDate = dateFns.addDays(currentDate, 1);
+    //   }
+    
+    //   if (currentWeek.length > 0) {
+    //     weeks.push(currentWeek);
+    //   }
+    
+    //   return weeks;
+    // }
+
+    calculateMonth(selectedDate: Date): Date[][] {
+      const startOfMonth = dateFns.startOfMonth(selectedDate);
+      const endOfMonth = dateFns.endOfMonth(selectedDate);
+    
+      const firstDayOfMonth = dateFns.getDay(startOfMonth); // Obtén el día de la semana del primer día del mes (0: domingo, 1: lunes, ..., 6: sábado)
+    
+      const weeks: Date[][] = [];
+      let currentWeek: Date[] = [];
+      let currentDate = dateFns.subDays(startOfMonth, firstDayOfMonth); // Resta días para alinear con el domingo
+    
+      while (currentDate <= endOfMonth) {
+        if (currentWeek.length === 7) {
+          weeks.push(currentWeek);
+          currentWeek = [];
+        }
+        currentWeek.push(currentDate);
+        currentDate = dateFns.addDays(currentDate, 1);
+      }
+    
+      if (currentWeek.length > 0) {
+        weeks.push(currentWeek);
+      }
+    
+      return weeks;
+    }
+    
 }

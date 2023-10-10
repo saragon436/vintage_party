@@ -1,0 +1,29 @@
+<div id="formulario" class="calendar">
+    <div class="calendar-header">
+      <button (click)="previousMonth()">Anterior</button>
+      <h2>{{ nombresMeses[selectedDate.getMonth()] }} {{ selectedDate.getFullYear() }}</h2>
+      <button (click)="nextMonth()">Siguiente</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th *ngFor="let day of nombresDias">{{ day }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let week of weeks">
+          <td *ngFor="let day of week">
+            <div class="day">
+              <p>{{ day.getDate() }}</p>
+              <ul>
+                <li *ngFor="let contract of getContractsForDay(day)">
+                  {{ contract.codContract }}
+                </li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
