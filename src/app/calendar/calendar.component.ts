@@ -5,6 +5,8 @@ import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { ContractService } from '../Servicios/contract.service';
 import * as dateFns from 'date-fns';
 
+import { DatePipe } from '@angular/common';
+
 interface Contract {
   _id: string;
   codContract: string;
@@ -16,6 +18,7 @@ interface Contract {
   stock: number;
   status: string;
   address: string;
+  district: string;
   hourIni: string;
   hourFin: string;
   comment: string;

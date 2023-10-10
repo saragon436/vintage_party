@@ -51,7 +51,17 @@
       </div>
     </div>
     <div class="row" id="salto">
-      <div class="col-lg-12">
+      <div class="col-lg-3">
+        <div class="input-group">
+          <div class="form-floating">
+              <select class="form-control" formControlName="district" id="district">
+                <option value="">Selecciona un distrito</option>
+                <option *ngFor="let distrito of listaDistritos" [value]="distrito">{{ distrito }}</option>
+              </select>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-9">
         <div class="input-group">
           <div class="form-floating">
             <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"  formControlName="address"
@@ -60,6 +70,7 @@
           </div>
         </div>
       </div>
+      
     </div>
     <div class="row" id="salto">
       <div class="col-lg-6">
