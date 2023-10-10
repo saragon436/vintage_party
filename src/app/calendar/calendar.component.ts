@@ -26,6 +26,8 @@ interface Contract {
   onAccount:[];
   customer:{name:string,documentNumber:string,phone:string};
   userCreate:{userName:string};
+  isSelected: boolean;
+  isSelectedPickup: boolean;
 }
 
 
@@ -70,7 +72,10 @@ export class CalendarComponent implements OnInit {
     "Diciembre"
   ];
 
-  
+  // Function to toggle the isSelected property
+  toggleHighlight(contract:Contract) {
+  contract.isSelected = !contract.isSelected;
+  }
 
   exportToExcel(): void {
     const tableToExport = this.table.nativeElement;
@@ -134,6 +139,75 @@ export class CalendarComponent implements OnInit {
         );
       });
     }
-  
+
+    getContractsPikupDateForDay(day: Date): Contract[] {
+      return this.contract.filter((contract) => {
+        const pikcupDate = new Date(contract.pickupDate);
+        return (
+          pikcupDate.getDate() === day.getDate() -1 &&
+          pikcupDate.getMonth() === day.getMonth() &&
+          pikcupDate.getFullYear() === day.getFullYear()
+        );
+      });
+    }
+
+
+    onOptionChange(id:string,isSelected:boolean){
+      var payload = {
+        _id : id,
+        isSelected : isSelected,
+        onAccount: []
+        //pickupDate: this.form.controls['pickupDate'].value
+      };
+      console.log('payload '+payload);
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+        //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+        console.log('this.authenticationToken '+this.authenticationToken)
+        this.contractService.updateContract(payload, headers).subscribe(
+          (data: any) => {
+            console.log('ejemplo de cambiar estado')
+            this.findContract();
+          },
+          (error) => {
+            
+            if( error.status === 401){
+            
+              console.log('usuario o claves incorrectos');
+              this.route.navigate(['/app-login']);
+            }else{
+              console.log('error desconocido en el login');
+            }
+          });
+      
+    }
+
+    onOptionChangePickup(id:string,isSelectedPickup:boolean){
+      var payload = {
+        _id : id,
+        isSelectedPickup : isSelectedPickup,
+        onAccount: []
+        //pickupDate: this.form.controls['pickupDate'].value
+      };
+      console.log('payload '+payload);
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+        //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+        console.log('this.authenticationToken '+this.authenticationToken)
+        this.contractService.updateContract(payload, headers).subscribe(
+          (data: any) => {
+            console.log('ejemplo de cambiar estado')
+            this.findContract();
+          },
+          (error) => {
+            
+            if( error.status === 401){
+            
+              console.log('usuario o claves incorrectos');
+              this.route.navigate(['/app-login']);
+            }else{
+              console.log('error desconocido en el login');
+            }
+          });
+      
+    }
 
 }

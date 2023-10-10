@@ -72,24 +72,43 @@
     <table #table>
       <tr>
         <th width="10%">Fecha</th>
+        <th width="10%">Orden</th>
         <th width="15%">Código de Contrato</th>
         <th width="20%">Usuario</th>
         <th width="10%">Horario</th>
         <th width="11%">Distrito</th>
         <th width="50%">Direccion</th>
+        <th width="50%">Estado</th>
       </tr>
       <ng-container *ngFor="let day of week; let i = index">
         <tr>
-          <td [attr.rowspan]="getContractsForDay(day).length + 1">
+          <td [attr.rowspan]="getContractsForDay(day).length + 3 + getContractsPikupDateForDay(day).length">
             {{ nombresDias[i] }} {{ day | date: 'd' }} de {{ nombresMeses[day.getMonth()] }} de {{ day.getFullYear() }}
           </td>
         </tr>
-        <tr *ngFor="let contract of getContractsForDay(day)">
+        <tr>
+          <td>Entrega</td>
+        </tr>
+        <tr *ngFor="let contract of getContractsForDay(day); let i = index" [class.yellow-background]="contract.isSelected">
+          <td>{{ i + 1 }}</td>
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
           <td>{{ contract.hourIni }}-{{ contract.hourFin }}</td>
           <td>{{ contract.district }}</td>
           <td>{{ contract.address }}</td>
+          <td><input type="checkbox" [(ngModel)]="contract.isSelected" (change)="onOptionChange(contract._id,contract.isSelected)">Entregado</td>
+        </tr>
+        <tr>
+          <td>Recojo</td>
+        </tr>
+        <tr *ngFor="let contract of getContractsPikupDateForDay(day); let i = index" [class.yellow-background]="contract.isSelectedPickup">
+          <td>{{ i + 1 }}</td>
+          <td><div class="contract">{{ contract.codContract }}</div></td>
+          <td>{{ contract.customer.name }}</td>
+          <td>--</td>
+          <td>{{ contract.district }}</td>
+          <td>{{ contract.address }}</td>
+          <td><input type="checkbox" [(ngModel)]="contract.isSelectedPickup" (change)="onOptionChangePickup(contract._id,contract.isSelectedPickup)">Recojo</td>
         </tr>
       </ng-container>
     </table>

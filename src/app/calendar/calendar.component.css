@@ -68,4 +68,9 @@ table {
     font-weight: bold; /* Puedes aplicar estilos adicionales si lo deseas */
     margin-bottom: 5px; /* Espacio entre el número de contrato y el nombre */
   }
+
+  .yellow-background {
+    background-color: yellow;
+  }
+  
   
