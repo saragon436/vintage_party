@@ -76,6 +76,7 @@
         <th width="15%">Código de Contrato</th>
         <th width="20%">Usuario</th>
         <th width="10%">Horario</th>
+        <th width="10%">Mobilidad</th>
         <th width="11%">Distrito</th>
         <th width="50%">Direccion</th>
         <th width="50%">Estado</th>
@@ -87,25 +88,39 @@
           </td>
         </tr>
         <tr>
-          <td>Entrega</td>
+          <td style="background-color: rgb(219, 96, 203);">Entrega</td>
         </tr>
         <tr *ngFor="let contract of getContractsForDay(day); let i = index" [class.yellow-background]="contract.isSelected">
           <td>{{ i + 1 }}</td>
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
           <td>{{ contract.hourIni }}-{{ contract.hourFin }}</td>
+          <td>
+            <select [(ngModel)]="contract.mobility" (change)="onOptionChangeMobility(contract._id,contract.mobility)" >
+              <option value="ROJO">ROJO</option>
+              <option value="AZUL">AZUL</option>
+              <option value="EDUARDO">EDUARDO</option>
+            </select>
+          </td>
           <td>{{ contract.district }}</td>
           <td>{{ contract.address }}</td>
           <td><input type="checkbox" [(ngModel)]="contract.isSelected" (change)="onOptionChange(contract._id,contract.isSelected)">Entregado</td>
         </tr>
         <tr>
-          <td>Recojo</td>
+          <td style="background-color: rgb(0, 255, 60);">Recojo</td>
         </tr>
         <tr *ngFor="let contract of getContractsPikupDateForDay(day); let i = index" [class.yellow-background]="contract.isSelectedPickup">
           <td>{{ i + 1 }}</td>
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
           <td>--</td>
+          <td>
+            <select [(ngModel)]="contract.mobilityPickup" (change)="onOptionChangeMobilityPickup(contract._id,contract.mobilityPickup)" >
+              <option value="ROJO">ROJO</option>
+              <option value="AZUL">AZUL</option>
+              <option value="EDUARDO">EDUARDO</option>
+            </select>
+          </td>
           <td>{{ contract.district }}</td>
           <td>{{ contract.address }}</td>
           <td><input type="checkbox" [(ngModel)]="contract.isSelectedPickup" (change)="onOptionChangePickup(contract._id,contract.isSelectedPickup)">Recojo</td>

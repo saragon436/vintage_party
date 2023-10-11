@@ -21,6 +21,8 @@ interface Contract {
   district: string;
   hourIni: string;
   hourFin: string;
+  mobility: string;
+  mobilityPickup: string;
   comment: string;
   listAccessories:[];
   onAccount:[];
@@ -207,6 +209,68 @@ export class CalendarComponent implements OnInit {
               console.log('error desconocido en el login');
             }
           });
+      
+    }
+
+    onOptionChangeMobility(id:string,mobility:string){
+      var payload = {
+        _id : id,
+        mobility : mobility,
+        onAccount: []
+        //pickupDate: this.form.controls['pickupDate'].value
+      };
+      console.log('payload '+payload);
+      
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+        //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+        console.log('this.authenticationToken '+this.authenticationToken)
+        this.contractService.updateContract(payload, headers).subscribe(
+          (data: any) => {
+            console.log('ejemplo de cambiar estado')
+            this.findContract();
+          },
+          (error) => {
+            
+            if( error.status === 401){
+            
+              console.log('usuario o claves incorrectos');
+              this.route.navigate(['/app-login']);
+            }else{
+              console.log('error desconocido en el login');
+            }
+          });
+     
+      
+    }
+
+    onOptionChangeMobilityPickup(id:string,mobilityPickup:string){
+      var payload = {
+        _id : id,
+        mobilityPickup : mobilityPickup,
+        onAccount: []
+        //pickupDate: this.form.controls['pickupDate'].value
+      };
+      console.log('payload '+payload);
+      
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+        //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+        console.log('this.authenticationToken '+this.authenticationToken)
+        this.contractService.updateContract(payload, headers).subscribe(
+          (data: any) => {
+            console.log('ejemplo de cambiar estado')
+            this.findContract();
+          },
+          (error) => {
+            
+            if( error.status === 401){
+            
+              console.log('usuario o claves incorrectos');
+              this.route.navigate(['/app-login']);
+            }else{
+              console.log('error desconocido en el login');
+            }
+          });
+     
       
     }
 
