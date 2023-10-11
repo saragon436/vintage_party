@@ -1,77 +1,13 @@
-<!-- <div id="formulario">
-  <div>
-    <button (click)="exportToExcel()">Exportar a Excel</button>
-  </div>
-  <div class="vertical-container">
-    <table #table>
-      <tr>
-        <th width="10%">Día</th>
-        <th width="15%">Código de Contrato</th>
-        <th width="20%">Usuario</th>
-        <th width="10%">Horario</th>
-        <th width="11%">Distrito</th>
-        <th width="50%">Direccion</th>
-      </tr>
-      <tr *ngFor="let day of week; let i = index">
-        <td>{{ nombresDias[i] }} {{ day | date: 'd' }} de {{ nombresMeses[day.getMonth()] }} de {{ day.getFullYear() }}</td>
-        <td>
-
-          <li *ngFor="let contract of getContractsForDay(day)">
-            <ul>
-              <div class="contract">{{ contract.codContract}}</div>
-            </ul>
-          </li>
-
-        </td>
-        <td>
-
-          <li *ngFor="let contract of getContractsForDay(day)">
-            <ul>
-              <div class="contract">{{ contract.customer.name }}</div>
-            </ul>
-          </li>
-
-        </td>
-        <td>
-
-          <li *ngFor="let contract of getContractsForDay(day)">
-            <ul>
-              <div class="contract">{{contract.hourIni}}-{{contract.hourFin}}</div>
-            </ul>
-          </li>
-
-        </td>
-        <td>
-
-          <li *ngFor="let contract of getContractsForDay(day)">
-            <ul>
-              <div class="contract">{{ contract.district }}</div>
-            </ul>
-          </li>
-
-        </td>
-        <td>
-
-          <li *ngFor="let contract of getContractsForDay(day)">
-            <ul>
-              <div class="contract">{{ contract.address }}</div>
-            </ul>
-          </li>
-
-        </td>
-
-      </tr>
-    </table>
-  </div>
-</div> -->
 <div id="formulario">
   <div>
     <button class="btn btn-primary" (click)="exportToExcel()">Exportar a Excel</button>
   </div>
+  <div id="salto"></div>
   <div class="vertical-container">
     <table #table>
       <tr>
         <th width="10%">Fecha</th>
+        <th width="10%">Boton</th>
         <th width="10%">Orden</th>
         <th width="15%">Código de Contrato</th>
         <th width="20%">Usuario</th>
@@ -89,8 +25,16 @@
         </tr>
         <tr>
           <td style="background-color: rgb(219, 96, 203);">Entrega</td>
+          <div>
+            <button class="btn btn-primary" (click)="onOptionChangeOrder(getContractsForDay(day));onOptionChangeOrderPickup(getContractsPikupDateForDay(day))">Guardar Orden</button>
+          </div>
         </tr>
         <tr *ngFor="let contract of getContractsForDay(day); let i = index" [class.yellow-background]="contract.isSelected">
+          <td>
+            <button class="btn btn-warning" (click)="moveRowUp(day,contract)">Subir</button>
+            <button class="btn btn-warning" (click)="moveRowDown(day,contract)">Bajar</button>
+            <input type="text" [(ngModel)]="contract.order" [value]=" i + 1" [hidden]="true">
+          </td>
           <td>{{ i + 1 }}</td>
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
@@ -110,6 +54,11 @@
           <td style="background-color: rgb(0, 255, 60);">Recojo</td>
         </tr>
         <tr *ngFor="let contract of getContractsPikupDateForDay(day); let i = index" [class.yellow-background]="contract.isSelectedPickup">
+          <td>
+            <button class="btn btn-warning" (click)="moveRowUpPickup(day,contract)">Subir</button>
+            <button class="btn btn-warning" (click)="moveRowDownPickup(day,contract)">Bajar</button>
+            <input type="number" [(ngModel)]="contract.orderPickup" [value]="i + 1" [hidden]="true">
+          </td>
           <td>{{ i + 1 }}</td>
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>

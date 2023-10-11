@@ -40,3 +40,21 @@
     border-bottom: none;
   }
   
+  .contract {
+    list-style: none;
+    padding: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 5px; /* Espacio entre los contratos */
+  }
+
+  .recuadro {
+    border: 1px solid #000; /* Borde del recuadro */
+    padding: 10px; /* Espacio alrededor del contenido dentro del recuadro */
+    margin: 10px; /* Espacio entre cada recuadro */
+    width: 100%; /* Ancho del recuadro, ajusta según tus necesidades */
+    height: 100%; /* Altura del recuadro, ajusta según tus necesidades */
+    display: inline-block; /* Para que los recuadros aparezcan uno al lado del otro */
+  }
+  
