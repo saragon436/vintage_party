@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { catchError, map, Observable,of, tap } from 'rxjs';
-
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +23,7 @@ export class AuthenticationService {
         
     //   })
     //   return of(response);
-    return this.http.post("http://146.190.40.162:3000/auth", body, { headers, observe: response }).pipe(
+    return this.http.post(environment.apiUrl+"/auth", body, { headers, observe: response }).pipe(
       catchError( e => {
         //implementar aca la logica del error        
         console.error('Error de logueo', e)
