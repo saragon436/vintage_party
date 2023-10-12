@@ -26,7 +26,7 @@
           </td>
         </tr>
         <tr>
-          <td style="background-color: rgb(219, 96, 203);">Entrega</td>
+          <td style="background-color: rgb(72, 182, 241);">Entrega</td>
           <div>
             <button class="boton" (click)="onOptionChangeOrder(getContractsForDay(day));onOptionChangeOrderPickup(getContractsPikupDateForDay(day))">Guardar Orden</button>
           </div>
@@ -38,7 +38,7 @@
             <input type="text" [(ngModel)]="contract.order" [value]=" i + 1" [hidden]="true">
           </td>
           <!-- <td>{{ i + 1 }}</td> -->
-          <td><div class="contract">{{ contract.codContract }}</div></td>
+          <td>{{ contract.codContract }}</td>
           <td>{{ contract.customer.name }}</td>
           <td><input type="time" [(ngModel)]="contract.hourIni" (keyup.enter)="saveHour(contract._id,contract.hourIni)">
             <input type="time" [(ngModel)]="contract.hourFin" (keyup.enter)="saveHourFin(contract._id,contract.hourFin)"></td>
@@ -55,7 +55,7 @@
           <td><input type="checkbox" [(ngModel)]="contract.isSelected" (change)="onOptionChange(contract._id,contract.isSelected)">Entregado</td>
         </tr>
         <tr>
-          <td style="background-color: rgb(0, 255, 60);">Recojo</td>
+          <td style="background-color: rgb(69, 77, 230);">Recojo</td>
         </tr>
         <tr *ngFor="let contract of getContractsPikupDateForDay(day); let i = index" [class.yellow-background]="contract.isSelectedPickup">
           <td>
@@ -64,7 +64,7 @@
             <input type="number" [(ngModel)]="contract.orderPickup" [value]="i + 1" [hidden]="true">
           </td>
           <!-- <td>{{ i + 1 }}</td> -->
-          <td><div class="contract">{{ contract.codContract }}</div></td>
+          <td>{{ contract.codContract }}</td>
           <td>{{ contract.customer.name }}</td>
           <td><input type="time" [(ngModel)]="contract.hourIniPickup" (keyup.enter)="saveHourPickup(contract._id,contract.hourIniPickup)">
             <input type="time" [(ngModel)]="contract.hourFinPickup" (keyup.enter)="saveHourFinPickup(contract._id,contract.hourFinPickup)"></td>
