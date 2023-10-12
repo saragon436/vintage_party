@@ -8,16 +8,16 @@
   <div class="vertical-container">
     <table #table>
       <tr>
-        <th width="10%">Fecha</th>
+        <th width="5%">Fecha</th>
         <th width="10%">Boton</th>
-        <th width="10%">Orden</th>
-        <th width="15%">Código de Contrato</th>
-        <th width="20%">Usuario</th>
-        <th width="10%">Horario</th>
-        <th width="10%">Mobilidad</th>
+        <!-- <th width="10%">Orden</th> -->
+        <th width="5%">Código de Contrato</th>
+        <th width="5%">Usuario</th>
+        <th width="5%">Horario</th>
+        <th width="5%">Mobilidad</th>
         <th width="11%">Distrito</th>
-        <th width="50%">Direccion</th>
-        <th width="50%">Estado</th>
+        <th width="60%">Direccion</th>
+        <th width="10%">Estado</th>
       </tr>
       <ng-container *ngFor="let day of week; let i = index">
         <tr>
@@ -37,7 +37,7 @@
             <button class="btn btn-warning" (click)="moveRowDown(day,contract)">Bajar</button>
             <input type="text" [(ngModel)]="contract.order" [value]=" i + 1" [hidden]="true">
           </td>
-          <td>{{ i + 1 }}</td>
+          <!-- <td>{{ i + 1 }}</td> -->
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
           <td>{{ contract.hourIni }}-{{ contract.hourFin }}</td>
@@ -61,7 +61,7 @@
             <button class="btn btn-warning" (click)="moveRowDownPickup(day,contract)">Bajar</button>
             <input type="number" [(ngModel)]="contract.orderPickup" [value]="i + 1" [hidden]="true">
           </td>
-          <td>{{ i + 1 }}</td>
+          <!-- <td>{{ i + 1 }}</td> -->
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
           <td>--</td>
