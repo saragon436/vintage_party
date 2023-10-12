@@ -12,6 +12,7 @@ import { ContractService } from '../Servicios/contract.service';
 import { NgSelectComponent } from '@ng-select/ng-select/public-api';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { distritosLima } from "../utils/distritos-lima";
 
 interface Customer {
   name: string;
@@ -53,6 +54,11 @@ interface Contract {
   stock: number;
   status: string;
   address: string;
+  district:string;
+  hourIni: string;
+  hourFin: string;
+  hourIniPickup: string;
+  hourFinPickup: string;
   comment: string;
   listAccessories:[];
   onAccount:[];
@@ -89,6 +95,8 @@ export class ContractComponent {
   documentNumber="";
   operacion_1="";
   A_cuenta_1=0.0;
+  listaDistritos = distritosLima;
+  distritoSeleccionado: string = '';
 
   constructor(
     private modalService: NgbModal,
@@ -115,6 +123,11 @@ export class ContractComponent {
         eventDate: new FormControl('', Validators.required),
         pickupDate: new FormControl('', Validators.required),
         address: new FormControl('', Validators.required),
+        district: new FormControl('', Validators.required),
+        hourIni: new FormControl('', Validators.required), 
+        hourFin: new FormControl('', Validators.required),
+        hourIniPickup: new FormControl('', Validators.required),
+        hourFinPickup: new FormControl('', Validators.required),
         //createDate: new FormControl('', Validators.required),
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
@@ -225,6 +238,11 @@ export class ContractComponent {
       amount: new FormControl(0, Validators.required),
       comment: new FormControl('', Validators.required),
       address: new FormControl('', Validators.required),
+      district: new FormControl('', Validators.required),
+      hourIni: new FormControl('', Validators.required),
+      hourFin: new FormControl('', Validators.required),
+      hourIniPickup: new FormControl('', Validators.required),
+      hourFinPickup: new FormControl('', Validators.required),
       price: new FormControl(0, Validators.required),
       listAccessories: this.formBuilder.array([]),
       onAccount: this.formBuilder.array([])
@@ -614,10 +632,16 @@ export class ContractComponent {
           //this.form.controls['customer'].setValue(response.customer);
           this.selectedCustomer=response.customer;
           this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
-          console.log("cliente",[response.customer]);
+          console.log("distrito ",[response.district]);
           this.numberContract=response.codContract;
           //this.form.controls['co-contrato'].setValue(response.codContract);
+          this.form.controls['hourIni'].setValue(response.hourIni);
+          this.form.controls['hourFin'].setValue(response.hourFin);
+          this.form.controls['hourFin'].setValue(response.hourFin);
+          this.form.controls['hourIniPickup'].setValue(response.hourIniPickup);
+          this.form.controls['hourFinPickup'].setValue(response.hourFinPickup);
           this.form.controls['address'].setValue(response.address);
+          this.form.controls['district'].setValue(response.district);
           this.form.controls['comment'].setValue(response.comment);
           this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
           this.form.controls['eventDate'].setValue(response.eventDate.slice(0,10));
