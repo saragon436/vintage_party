@@ -3,6 +3,8 @@ import { Component, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@an
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { ContractService } from '../Servicios/contract.service';
+import { addDays, subDays, startOfWeek,getDay ,endOfWeek, addWeeks, subWeeks, isTuesday } from 'date-fns';
+
 import * as dateFns from 'date-fns';
 
 import * as XLSX from 'xlsx';
@@ -52,14 +54,14 @@ export class CalendarComponent implements OnInit {
   }
 
   public nombresDias: string[] = [
-    "Domingo",
-    "Lunes",
+    
     "Martes",
     "Miércoles",
     "Jueves",
     "Viernes",
     "Sábado",
-    "Domingo"
+    "Domingo",
+    "Lunes"
   ];
 
   public nombresMeses: string[] = [
@@ -99,16 +101,82 @@ export class CalendarComponent implements OnInit {
     this.findContract();
   }
 
-  calculateWeek(currentDate: Date): Date[] {
-    const startOfWeek = dateFns.startOfWeek(currentDate);
-    const week = [startOfWeek];
+  // calculateWeek(currentDate: Date): Date[] {
+  //   const startOfWeek = dateFns.startOfWeek(currentDate);
+  //   const week = [startOfWeek];
 
+  //   for (let i = 1; i < 7; i++) {
+  //     const nextDay = dateFns.addDays(startOfWeek, i);
+  //     week.push(nextDay);
+  //   }
+
+  //   return week;
+  // }
+
+   calculateWeek(currentDate: Date): Date[] {
+    // Encontrar el martes anterior al currentDate
+    let startOfWeek: Date = currentDate;
+    while (!isTuesday(startOfWeek)) { // Comprobamos si es martes
+      startOfWeek = addDays(startOfWeek, -1);
+    }
+  
+    const week: Date[] = [startOfWeek];
+  
     for (let i = 1; i < 7; i++) {
-      const nextDay = dateFns.addDays(startOfWeek, i);
+      const nextDay: Date = addDays(startOfWeek, i);
       week.push(nextDay);
     }
-
+  
     return week;
+  }
+
+  calculateNextWeek(startDate: Date): Date[] {
+    const lastDayOfWeek = this.calculateWeek(startDate)[6]; // Obtén el último día de la semana calculada
+  
+    const nextWeek: Date[] = [];
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = new Date(lastDayOfWeek);
+      nextDay.setDate(lastDayOfWeek.getDate() + i);
+      nextWeek.push(nextDay);
+    }
+  
+    return nextWeek;
+  }
+
+  calcularNext() {
+    if (this.week && this.week.length > 0) {
+      // Obtén el último día de la semana actual
+      const lastDayOfWeek = this.week[this.week.length - 1];
+      
+      // Calcula la fecha de inicio de la próxima semana
+      const nextWeekStartDate = new Date(lastDayOfWeek);
+      nextWeekStartDate.setDate(lastDayOfWeek.getDate() + 1); // Avanzar un día
+      
+      // Calcula la próxima semana
+      this.week = this.calculateWeek(nextWeekStartDate);
+    } else {
+      // Si this.week no está definido, calcula la semana actual
+      const currentDate = new Date();
+      this.week = this.calculateWeek(currentDate);
+    }
+  }
+
+  calcularbefore() {
+    if (this.week && this.week.length > 0) {
+      // Obtén el primer día de la semana actual
+      const firstDayOfWeek = this.week[0];
+      
+      // Calcula la fecha de inicio de la semana anterior
+      const previousWeekStartDate = new Date(firstDayOfWeek);
+      previousWeekStartDate.setDate(firstDayOfWeek.getDate() - 7); // Retroceder una semana
+      
+      // Calcula la semana anterior
+      this.week = this.calculateWeek(previousWeekStartDate);
+    } else {
+      // Si this.week no está definido, calcula la semana actual
+      const currentDate = new Date();
+      this.week = this.calculateWeek(currentDate);
+    }
   }
 
   findContract() {

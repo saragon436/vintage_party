@@ -77,4 +77,10 @@ table {
     padding:10px;
   }
   
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
   
