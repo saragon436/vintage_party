@@ -23,6 +23,8 @@ interface Contract {
   district: string;
   hourIni: string;
   hourFin: string;
+  hourIniPickup: string;
+  hourFinPickup: string;
   mobility: string;
   mobilityPickup: string;
   order: number;
@@ -586,6 +588,126 @@ export class CalendarComponent implements OnInit {
         }
       );
     }
+  }
+
+  saveHour(id: string, hourIni: string) {
+    // Recorre el arreglo de contratos
+
+    var payload = {
+        _id: id,
+        hourIni: hourIni,
+        onAccount: [],
+      };
+  
+      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+      console.log('this.authenticationToken ' + this.authenticationToken)
+      this.contractService.updateContract(payload, headers).subscribe(
+        (data: any) => {
+          console.log('ejemplo de cambiar estado')
+          this.findContract();
+        },
+        (error) => {
+  
+          if (error.status === 401) {
+  
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          } else {
+            console.log('error desconocido en el login');
+          }
+        });
+    
+  }
+
+  saveHourFin(id: string, hourFin: string) {
+    // Recorre el arreglo de contratos
+    var payload = {
+        _id: id,
+        hourFin: hourFin,
+        onAccount: [],
+      };
+      console.log('payload ' + payload);
+  
+      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+      console.log('this.authenticationToken ' + this.authenticationToken)
+      this.contractService.updateContract(payload, headers).subscribe(
+        (data: any) => {
+          console.log('ejemplo de cambiar estado')
+          this.findContract();
+        },
+        (error) => {
+  
+          if (error.status === 401) {
+  
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          } else {
+            console.log('error desconocido en el login');
+          }
+        });
+  
+  }
+
+  saveHourPickup(id: string, hourIniPickup: string) {
+    // Recorre el arreglo de contratos
+
+    var payload = {
+        _id: id,
+        hourIniPickup: hourIniPickup,
+        onAccount: [],
+      };
+  
+      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+      console.log('this.authenticationToken ' + this.authenticationToken)
+      this.contractService.updateContract(payload, headers).subscribe(
+        (data: any) => {
+          console.log('ejemplo de cambiar estado')
+          this.findContract();
+        },
+        (error) => {
+  
+          if (error.status === 401) {
+  
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          } else {
+            console.log('error desconocido en el login');
+          }
+        });
+    
+  }
+
+  saveHourFinPickup(id: string, hourFinPickup: string) {
+    // Recorre el arreglo de contratos
+    var payload = {
+        _id: id,
+        hourFinPickup: hourFinPickup,
+        onAccount: [],
+      };
+      console.log('payload ' + payload);
+  
+      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+      console.log('this.authenticationToken ' + this.authenticationToken)
+      this.contractService.updateContract(payload, headers).subscribe(
+        (data: any) => {
+          console.log('ejemplo de cambiar estado')
+          this.findContract();
+        },
+        (error) => {
+  
+          if (error.status === 401) {
+  
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          } else {
+            console.log('error desconocido en el login');
+          }
+        });
+  
   }
 
 }

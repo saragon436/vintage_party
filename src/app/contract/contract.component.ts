@@ -57,6 +57,8 @@ interface Contract {
   district:string;
   hourIni: string;
   hourFin: string;
+  hourIniPickup: string;
+  hourFinPickup: string;
   comment: string;
   listAccessories:[];
   onAccount:[];
@@ -124,6 +126,8 @@ export class ContractComponent {
         district: new FormControl('', Validators.required),
         hourIni: new FormControl('', Validators.required), 
         hourFin: new FormControl('', Validators.required),
+        hourIniPickup: new FormControl('', Validators.required),
+        hourFinPickup: new FormControl('', Validators.required),
         //createDate: new FormControl('', Validators.required),
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
@@ -237,6 +241,8 @@ export class ContractComponent {
       district: new FormControl('', Validators.required),
       hourIni: new FormControl('', Validators.required),
       hourFin: new FormControl('', Validators.required),
+      hourIniPickup: new FormControl('', Validators.required),
+      hourFinPickup: new FormControl('', Validators.required),
       price: new FormControl(0, Validators.required),
       listAccessories: this.formBuilder.array([]),
       onAccount: this.formBuilder.array([])
@@ -631,6 +637,9 @@ export class ContractComponent {
           //this.form.controls['co-contrato'].setValue(response.codContract);
           this.form.controls['hourIni'].setValue(response.hourIni);
           this.form.controls['hourFin'].setValue(response.hourFin);
+          this.form.controls['hourFin'].setValue(response.hourFin);
+          this.form.controls['hourIniPickup'].setValue(response.hourIniPickup);
+          this.form.controls['hourFinPickup'].setValue(response.hourFinPickup);
           this.form.controls['address'].setValue(response.address);
           this.form.controls['district'].setValue(response.district);
           this.form.controls['comment'].setValue(response.comment);

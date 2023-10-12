@@ -28,19 +28,21 @@
         <tr>
           <td style="background-color: rgb(219, 96, 203);">Entrega</td>
           <div>
-            <button class="btn btn-primary" (click)="onOptionChangeOrder(getContractsForDay(day));onOptionChangeOrderPickup(getContractsPikupDateForDay(day))">Guardar Orden</button>
+            <button class="boton" (click)="onOptionChangeOrder(getContractsForDay(day));onOptionChangeOrderPickup(getContractsPikupDateForDay(day))">Guardar Orden</button>
           </div>
         </tr>
         <tr *ngFor="let contract of getContractsForDay(day); let i = index" [class.yellow-background]="contract.isSelected">
           <td>
-            <button class="btn btn-warning" (click)="moveRowUp(day,contract)">Subir</button>
-            <button class="btn btn-warning" (click)="moveRowDown(day,contract)">Bajar</button>
+            <button class="boton" (click)="moveRowUp(day,contract)">Subir</button>
+            <button class="boton" (click)="moveRowDown(day,contract)">Bajar</button>
             <input type="text" [(ngModel)]="contract.order" [value]=" i + 1" [hidden]="true">
           </td>
           <!-- <td>{{ i + 1 }}</td> -->
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
-          <td>{{ contract.hourIni }}-{{ contract.hourFin }}</td>
+          <td><input type="time" [(ngModel)]="contract.hourIni" (keyup.enter)="saveHour(contract._id,contract.hourIni)">
+            <input type="time" [(ngModel)]="contract.hourFin" (keyup.enter)="saveHourFin(contract._id,contract.hourFin)"></td>
+          <!-- <td>{{ contract.hourIni }}-{{ contract.hourFin }}</td> -->
           <td>
             <select [(ngModel)]="contract.mobility" (change)="onOptionChangeMobility(contract._id,contract.mobility)" >
               <option value="ROJO">ROJO</option>
@@ -57,14 +59,15 @@
         </tr>
         <tr *ngFor="let contract of getContractsPikupDateForDay(day); let i = index" [class.yellow-background]="contract.isSelectedPickup">
           <td>
-            <button class="btn btn-warning" (click)="moveRowUpPickup(day,contract)">Subir</button>
-            <button class="btn btn-warning" (click)="moveRowDownPickup(day,contract)">Bajar</button>
+            <button class="boton" (click)="moveRowUpPickup(day,contract)">Subir</button>
+            <button class="boton" (click)="moveRowDownPickup(day,contract)">Bajar</button>
             <input type="number" [(ngModel)]="contract.orderPickup" [value]="i + 1" [hidden]="true">
           </td>
           <!-- <td>{{ i + 1 }}</td> -->
           <td><div class="contract">{{ contract.codContract }}</div></td>
           <td>{{ contract.customer.name }}</td>
-          <td>--</td>
+          <td><input type="time" [(ngModel)]="contract.hourIniPickup" (keyup.enter)="saveHourPickup(contract._id,contract.hourIniPickup)">
+            <input type="time" [(ngModel)]="contract.hourFinPickup" (keyup.enter)="saveHourFinPickup(contract._id,contract.hourFinPickup)"></td>
           <td>
             <select [(ngModel)]="contract.mobilityPickup" (change)="onOptionChangeMobilityPickup(contract._id,contract.mobilityPickup)" >
               <option value="ROJO">ROJO</option>
