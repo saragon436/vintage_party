@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { catchError, map, Observable,of, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class CustomerService {
 
   addCustomer(body:any,headers: HttpHeaders): Observable<any>{
     var response:any;
-    return this.http.post("http://146.190.40.162:3000/customer", body, { headers, observe: response }).pipe(
+    return this.http.post(environment.apiUrl+"/customer", body, { headers, observe: response }).pipe(
       catchError( e => {
         //implementar aca la logica del error        
         console.error('Error de agregar', e)
@@ -23,7 +24,7 @@ export class CustomerService {
 
   listCustomer(headers: HttpHeaders): Observable<any>{
     var response:any;
-    return this.http.get("http://146.190.40.162:3000/customer", { headers, observe: response }).pipe(
+    return this.http.get(environment.apiUrl+"/customer", { headers, observe: response }).pipe(
       catchError( e => {     
         console.error('Error de agregar', e)
         throw (e)
@@ -34,7 +35,7 @@ export class CustomerService {
 
   updateCustomer(body:any,headers: HttpHeaders): Observable<any>{
     var response:any;
-    return this.http.put("http://146.190.40.162:3000/customer", body, { headers, observe: response }).pipe(
+    return this.http.put(environment.apiUrl+"/customer", body, { headers, observe: response }).pipe(
       catchError( e => {
         //implementar aca la logica del error        
         console.error('Error de agregar', e)
@@ -45,7 +46,7 @@ export class CustomerService {
   }
   deleteCustomer(body:string,headers: HttpHeaders): Observable<any>{
     var response:any;
-    return this.http.delete("http://146.190.40.162:3000/customer/"+body, { headers, observe: response }).pipe(
+    return this.http.delete(environment.apiUrl+"/customer/"+body, { headers, observe: response }).pipe(
       catchError( e => {
         //implementar aca la logica del error        
         console.error('Error de eliminar', e)
