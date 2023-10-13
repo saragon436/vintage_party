@@ -261,7 +261,7 @@ export class CalendarComponent implements OnInit {
 
   getContractsPikupDateForDay(day: Date): Contract[] {
     const contractsForDay = this.contract.filter((contract) => {
-      const installDate = new Date(contract.installDate);
+      const installDate = new Date(contract.pickupDate);
       return (
         installDate.getDate() === day.getDate() - 1 &&
         installDate.getMonth() === day.getMonth() &&
