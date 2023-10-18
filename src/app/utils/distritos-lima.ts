@@ -4,6 +4,7 @@ export const distritosLima = [
     'Ate',
     'Barranco',
     'Breña',
+    'Callao',
     'Carabayllo',
     'Cercado de Lima',
     'Chaclacayo',
