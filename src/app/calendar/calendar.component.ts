@@ -245,17 +245,50 @@ export class CalendarComponent implements OnInit {
       );
     });
 
+      // Filtrar los contratos que no tienen 'almacen' como dirección
+    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
+    return contract.district !== 'Almacen';
+    });
+
     // Asignar un valor por defecto a 'order' si es null o undefined
-    contractsForDay.forEach((contract, index) => {
+    contractsExcludingAlmacen.forEach((contract, index) => {
       if (contract.order == null) {
         contract.order = index + 1;
       }
     });
 
     // Ordenar los contratos por 'order' en orden ascendente
-    contractsForDay.sort((a, b) => a.order - b.order);
+    contractsExcludingAlmacen.sort((a, b) => a.order - b.order);
 
-    return contractsForDay;
+    return contractsExcludingAlmacen;
+  }
+
+  getContractsStoreForDay(day: Date): Contract[] {
+    const contractsForDay = this.contract.filter((contract) => {
+      const installDate = new Date(contract.installDate);
+      return (
+        installDate.getDate() === day.getDate() - 1 &&
+        installDate.getMonth() === day.getMonth() &&
+        installDate.getFullYear() === day.getFullYear()
+      );
+    });
+
+      // Filtrar los contratos que no tienen 'almacen' como dirección
+    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
+    return contract.district == 'Almacen';
+    });
+
+    // Asignar un valor por defecto a 'order' si es null o undefined
+    contractsExcludingAlmacen.forEach((contract, index) => {
+      if (contract.order == null) {
+        contract.order = index + 1;
+      }
+    });
+
+    // Ordenar los contratos por 'order' en orden ascendente
+    contractsExcludingAlmacen.sort((a, b) => a.order - b.order);
+
+    return contractsExcludingAlmacen;
   }
 
 
@@ -269,18 +302,50 @@ export class CalendarComponent implements OnInit {
       );
     });
 
+    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
+      return contract.district !== 'Almacen';
+      });
+
     // Asignar un valor por defecto a 'order' si es null o undefined
-    contractsForDay.forEach((contract, index) => {
+    contractsExcludingAlmacen.forEach((contract, index) => {
       if (contract.orderPickup == null) {
         contract.orderPickup = index + 1;
       }
     });
 
     // Ordenar los contratos por 'order' en orden ascendente
-    contractsForDay.sort((a, b) => a.orderPickup - b.orderPickup);
+    contractsExcludingAlmacen.sort((a, b) => a.orderPickup - b.orderPickup);
 
-    return contractsForDay;
+    return contractsExcludingAlmacen;
   }
+
+  getContractsPikupDateStoreForDay(day: Date): Contract[] {
+    const contractsForDay = this.contract.filter((contract) => {
+      const installDate = new Date(contract.pickupDate);
+      return (
+        installDate.getDate() === day.getDate() - 1 &&
+        installDate.getMonth() === day.getMonth() &&
+        installDate.getFullYear() === day.getFullYear()
+      );
+    });
+
+    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
+      return contract.district == 'Almacen';
+      });
+
+    // Asignar un valor por defecto a 'order' si es null o undefined
+    contractsExcludingAlmacen.forEach((contract, index) => {
+      if (contract.orderPickup == null) {
+        contract.orderPickup = index + 1;
+      }
+    });
+
+    // Ordenar los contratos por 'order' en orden ascendente
+    contractsExcludingAlmacen.sort((a, b) => a.orderPickup - b.orderPickup);
+
+    return contractsExcludingAlmacen;
+  }
+
 
   getBothcontract(day:Date): Contract[]{
     const contractsForDay = this.getContractsForDay(day);
