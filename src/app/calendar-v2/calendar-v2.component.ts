@@ -115,14 +115,15 @@ export class CalendarV2Component {
      }
 
      getContractsForDay(day: Date): Contract[] {
-      return this.contract.filter((contract) => {
-        const installDate = new Date(contract.installDate);
-        return (
-          installDate.getDate() === day.getDate() -1 &&
-          installDate.getMonth() === day.getMonth() &&
-          installDate.getFullYear() === day.getFullYear()
-        );
+      const dayFormatted = day.toISOString().slice(0, 10);
+       const contractsForDay = this.contract.filter((contract) => {
+        const installDate = contract.installDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
+        return installDate === dayFormatted;
       });
+
+      //const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
+      return contractsForDay;
+     
     }
   
     filterContracts(): void {

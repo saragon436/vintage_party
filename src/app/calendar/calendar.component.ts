@@ -236,15 +236,27 @@ export class CalendarComponent implements OnInit {
   // }
 
   getContractsForDay(day: Date): Contract[] {
-    const contractsForDay = this.contract.filter((contract) => {
-      const installDate = new Date(contract.installDate);
-      return (
-        installDate.getDate() === day.getDate() - 1 &&
-        installDate.getMonth() === day.getMonth() &&
-        installDate.getFullYear() === day.getFullYear()
-      );
-    });
 
+    // const contractsForDay = this.contract.filter((contract) => {
+    //   const installDate = new Date(Date.parse(contract.installDate));
+    //   //console.log("dia ",day.getDate() +" fecha instalacion "+ contract.installDate +"conrato "+contract.codContract)
+    //   contract.codContract=="2023-0000002280"?console.log("dia ",day.getMonth() +"mes "+day.getDate() +"cDia "+ installDate.getMonth()+"cMes "+installDate.getDate()):""
+    //   return (
+    //     //installDate.getDay() === (day.getDate()-1 == 31 ? 1 : day.getDate() - 1) &&
+        
+
+    //     installDate.getDate() === day.getDate() &&
+    //     installDate.getMonth() === day.getMonth() &&
+    //     installDate.getFullYear() === day.getFullYear()
+    //   );
+    // });
+
+    const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
+
+  const contractsForDay = this.contract.filter((contract) => {
+    const installDate = contract.installDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
+    return installDate === dayFormatted;
+  });
       // Filtrar los contratos que no tienen 'almacen' como dirección
     const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
     return contract.district !== 'Almacen';
@@ -263,15 +275,52 @@ export class CalendarComponent implements OnInit {
     return contractsExcludingAlmacen;
   }
 
+  // getContractsForDay(day: Date): Contract[] {
+  //   debugger
+  //   // Ajustar la zona horaria de day para eliminarla
+  //   day.setUTCHours(0, 0, 0, 0);
+    
+  //   const dayFormatted = this.datePipe.transform(day, 'yyyy-MM-dd');
+    
+  //   const contractsForDay = this.contract.filter((contract) => {
+  //     const installDate = new Date(contract.installDate);
+  //     const installDateFormatted = this.datePipe.transform(installDate, 'yyyy-MM-dd');
+  //     return installDateFormatted === dayFormatted;
+  //   });
+  
+  //   // Filtrar los contratos que no tienen 'Almacen' como dirección
+  //   const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
+  //     return contract.district !== 'Almacen';
+  //   });
+  
+  //   // Asignar un valor por defecto a 'order' si es null o undefined
+  //   contractsExcludingAlmacen.forEach((contract, index) => {
+  //     if (contract.order == null) {
+  //       contract.order = index + 1;
+  //     }
+  //   });
+  
+  //   // Ordenar los contratos por 'order' en orden ascendente
+  //   contractsExcludingAlmacen.sort((a, b) => a.order - b.order);
+  
+  //   return contractsExcludingAlmacen;
+  // }
+
   getContractsStoreForDay(day: Date): Contract[] {
-    const contractsForDay = this.contract.filter((contract) => {
-      const installDate = new Date(contract.installDate);
-      return (
-        installDate.getDate() === day.getDate() - 1 &&
-        installDate.getMonth() === day.getMonth() &&
-        installDate.getFullYear() === day.getFullYear()
-      );
-    });
+    // const contractsForDay = this.contract.filter((contract) => {
+    //   const installDate = new Date(contract.installDate);
+    //   return (
+    //     installDate.getDate() == day.getDate() &&
+    //     installDate.getMonth() === day.getMonth() &&
+    //     installDate.getFullYear() === day.getFullYear()
+    //   );
+    // });
+    const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
+
+  const contractsForDay = this.contract.filter((contract) => {
+    const installDate = contract.installDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
+    return installDate === dayFormatted;
+  });
 
       // Filtrar los contratos que no tienen 'almacen' como dirección
     const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
@@ -293,13 +342,11 @@ export class CalendarComponent implements OnInit {
 
 
   getContractsPikupDateForDay(day: Date): Contract[] {
+    const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
+
     const contractsForDay = this.contract.filter((contract) => {
-      const installDate = new Date(contract.pickupDate);
-      return (
-        installDate.getDate() === day.getDate() - 1 &&
-        installDate.getMonth() === day.getMonth() &&
-        installDate.getFullYear() === day.getFullYear()
-      );
+      const installDate = contract.pickupDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
+      return installDate === dayFormatted;
     });
 
     const contractsExcludingAlmacen = contractsForDay.filter((contract) => {

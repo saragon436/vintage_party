@@ -478,8 +478,22 @@ export class ContractComponent {
 
   onSave() {
     if (this.form.valid &&  this.isDisabled==false) {
+      debugger
       if(!this.mostrarBotones){
-        this.form.controls['customer'].setValue(this.selectedCustomer)
+        console.log("valor de cliente ", this.form.controls['customer'].value)
+        // this.selectedCustomer=this.form.controls['customer'].value;
+        // this.form.controls['customer'].setValue(this.selectedCustomer)
+
+        const customerValue = this.form.controls['customer'].value;
+
+        if (typeof customerValue === 'object' && customerValue !== null) {
+          // El valor es un objeto JSON
+          console.log('El valor es un objeto JSON:', customerValue);
+        } else {
+          // El valor no es un objeto JSON
+          this.form.controls['customer'].setValue(this.selectedCustomer)
+        }
+
       }
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
       const values = {...this.form.value}
