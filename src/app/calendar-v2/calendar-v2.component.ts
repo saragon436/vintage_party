@@ -20,6 +20,8 @@ interface Contract {
   hourIni: string;
   hourFin: string;
   comment: string;
+  order: number;
+  orderPickup: number;
   listAccessories:[];
   onAccount:[];
   customer:{name:string,documentNumber:string,phone:string};
@@ -38,10 +40,13 @@ export class CalendarV2Component {
   week: Date[] = [];
   weeks: Date[][] = [];
   contract: Contract[];
+  contratosDuplicados: Contract[];
+
    constructor(private route: Router,
      private authenticationToken: AuthenticationToken,
      private contractService: ContractService){
        this.contract = [];
+       this.contratosDuplicados = [];
    }
 
    public nombresDias: string[] = [
@@ -77,6 +82,7 @@ export class CalendarV2Component {
     console.log("semansa : " , this.week)
     this.findContract();
     this.updateCalendar();
+    this.filtrarYOrdenarContratos();
   }
 
   calculateWeek(currentDate: Date): Date[] {
@@ -202,6 +208,49 @@ export class CalendarV2Component {
       }
     
       return weeks;
+    }
+
+    filtrarYOrdenarContratos() {
+      
+      // Obtén la fecha actual en el formato adecuado
+    const fechaActual = new Date().toISOString().slice(0, 10);
+
+    // Filtra los contratos que cumplen con la primera condición (fecha actual vs. installDate)
+    const contratosFiltradosPrimeraCondicion = this.contract.filter((contrato) => {
+      return contrato.installDate.slice(0, 10) <= fechaActual;
+    });
+
+    // Filtra nuevamente los contratos que cumplen con la segunda condición (pickupDate vs. fecha actual)
+    const contratosFiltrados = contratosFiltradosPrimeraCondicion.filter((contrato) => {
+      return contrato.pickupDate.slice(0, 10) >= fechaActual;
+    });
+
+    // Duplica los contratos si tienen la misma fecha de instalación y recojo
+    const contratosDuplicados = [];
+    contratosFiltrados.forEach((contrato) => {
+      const fechaInstalacion = contrato.installDate.slice(0, 10);
+      const fechaRecojo = contrato.pickupDate.slice(0, 10);
+      if (fechaInstalacion === fechaRecojo) {
+        // Duplica el contrato
+        const contratoDuplicado = { ...contrato };
+        contratoDuplicado.installDate = fechaInstalacion;
+        contratoDuplicado.pickupDate = fechaRecojo;
+        contratosDuplicados.push(contratoDuplicado);
+      }
+      contratosDuplicados.push(contrato);
+    });
+
+    // Ordena los contratos por "order" y "orderPickup"
+    this.contratosDuplicados.sort((a, b) => {
+      if (a.order === b.order) {
+        return a.orderPickup - b.orderPickup;
+      }
+      return a.order - b.order;
+    });
+
+  
+      // Puedes almacenar los resultados en una propiedad de tu componente
+      console.log("Listado de contratos ",this.contratosDuplicados);
     }
     
 }
