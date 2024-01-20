@@ -1,9 +1,11 @@
 // distritos-lima.ts
 export const distritosLima = [
+    'Almacen',
     'Ancón',
     'Ate',
     'Barranco',
     'Breña',
+    'Callao',
     'Carabayllo',
     'Cercado de Lima',
     'Chaclacayo',
