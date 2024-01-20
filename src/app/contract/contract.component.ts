@@ -168,12 +168,13 @@ export class ContractComponent {
           "Precio": ele.price,
           "Total":ele.amount*ele.price,
           "Comentario":item.comment,
+          "usuario":item.userCreate.userName,
           "Estado":item.status
         };
       }), { "Contrato": item.codContract,"Cliente": item.customer.name,"Mes Contrato": item.createDate.slice(5,7),"F Creacion": item.createDate.slice(0,10),"Precio": "Total", "Total": item.amount,"Estado":item.status } ]
     });
 
-    const headers = ['Contrato','Cliente',"Direccion","Mes Contrato",'F Creacion','F Instalacion','F Evento','F Recojo','Descripcion','Cantidad', "Precio", "Total","Comentario","Estado"];
+    const headers = ['Contrato','Cliente',"Direccion","Mes Contrato",'F Creacion','F Instalacion','F Evento','F Recojo','Descripcion','Cantidad', "Precio", "Total","Comentario","usuario","Estado"];
 
     const worksheet = XLSX.utils.json_to_sheet(listExport);
     XLSX.utils.sheet_add_json(worksheet, listExport, { header: headers, skipHeader: true, origin: 'A2'});
@@ -602,34 +603,79 @@ export class ContractComponent {
     }
     
   }
+  
+  
+  
+  
 
-  findContract(){
+  // findContract(){
+  //   const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+  //   //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+  //   console.log('this.authenticationToken '+this.authenticationToken)
+  //   this.contractService
+  //   .listContract(headers)
+  //   .pipe(
+  //     map( contracts => {
+  //       return contracts.sort((a:any, b:any) => b.numberContract - a.numberContract);
+  //     })
+  //   )
+  //   .subscribe(
+  //     (contract) => {
+  //         this.contract=contract;
+  //         console.log("contract ",this.contract)
+  //     },
+  //     (error) => {
+        
+  //       if( error.status === 401){
+        
+  //         console.log('usuario o claves incorrectos');
+  //         this.route.navigate(['/app-login']);
+  //       }else{
+  //         console.log('error desconocido en el login');
+  //       }
+  //     });
+  //   }
+
+  findContract() {
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken '+this.authenticationToken)
+    console.log('this.authenticationToken ' + this.authenticationToken);
+  
     this.contractService
-    .listContract(headers)
-    .pipe(
-      map( contracts => {
-        return contracts.sort((a:any, b:any) => b.numberContract - a.numberContract);
-      })
-    )
-    .subscribe(
-      (contract) => {
-          this.contract=contract;
-          console.log("contract ",this.contract)
-      },
-      (error) => {
-        
-        if( error.status === 401){
-        
-          console.log('usuario o claves incorrectos');
-          this.route.navigate(['/app-login']);
-        }else{
-          console.log('error desconocido en el login');
+      .listContract(headers)
+      .pipe(
+        map(contracts => {
+          return contracts
+            .filter((contract: any) => contract.codContract && typeof contract.codContract === 'string')
+            .map((contract: any) => {
+              const parts = contract.codContract.split('-');
+              const firstNumber = parts.length > 0 ? parseInt(parts[0], 10) : 0;
+              return { ...contract, firstNumber };
+            })
+            .sort((a: any, b: any) => {
+              if (a.firstNumber !== b.firstNumber) {
+                return b.firstNumber - a.firstNumber;
+              } else {
+                return b.codContract.localeCompare(a.codContract);
+              }
+            });
+        })
+      )
+      .subscribe(
+        (contracts) => {
+          this.contract = contracts;
+          console.log("contract ", this.contract);
+        },
+        (error) => {
+          if (error.status === 401) {
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          } else {
+            console.log('error desconocido en el login:', error);
+          }
         }
-      });
-    }
+      );
+  }
+  
 
     findAccesoryById(valor:string){
       //this.items=[];
