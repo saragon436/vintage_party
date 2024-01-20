@@ -6,7 +6,8 @@ import { AuthenticationToken } from '../Servicios/autentication-token.service'
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
-
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 interface Accesory {
   _id: string;
   description: string;
@@ -86,6 +87,36 @@ export class AccessoryComponent {
       this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
     });
   } 
+
+  exportToExcel(): void {
+    let listExport: any[] = [];
+    this.accesorys.forEach((item: any) => {
+      listExport.push({
+        "Id": item._id,
+        "Descripcion": item.description,
+        "Color": item.color,
+        "Diseño": item.design,
+        "Largo": item.large,
+        "Profundidad": item.bottom,
+        "Alto": item.high,
+        "Ancho": item.width,
+        "Diametro": item.diameter, // O ajusta según el valor específico que necesites
+        "Stock": item.stock, // O ajusta según el valor específico que necesites
+        "Precio": item.price
+      });
+    });
+    const headers = ['Id','Descripcion','Color',"Diseño","Largo",'Profundidad','Alto','Ancho','Diametro','Stock','Precio'];
+
+    const worksheet = XLSX.utils.json_to_sheet(listExport);
+    XLSX.utils.sheet_add_json(worksheet, listExport, { header: headers, skipHeader: true, origin: 'A2'});
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    FileSaver.saveAs(excelBlob, 'Mobiliarios.xlsx');
+  
+  }
 
   private getDismissReason(reason: any): string {
     if (reason === ModalDismissReasons.ESC) {

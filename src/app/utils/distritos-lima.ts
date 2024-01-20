@@ -1,5 +1,6 @@
 // distritos-lima.ts
 export const distritosLima = [
+    'Almacen',
     'Ancón',
     'Ate',
     'Barranco',

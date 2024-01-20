@@ -1,60 +1,72 @@
-#formulario {
-    padding: 20px   30px   40px   10px;
-  }
-  /* Estilos para el calendario */
-.calendar {
-    width: 100%;
-    /*max-width: 600px; /* Ajusta el ancho máximo según tus necesidades */
-    margin: 0 auto; /* Centra el calendario horizontalmente */
-  }
-  
-  .calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  th, td {
-    text-align: center;
-    padding: 10px;
-    border: 1px solid #ccc; /* Líneas divisorias de celdas */
-  }
-  
-  .day {
-    position: relative;
-  }
-  
-  /* Estilos para las líneas divisorias verticales */
-  td:not(:last-child) {
-    border-right: none;
-  }
-  
-  /* Estilos para las líneas divisorias horizontales */
-  tr:not(:last-child) td {
-    border-bottom: none;
-  }
-  
-  .contract {
-    list-style: none;
-    padding: 5px;
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 5px;
-    margin-bottom: 5px; /* Espacio entre los contratos */
-  }
+* {
+  box-sizing: border-box;
+}
 
-  .recuadro {
-    border: 1px solid #000; /* Borde del recuadro */
-    padding: 10px; /* Espacio alrededor del contenido dentro del recuadro */
-    margin: 10px; /* Espacio entre cada recuadro */
-    width: 100%; /* Ancho del recuadro, ajusta según tus necesidades */
-    height: 100%; /* Altura del recuadro, ajusta según tus necesidades */
-    display: inline-block; /* Para que los recuadros aparezcan uno al lado del otro */
-  }
-  
+#formulario {
+  padding: 20px 30px 40px 10px;
+}
+
+/* Estilos para el calendario */
+.calendar {
+  width: 100%;
+  margin: 0 auto; /* Centra el calendario horizontalmente */
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: center;
+  padding: 10px;
+  border: 1px solid #ccc; /* Líneas divisorias de celdas */
+}
+
+.day {
+  position: relative;
+}
+
+/* Estilos para las líneas divisorias verticales */
+td:not(:last-child) {
+  border-right: none;
+}
+
+/* Estilos para las líneas divisorias horizontales */
+tr:not(:last-child) td {
+  border-bottom: none;
+}
+
+.contract {
+  list-style-type: none;
+  margin-bottom: 5px; /* Espacio entre los contratos */
+}
+
+/* Elimina la viñeta de la lista ul dentro de .day */
+.day ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Estilo para los elementos li dentro de .day */
+.day li {
+  /* Ajusta otros estilos según sea necesario */
+  margin-bottom: 5px;
+}
+
+/* Estilo para el contenido dentro del recuadro */
+.day .recuadro {
+  border: 1px solid #000;
+  padding: 10px;
+  margin: 10px;
+  width: calc(100% - 20px); /* Resta el doble del margen para compensar el margen del recuadro */
+  display: block;
+}
