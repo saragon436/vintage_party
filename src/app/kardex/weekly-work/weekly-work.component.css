@@ -1,0 +1,151 @@
+.weekly-container {
+  padding: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Estado vacío */
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: #666;
+}
+
+.empty-state h2 {
+  margin-bottom: 8px;
+}
+
+/* Barra de navegación de semanas */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #f3f3f3;
+  border: 1px solid #ddd;
+}
+
+.btn-nav {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #aaa;
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
+.btn-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.week-info {
+  text-align: center;
+}
+
+.week-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.week-range {
+  font-size: 11px;
+  color: #666;
+}
+
+/* Bloque de día */
+.day-block {
+  margin-bottom: 24px;
+}
+
+/* Separador entre días */
+.day-separator {
+  border-top: 3px solid #8d8d8d;
+  margin: 32px 0 12px 0;
+  width: 100%;
+  opacity: 0.35;
+}
+
+.day-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.day-date {
+  margin: 4px 0 12px 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* Tarjeta de contrato */
+.contract-card {
+  background: #fafafa;
+  padding: 10px 16px 12px 16px;
+  margin-bottom: 14px;
+  border-radius: 6px;
+  border: 1px solid #e3e3e3;
+  position: relative;
+}
+
+/* Separador lateral del contrato */
+.contract-separator {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background-color: #c4c4c4;
+  border-radius: 4px;
+}
+
+/* Header del contrato */
+.contract-header {
+  margin-left: 8px; /* para que no choque con la barra lateral */
+  margin-bottom: 8px;
+}
+
+.contract-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.contract-address {
+  font-size: 12px;
+  color: #6f6f6f;
+}
+
+/* Tabla de mobiliarios */
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-left: 8px; /* alinear con header */
+}
+
+.items-table td {
+  padding: 3px 0;
+  vertical-align: top;
+}
+
+.item-description {
+  font-size: 13px;
+}
+
+.item-status {
+  font-size: 13px;
+  color: green;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Línea final entre días (si quieres una más fuerte al final)
+hr {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+*/

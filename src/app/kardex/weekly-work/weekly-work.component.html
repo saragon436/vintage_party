@@ -1,0 +1,68 @@
+<div class="weekly-container">
+
+  <!-- Sin datos en el mes -->
+  <div *ngIf="weeks.length === 0" class="empty-state">
+    <h2>Mobiliario semanal</h2>
+    <p>No hay semanas con trabajos registradas para este mes.</p>
+  </div>
+
+  <!-- Con datos -->
+  <div *ngIf="weeks.length > 0">
+
+    <!-- Barra de navegación de semanas -->
+    <div class="week-nav">
+      <button
+        class="btn-nav"
+        (click)="goToPreviousWeek()"
+        [disabled]="selectedWeekIndex === 0">
+        ⬅ Semana anterior
+      </button>
+
+      <div class="week-info">
+        <div class="week-title">
+          Mobiliario semanal - Semana {{ selectedWeekNumber }}
+        </div>
+        <small class="week-range">
+          {{ selectedWeekRange }}
+        </small>
+      </div>
+
+      <button
+        class="btn-nav"
+        (click)="goToNextWeek()"
+        [disabled]="selectedWeekIndex === weeks.length - 1">
+        Semana siguiente ➡
+      </button>
+    </div>
+
+    <!-- Si la semana seleccionada no tiene items -->
+    <div *ngIf="currentWeekView.length === 0" class="empty-state">
+      <p>No hay trabajos en esta semana.</p>
+    </div>
+
+    <!-- Listado por día -->
+    <div *ngFor="let day of currentWeekView" class="day-block">
+
+      <!-- Separador visual del día -->
+      <div class="day-separator"></div>
+
+      <h3 class="day-title">POR REVISAR</h3>
+      <h4 class="day-date">{{ day.date }}</h4>
+
+      <!-- Tabla de mobiliarios agregados por día -->
+      <table class="items-table">
+        <tbody>
+          <tr *ngFor="let acc of day.accessories">
+            <td class="item-description">
+              {{ acc.totalAmount }} - {{ acc.description }}
+            </td>
+            <td class="item-status">
+              OK
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+</div>

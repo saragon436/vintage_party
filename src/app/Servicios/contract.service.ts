@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { catchError, map, Observable,of, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { WeekSummaryDto } from '../kardex/models/weekly-summary.model';
 
 @Injectable({
   providedIn: 'root'
@@ -59,5 +60,16 @@ export class ContractService {
       }),
       map( x => x),
     )
+  }
+
+  getWeeklySummary(
+    year: number,
+    month: number,
+    headers: HttpHeaders
+  ): Observable<WeekSummaryDto[]> {
+    return this.http.get<WeekSummaryDto[]>(
+      `${environment.apiUrl}/contract/summary/weekly?year=${year}&month=${month}`,
+      { headers }
+    );
   }
 }
