@@ -263,6 +263,38 @@
         </div>
       </form>
     </div>
+    <div class="row" id="salto">
+  <div class="col-lg-4">
+    <button
+      type="button"
+      class="btn btn-outline-secondary mb-2"
+      (click)="showYearSelector = !showYearSelector"
+    >
+      {{ showYearSelector ? 'Ocultar años anteriores' : 'Ver años anteriores' }}
+    </button>
+
+    <div *ngIf="showYearSelector">
+      <label for="yearSelect"><strong>Filtrar por año</strong></label>
+      <select
+        id="yearSelect"
+        class="form-select"
+        [(ngModel)]="selectedYear"
+        (ngModelChange)="onYearChange($event)"
+        name="yearSelect"
+      >
+        <!-- Año actual -->
+        <option [ngValue]="currentYear">
+          Año actual ({{ currentYear }})
+        </option>
+
+        <!-- Últimos 5 años hacia atrás -->
+        <option *ngFor="let year of years" [ngValue]="year">
+          {{ year }}
+        </option>
+      </select>
+    </div>
+  </div>
+</div>
     <div class="row" id="salto" >
       <table>
         <thead sticky>

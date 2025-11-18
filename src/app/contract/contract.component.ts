@@ -98,6 +98,10 @@ export class ContractComponent {
   listaDistritos = distritosLima;
   distritoSeleccionado: string = '';
 
+  currentYear = new Date().getFullYear();  // ej. 2025
+  selectedYear = this.currentYear;
+  years: number[] = [];
+
   constructor(
     private modalService: NgbModal,
     private customerService: CustomerService,
@@ -145,6 +149,7 @@ export class ContractComponent {
   A_cuenta_2=0;
   isDisabled=false;
   listarDetalle=false;
+  showYearSelector = false;
 
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
@@ -261,12 +266,20 @@ export class ContractComponent {
   }
 
   ngOnInit() {
-    this.findClient();
-    // if(this.mostrarBotones==true){
-    //   this.searchStock();
-    // }
-    this.searchStock();
-    this.findContract();
+    this.buildYears();                       // 🔹 llena la lista de años
+  this.selectedYear = this.currentYear;    // 🔹 año actual por defecto
+
+  this.findClient();
+  this.searchStock();
+  this.findContract(this.selectedYear);    // 🔹 solo contratos del año actual
+  }
+
+  buildYears(): void {
+    this.years = [];
+    // año actual + 5 hacia atrás (ej: 2025, 2024, 2023, 2022, 2021, 2020)
+    for (let i = 1; i <= 5; i++) {
+      this.years.push(this.currentYear - i);
+    }
   }
 
   finDate(){
@@ -636,44 +649,55 @@ export class ContractComponent {
   //     });
   //   }
 
-  findContract() {
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    console.log('this.authenticationToken ' + this.authenticationToken);
-  
-    this.contractService
-      .listContract(headers)
-      .pipe(
-        map(contracts => {
-          return contracts
-            .filter((contract: any) => contract.codContract && typeof contract.codContract === 'string')
-            .map((contract: any) => {
-              const parts = contract.codContract.split('-');
-              const firstNumber = parts.length > 0 ? parseInt(parts[0], 10) : 0;
-              return { ...contract, firstNumber };
-            })
-            .sort((a: any, b: any) => {
-              if (a.firstNumber !== b.firstNumber) {
-                return b.firstNumber - a.firstNumber;
-              } else {
-                return b.codContract.localeCompare(a.codContract);
-              }
-            });
-        })
-      )
-      .subscribe(
-        (contracts) => {
-          this.contract = contracts;
-          console.log("contract ", this.contract);
-        },
-        (error) => {
-          if (error.status === 401) {
-            console.log('usuario o claves incorrectos');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('error desconocido en el login:', error);
-          }
+  findContract(year: number = this.selectedYear) {
+  const headers = new HttpHeaders().set(
+    'Authorization',
+    'Bearer ' + this.authenticationToken.myValue
+  );
+  console.log('this.authenticationToken ', this.authenticationToken);
+  console.log('Consultando contratos del año: ', year);
+
+  this.contractService
+    .getContractsByYear(year, headers) // 👈 asegúrate de que este método esté tipado
+    .pipe(
+      map((contracts: Contract[]) => {   // 👈 aquí tipamos el parámetro
+        return contracts
+          .filter(
+            (contract: Contract) =>
+              contract.codContract && typeof contract.codContract === 'string'
+          )
+          .sort((a: Contract, b: Contract) => {
+            const aPart = parseInt(a.codContract.split('-')[0] || '0', 10);
+            const bPart = parseInt(b.codContract.split('-')[0] || '0', 10);
+
+            if (aPart !== bPart) {
+              return bPart - aPart; // primero los más grandes
+            } else {
+              return b.codContract.localeCompare(a.codContract);
+            }
+          });
+      })
+    )
+    .subscribe(
+      (contracts: Contract[]) => {     // 👈 tipamos también aquí
+        this.contract = contracts;
+        console.log('contract ', this.contract);
+      },
+      (error) => {
+        if (error.status === 401) {
+          console.log('usuario o claves incorrectos');
+          this.route.navigate(['/app-login']);
+        } else {
+          console.log('error desconocido en el login:', error);
         }
-      );
+      }
+    );
+}
+
+
+  onYearChange(year: number) {
+    this.selectedYear = year;
+    this.findContract(year);
   }
   
 

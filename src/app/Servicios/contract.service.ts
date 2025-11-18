@@ -45,6 +45,10 @@ export class ContractService {
     )
   }
 
+  getContractsByYear(year: number, headers: HttpHeaders): Observable<any[]> {
+  return this.http.get<any[]>(`${environment.apiUrl}/contract/year/${year}`, { headers });
+}
+
   listContractById(id:string,headers: HttpHeaders): Observable<any>{
     var response:any;
     return this.http.get(environment.apiUrl+"/contract/"+id, { headers, observe: response }).pipe(
