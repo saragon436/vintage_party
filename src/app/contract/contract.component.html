@@ -263,38 +263,69 @@
         </div>
       </form>
     </div>
+
+    <!-- 🔹 Filtros: Año + Estado -->
+        <!-- 🔹 Filtros agrupados a un costado -->
     <div class="row" id="salto">
-  <div class="col-lg-4">
-    <button
-      type="button"
-      class="btn btn-outline-secondary mb-2"
-      (click)="showYearSelector = !showYearSelector"
-    >
-      {{ showYearSelector ? 'Ocultar años anteriores' : 'Ver años anteriores' }}
-    </button>
+  <div class="col-12">
+    <div class="filters-panel-full shadow-sm rounded">
 
-    <div *ngIf="showYearSelector">
-      <label for="yearSelect"><strong>Filtrar por año</strong></label>
-      <select
-        id="yearSelect"
-        class="form-select"
-        [(ngModel)]="selectedYear"
-        (ngModelChange)="onYearChange($event)"
-        name="yearSelect"
-      >
-        <!-- Año actual -->
-        <option [ngValue]="currentYear">
-          Año actual ({{ currentYear }})
-        </option>
+      <div class="filters-header d-flex justify-content-between align-items-center mb-2">
+        <span class="filters-title">Filtros</span>
 
-        <!-- Últimos 5 años hacia atrás -->
-        <option *ngFor="let year of years" [ngValue]="year">
-          {{ year }}
-        </option>
-      </select>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary toggle-btn"
+          (click)="showYearSelector = !showYearSelector"
+        >
+          {{ showYearSelector ? 'Ocultar años anteriores' : 'Ver años anteriores' }}
+        </button>
+      </div>
+
+      <div class="filters-body row">
+
+        <!-- Año -->
+        <div class="col-lg-6 col-md-6 col-sm-12 mb-2" *ngIf="showYearSelector">
+          <label class="form-label">Año</label>
+          <select
+            class="form-select form-select-sm"
+            [(ngModel)]="selectedYear"
+            (ngModelChange)="onYearChange($event)"
+            name="yearSelect"
+          >
+
+            <option [ngValue]="currentYear">
+              Año actual ({{ currentYear }})
+            </option>
+
+            <option *ngFor="let year of years" [ngValue]="year">
+              {{ year }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Estado -->
+        <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+          <label class="form-label">Estado</label>
+          <select
+            class="form-select form-select-sm"
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="onStatusChange($event)"
+            name="statusSelect"
+          >
+            <option *ngFor="let status of statuses" [ngValue]="status">
+              {{ status }}
+            </option>
+          </select>
+        </div>
+
+      </div>
+
     </div>
   </div>
 </div>
+
+    <!-- Listado de contratos -->
     <div class="row" id="salto" >
       <table>
         <thead sticky>
@@ -311,26 +342,35 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of contract" >
-            <td *ngIf="item.status!='Archivado'"><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)" >Eliminar</button></td>
-            <td *ngIf="item.status=='Archivado'"><button type="button" class="btn btn-danger"   disabled>Eliminar</button></td>
-            <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">Visualizar</button></td>
+          <!-- 👇 aquí usamos filteredContracts en lugar de contract -->
+          <tr *ngFor="let item of filteredContracts">
+            <td *ngIf="item.status!='Archivado'">
+              <button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)" >Eliminar</button>
+            </td>
+            <td *ngIf="item.status=='Archivado'">
+              <button type="button" class="btn btn-danger" disabled>Eliminar</button>
+            </td>
+
+            <td>
+              <button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">Visualizar</button>
+            </td>
             <td>{{ item.codContract }}</td>
             <td>{{ item.customer.name }}</td>
             <td>{{ item.createDate.slice(0,10) }}</td>
             <td>{{ item.installDate.slice(0,10) }}</td>
             <td>{{ item.eventDate.slice(0,10) }}</td>
             <td>{{ item.pickupDate.slice(0,10) }}</td>
+
             <td *ngIf="item.status=='Archivado'">
               {{ item.status }}
             </td>
             <td *ngIf="item.status!='Archivado'">
               <select [(ngModel)]="item.status" (change)="onOptionChange(item._id,item.status)" >
-              <option value="Por Pagar">Por Pagar</option>
-              <option value="En Almacen">En Almacen</option>
-              <option value="Pagado">Pagado</option>
-              <option value="Archivado">Archivado</option>
-            </select>
+                <option value="Por Pagar">Por Pagar</option>
+                <option value="En Almacen">En Almacen</option>
+                <option value="Pagado">Pagado</option>
+                <option value="Archivado">Archivado</option>
+              </select>
             </td>
           </tr>
         </tbody>

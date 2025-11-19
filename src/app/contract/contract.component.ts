@@ -76,6 +76,7 @@ export class ContractComponent {
   fechaCreacion: string="";
   contract:Contract[];
   contract2:Contract[];
+  filteredContracts: Contract[] = [];   // 🔹 lista que se muestra en la tabla
   form: FormGroup;
   customer$: Observable<Customer[]>;
   accessory$: Observable<Accessory[]>;
@@ -98,9 +99,25 @@ export class ContractComponent {
   listaDistritos = distritosLima;
   distritoSeleccionado: string = '';
 
-  currentYear = new Date().getFullYear();  // ej. 2025
+  // 🔹 Año actual y lista de años
+  currentYear = new Date().getFullYear();
   selectedYear = this.currentYear;
   years: number[] = [];
+  showYearSelector = false;
+
+  // 🔹 Filtro por estado
+  statuses: string[] = ['Por Pagar', 'En Almacen', 'Pagado', 'Archivado'];
+  selectedStatus: string = 'Por Pagar';
+
+  condicion=false;
+  mostrarBotones=false;
+  codUser='';
+  _idContrat="";
+  A_cuenta_fecha_1="";
+  selectStatus="";
+  A_cuenta_2=0;
+  isDisabled=false;
+  listarDetalle=false;
 
   constructor(
     private modalService: NgbModal,
@@ -119,7 +136,6 @@ export class ContractComponent {
         search: new FormControl(''),
         searchAccessory: new FormControl(''),
         customer: new FormControl('', Validators.required),
-        //number: new FormControl('', Validators.required),
         onAccountvalues: new FormControl(0, Validators.required),
         saldo: new FormControl(0, Validators.required),
         createDate: new FormControl('', Validators.required),
@@ -132,7 +148,6 @@ export class ContractComponent {
         hourFin: new FormControl('', Validators.required),
         hourIniPickup: new FormControl('', Validators.required),
         hourFinPickup: new FormControl('', Validators.required),
-        //createDate: new FormControl('', Validators.required),
         amount: new FormControl(0, Validators.required),
         comment: new FormControl('', Validators.required),
         price: new FormControl(0, Validators.required),
@@ -140,16 +155,6 @@ export class ContractComponent {
         onAccount: this.formBuilder.array([])
       });
   }
-  condicion=false;
-  mostrarBotones=false;
-  codUser='';
-  _idContrat="";
-  A_cuenta_fecha_1="";
-  selectStatus="";
-  A_cuenta_2=0;
-  isDisabled=false;
-  listarDetalle=false;
-  showYearSelector = false;
 
   openModal() {
     this.modalService.open(CustomerComponent, { centered: true });
@@ -189,7 +194,6 @@ export class ContractComponent {
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     FileSaver.saveAs(excelBlob, 'data.xlsx');
-  
   }
 
   exportToExcelAccount(): void {
@@ -222,19 +226,15 @@ export class ContractComponent {
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const excelBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     FileSaver.saveAs(excelBlob, 'vintageAcuenta.xlsx');
-  
   }
 
   limpiar(){
-    //this.contract = [];
-    //this.unsubscribe = new Subject();
     this.customer$ = new Observable<Customer[]>;
     this.accessory$ = new Observable<Accessory[]>;
     this.form = this.formBuilder.group({
       search: new FormControl(''),
       searchAccessory: new FormControl(''),
       customer: new FormControl('', Validators.required),
-      //number: new FormControl('', Validators.required),
       onAccountvalues: new FormControl(0, Validators.required),
       saldo: new FormControl(0, Validators.required),
       installDate: new FormControl('', Validators.required),
@@ -257,26 +257,25 @@ export class ContractComponent {
     this._idContrat="";
     this.fechaCreacion="";
     this.numberContract="";
-          //this.fechaActual=response.createDate.slice(0,10);
     this.customerName="";
     this.phone="";
     this.documentNumber="";
-    //this.codUser="";
     this.selectStatus="";
   }
 
   ngOnInit() {
-    this.buildYears();                       // 🔹 llena la lista de años
-  this.selectedYear = this.currentYear;    // 🔹 año actual por defecto
+    this.buildYears();
+    this.selectedYear = this.currentYear;
+    this.selectedStatus = 'Por Pagar';
 
-  this.findClient();
-  this.searchStock();
-  this.findContract(this.selectedYear);    // 🔹 solo contratos del año actual
+    this.findClient();
+    this.searchStock();
+    this.findContract(this.selectedYear, this.selectedStatus);
   }
 
   buildYears(): void {
     this.years = [];
-    // año actual + 5 hacia atrás (ej: 2025, 2024, 2023, 2022, 2021, 2020)
+    // solo 5 años hacia atrás (no repetimos el año actual)
     for (let i = 1; i <= 5; i++) {
       this.years.push(this.currentYear - i);
     }
@@ -293,7 +292,6 @@ export class ContractComponent {
 
   findClient(){
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    console.log('this.authenticationToken ' + this.authenticationToken)
     this.customer$ = this.customerService.listCustomer(headers);
   }
 
@@ -319,7 +317,6 @@ export class ContractComponent {
     if (itemSelected) {
 
       if (this.arrayValuesAccessory.find(x => x.id === itemSelected._id)) {
-
         this.form.get('searchAccessory')?.patchValue([]);
         return;
       }
@@ -342,9 +339,6 @@ export class ContractComponent {
             items: [itemSelected?.items]
           })
         );
-        console.log('arreglo de accesorios ' ,this.arrayAccessory.value);
-        console.log('this.arrayAccessory.controls.length ' ,this.arrayAccessory.controls.length);
-        console.log('this.arrayAccessory.controls ' ,this.arrayAccessory.controls);
     }
 
     this.form.get('searchAccessory')?.patchValue([]);
@@ -353,12 +347,10 @@ export class ContractComponent {
   }
 
   onAddCustomer(element: NgSelectComponent) {
-
     const itemSelected = element.selectedValues[0] as Customer;
     if (itemSelected) {
       this.customerName=itemSelected?.name;
     }
-    console.log("this.customerName ",this.customerName);
     this.form.get('searchAccessory')?.patchValue([]);
     this.sumarValores();
     this.sumarValoresOnAccount();
@@ -372,7 +364,6 @@ export class ContractComponent {
             amount: element
           })
         );
-        console.log('arreglo de en cuenta ' ,this.arrayOnAccount.value);
         this.onAccount=0;
         this.sumarValoresOnAccount();
   }
@@ -435,26 +426,17 @@ export class ContractComponent {
   }
 
   addAcount(){
-    
-    
     var saldo=(this.A_cuenta_2-this.A_cuenta_1);
     if(saldo==0){
-      console.log("entro a la condicional");
       this.selectStatus='Pagado';
     }
 
-    console.log("this.totalBalance ",this.totalBalance)
-    console.log("this.selectStatus ",this.selectStatus)
     var payload = {
       _id : this._idContrat,
       onAccount : [{amount: parseFloat(this.A_cuenta_1.toString()),number:this.operacion_1,createdDate:this.A_cuenta_fecha_1}],
-      //pickupDate: this.form.controls['pickupDate'].value
       status: this.selectStatus
     };
-    console.log('payload '+payload);
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken '+this.authenticationToken)
     this.contractService.updateContract(payload, headers).subscribe(
       (data: any) => {
         this._idContrat='';
@@ -462,14 +444,10 @@ export class ContractComponent {
         this.A_cuenta_fecha_1='';
         this.operacion_1='';
         this.A_cuenta_2=0;
-        console.log('ejemplo de actualizar')
         this.onSubmitExit();
       },
       (error) => {
-        
         if( error.status === 401){
-        
-          console.log('usuario o claves incorrectos');
           this.route.navigate(['/app-login']);
         }else{
           console.log('error desconocido en el login');
@@ -480,108 +458,68 @@ export class ContractComponent {
   startTimer() {
     setTimeout(() => {
       window.print();
-          this.findContract();
-          this.limpiar();
-          this.findClient();
-          this.searchStock();
-          //this.finDate();
+      this.findContract(this.selectedYear, this.selectedStatus);
+      this.limpiar();
+      this.findClient();
+      this.searchStock();
       this.condicion=false;
-      
-    }, 100); // 1000 milisegundos = 1 segundo
+    }, 100);
   }
 
   onSave() {
     if (this.form.valid &&  this.isDisabled==false) {
-      debugger
       if(!this.mostrarBotones){
-        console.log("valor de cliente ", this.form.controls['customer'].value)
-        // this.selectedCustomer=this.form.controls['customer'].value;
-        // this.form.controls['customer'].setValue(this.selectedCustomer)
-
         const customerValue = this.form.controls['customer'].value;
-
-        if (typeof customerValue === 'object' && customerValue !== null) {
-          // El valor es un objeto JSON
-          console.log('El valor es un objeto JSON:', customerValue);
-        } else {
-          // El valor no es un objeto JSON
+        if (!(typeof customerValue === 'object' && customerValue !== null)) {
           this.form.controls['customer'].setValue(this.selectedCustomer)
         }
-
       }
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
       const values = {...this.form.value}
-      console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => { 
           this.isDisabled=true;
           this.numberContract=resp.codContract;
-          console.log('this.numberContract', this.numberContract);
           this.codUser=this.authenticationToken.user;
           this.customerName=resp.customer.name;
           this.phone=resp.customer.phone;
           this.documentNumber=resp.customer.documentNumber;
-          //window.print();
           this.startTimer();
-          //this.findContract();
-          //this.limpiar();
-          //this.findClient();
-          //this.searchStock();
-          //this.finDate();
-          //this.condicion=false;
-         
-          console.log('RESPUESTAs', resp);
         }
       )
     }
-    console.log(222)
   }
 
   onUpdate() {
     if (this.form.valid &&  this.isDisabled==false) {
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
       const values = {...this.form.value}
-      console.log('values ',values);
       this.contractService.saveContract(values, headers).subscribe(
         (resp) => { 
           this.isDisabled=true;
           this.numberContract=resp.codContract;
-          console.log('this.numberContract', this.numberContract);
           this.codUser=this.authenticationToken.user;
           this.customerName=resp.customer.name;
           this.phone=resp.customer.phone;
           this.documentNumber=resp.customer.documentNumber;
-          //window.print();
           this.startTimer();
-          //this.findContract();
-          //this.limpiar();
-          //this.findClient();
-          //this.searchStock();
-          //this.finDate();
-          //this.condicion=false;
-         
-          console.log('RESPUESTAs', resp);
         }
       )
     }
-    console.log(222)
   }
 
   printDocument(){
     this.listarDetalle=false;
     setTimeout(() => {
-      
-    window.print();
+      window.print();
     }, 200);
   }
 
   printDocumentDetalle(){
     this.listarDetalle=true;
     setTimeout(() => {
-      
-    window.print();
+      window.print();
     }, 200);
-    
   }
 
   onOptionChange(id:string,status:string){
@@ -589,200 +527,142 @@ export class ContractComponent {
       _id : id,
       status : status,
       onAccount: []
-      //pickupDate: this.form.controls['pickupDate'].value
     };
-    console.log('payload '+payload);
     if(status!="Anulado"){
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-      console.log('this.authenticationToken '+this.authenticationToken)
       this.contractService.updateContract(payload, headers).subscribe(
         (data: any) => {
-          console.log('ejemplo de cambiar estado')
-          this.findContract();
+          this.findContract(this.selectedYear, this.selectedStatus);
         },
         (error) => {
-          
           if( error.status === 401){
-          
-            console.log('usuario o claves incorrectos');
             this.route.navigate(['/app-login']);
           }else{
             console.log('error desconocido en el login');
           }
         });
-    }else{
-
     }
-    
   }
-  
-  
-  
-  
 
-  // findContract(){
-  //   const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-  //   //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-  //   console.log('this.authenticationToken '+this.authenticationToken)
-  //   this.contractService
-  //   .listContract(headers)
-  //   .pipe(
-  //     map( contracts => {
-  //       return contracts.sort((a:any, b:any) => b.numberContract - a.numberContract);
-  //     })
-  //   )
-  //   .subscribe(
-  //     (contract) => {
-  //         this.contract=contract;
-  //         console.log("contract ",this.contract)
-  //     },
-  //     (error) => {
-        
-  //       if( error.status === 401){
-        
-  //         console.log('usuario o claves incorrectos');
-  //         this.route.navigate(['/app-login']);
-  //       }else{
-  //         console.log('error desconocido en el login');
-  //       }
-  //     });
-  //   }
-
-  findContract(year: number = this.selectedYear) {
-  const headers = new HttpHeaders().set(
-    'Authorization',
-    'Bearer ' + this.authenticationToken.myValue
-  );
-  console.log('this.authenticationToken ', this.authenticationToken);
-  console.log('Consultando contratos del año: ', year);
-
-  this.contractService
-    .getContractsByYear(year, headers) // 👈 asegúrate de que este método esté tipado
-    .pipe(
-      map((contracts: Contract[]) => {   // 👈 aquí tipamos el parámetro
-        return contracts
-          .filter(
-            (contract: Contract) =>
-              contract.codContract && typeof contract.codContract === 'string'
-          )
-          .sort((a: Contract, b: Contract) => {
-            const aPart = parseInt(a.codContract.split('-')[0] || '0', 10);
-            const bPart = parseInt(b.codContract.split('-')[0] || '0', 10);
-
-            if (aPart !== bPart) {
-              return bPart - aPart; // primero los más grandes
-            } else {
-              return b.codContract.localeCompare(a.codContract);
-            }
-          });
-      })
-    )
-    .subscribe(
-      (contracts: Contract[]) => {     // 👈 tipamos también aquí
-        this.contract = contracts;
-        console.log('contract ', this.contract);
-      },
-      (error) => {
-        if (error.status === 401) {
-          console.log('usuario o claves incorrectos');
-          this.route.navigate(['/app-login']);
-        } else {
-          console.log('error desconocido en el login:', error);
-        }
-      }
+  // 🔥 Ahora consume año + estado
+  findContract(year: number = this.selectedYear, status: string = this.selectedStatus) {
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      'Bearer ' + this.authenticationToken.myValue
     );
-}
+    console.log('Consultando contratos del año: ', year, ' estado: ', status);
 
+    this.contractService
+      .getContractsByYearAndStatus(year, status, headers)
+      .pipe(
+        map((contracts: Contract[]) => {
+          return contracts
+            .filter(
+              (contract: Contract) =>
+                contract.codContract && typeof contract.codContract === 'string'
+            )
+            .sort((a: Contract, b: Contract) => {
+              const aPart = parseInt(a.codContract.split('-')[0] || '0', 10);
+              const bPart = parseInt(b.codContract.split('-')[0] || '0', 10);
+
+              if (aPart !== bPart) {
+                return bPart - aPart;
+              } else {
+                return b.codContract.localeCompare(a.codContract);
+              }
+            });
+        })
+      )
+      .subscribe(
+        (contracts: Contract[]) => {
+          this.contract = contracts;
+          this.filteredContracts = contracts;
+          console.log('contract ', this.contract);
+        },
+        (error) => {
+          if (error.status === 401) {
+            console.log('usuario o claves incorrectos');
+            this.route.navigate(['/app-login']);
+          } else {
+            console.log('error desconocido en el login:', error);
+          }
+        }
+      );
+  }
 
   onYearChange(year: number) {
     this.selectedYear = year;
-    this.findContract(year);
+    this.findContract(this.selectedYear, this.selectedStatus);
   }
-  
 
-    findAccesoryById(valor:string){
-      //this.items=[];
-      this.isDisabled=false;
-      console.log("valor ",valor);
-      // this.arrayAccessory.clear();
-      console.log("this.arrayAccessory ",[this.arrayAccessory.value]);
-      this.contract.forEach((response)=>{
-        if(response._id==valor){
-          console.log("response ",response)
-          //this.form.controls.get('customer')?.setValue(response.customer);
-          this._idContrat=valor;
-          this.idItemDelete=valor;
-          //this.form.controls['customer'].setValue(response.customer);
-          this.selectedCustomer=response.customer;
-          this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
-          console.log("distrito ",[response.district]);
-          this.numberContract=response.codContract;
-          //this.form.controls['co-contrato'].setValue(response.codContract);
-          this.form.controls['hourIni'].setValue(response.hourIni);
-          this.form.controls['hourFin'].setValue(response.hourFin);
-          this.form.controls['hourFin'].setValue(response.hourFin);
-          this.form.controls['hourIniPickup'].setValue(response.hourIniPickup);
-          this.form.controls['hourFinPickup'].setValue(response.hourFinPickup);
-          this.form.controls['address'].setValue(response.address);
-          this.form.controls['district'].setValue(response.district);
-          this.form.controls['comment'].setValue(response.comment);
-          this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
-          this.form.controls['eventDate'].setValue(response.eventDate.slice(0,10));
-          this.form.controls['pickupDate'].setValue(response.pickupDate.slice(0,10));
-          this.form.controls['createDate']?.setValue(response.createDate.slice(0,10));
-          this.fechaCreacion=response.createDate.slice(0,10);
-          //this.fechaActual=response.createDate.slice(0,10);
-          this.customerName=response.customer.name;
-          this.phone=response.customer.phone;
-          this.documentNumber=response.customer.documentNumber;
-          this.codUser=response?.userCreate?.userName;
-          this.selectStatus=response.status;
-          response.listAccessories.forEach((res:any)=>{
-            this.arrayAccessory
-            .push(
-              this.formBuilder.group({
-                id: res.id,
-                description: res.description,
-                color:res.color,
-                design:res.design,
-                high:res.high,
-                width:res.width,
-                large:res.large,
-                bottom:res.bottom,
-                amount: res.amount,
-                stock: res.stock,
-                price: res.price,
-                items: [res.items]
-                //items: {description:res.items.description,amount:res.items.amount}
-              })
-            );
-          })
-          response.onAccount.forEach((res:any)=>{
-            this.arrayOnAccount
-            .push(
-              this.formBuilder.group({
-                amount: res.amount,
-                number: res.number,
-                createdDate: res.createdDate.slice(0,10)
-              })
-            );
-          })
-          console.log("response.arrayAccessory ",this.arrayAccessory.value)
-          console.log("response.listAccesories ",response.listAccessories)
-          console.log('this.arrayAccessory.controls.length ' ,this.arrayAccessory.controls);
-          console.log('this.arrayOnAccount ' ,this.arrayOnAccount);
-        }
-      })
-      this.sumarValores();
-      this.sumarValoresOnAccount();
-      this.A_cuenta_2=this.totalBalance;
-      this.condicion=true;
-      //this.printDocument();
-      this.mostrarBotones=false;
-    }
+  onStatusChange(status: string) {
+    this.selectedStatus = status;
+    this.findContract(this.selectedYear, this.selectedStatus);
+  }
 
-    
+  findAccesoryById(valor:string){
+    this.isDisabled=false;
+    this.contract.forEach((response)=>{
+      if(response._id==valor){
+        this._idContrat=valor;
+        this.idItemDelete=valor;
+        this.selectedCustomer=response.customer;
+        this.form.controls['customer'].setValue(response.customer.documentNumber +' '+response.customer.name);
+        this.numberContract=response.codContract;
+        this.form.controls['hourIni'].setValue(response.hourIni);
+        this.form.controls['hourFin'].setValue(response.hourFin);
+        this.form.controls['hourIniPickup'].setValue(response.hourIniPickup);
+        this.form.controls['hourFinPickup'].setValue(response.hourFinPickup);
+        this.form.controls['address'].setValue(response.address);
+        this.form.controls['district'].setValue(response.district);
+        this.form.controls['comment'].setValue(response.comment);
+        this.form.controls['installDate'].setValue(response.installDate.slice(0,10));
+        this.form.controls['eventDate'].setValue(response.eventDate.slice(0,10));
+        this.form.controls['pickupDate'].setValue(response.pickupDate.slice(0,10));
+        this.form.controls['createDate']?.setValue(response.createDate.slice(0,10));
+        this.fechaCreacion=response.createDate.slice(0,10);
+        this.customerName=response.customer.name;
+        this.phone=response.customer.phone;
+        this.documentNumber=response.customer.documentNumber;
+        this.codUser=response?.userCreate?.userName;
+        this.selectStatus=response.status;
+        response.listAccessories.forEach((res:any)=>{
+          this.arrayAccessory
+          .push(
+            this.formBuilder.group({
+              id: res.id,
+              description: res.description,
+              color:res.color,
+              design:res.design,
+              high:res.high,
+              width:res.width,
+              large:res.large,
+              bottom:res.bottom,
+              amount: res.amount,
+              stock: res.stock,
+              price: res.price,
+              items: [res.items]
+            })
+          );
+        });
+        response.onAccount.forEach((res:any)=>{
+          this.arrayOnAccount
+          .push(
+            this.formBuilder.group({
+              amount: res.amount,
+              number: res.number,
+              createdDate: res.createdDate.slice(0,10)
+            })
+          );
+        });
+      }
+    })
+    this.sumarValores();
+    this.sumarValoresOnAccount();
+    this.A_cuenta_2=this.totalBalance;
+    this.condicion=true;
+    this.mostrarBotones=false;
+  }
 
   searchStock() {
     this.form.valueChanges
@@ -794,7 +674,6 @@ export class ContractComponent {
       .subscribe(
         (value) => {
           if (value.installDate !== '' && value.pickupDate !== '' && value.installDate <= value.pickupDate) {
-            //this.arrayAccessory.clear();
             const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
             this.accessory$ = this.accessoryService.listStockAccessory(headers, { "installDate": value.installDate, "pickupDate": value.pickupDate });
           }
@@ -809,18 +688,12 @@ export class ContractComponent {
       status:'Anulado'
     };
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken '+this.authenticationToken)
     this.contractService.updateContract(payload, headers).subscribe(
       (data:any) => {
-        console.log("eliminar accesorios ",data);
-         this.ngOnInit();
+        this.ngOnInit();
       },
       (error) => {
-        
         if( error.status === 401){
-        
-          console.log('usuario o claves incorrectos');
           this.route.navigate(['/app-login']);
         }else{
           console.log('error desconocido en el eliminar');
@@ -829,12 +702,10 @@ export class ContractComponent {
   }
 
   onSubmitExit(){
-
-    this.findContract();
+    this.findContract(this.selectedYear, this.selectedStatus);
     this.limpiar();
     this.findClient();
     this.searchStock();
-    //this.finDate();
     this._idContrat='';
     this.A_cuenta_1=0;
     this.A_cuenta_fecha_1='';
@@ -849,7 +720,6 @@ export class ContractComponent {
     this.unsubscribe.complete();
   }
 
-  imprimir(valor:string){
+  imprimir(valor:string){}
 
-  }
 }

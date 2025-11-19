@@ -9,30 +9,42 @@
   <!-- Con datos -->
   <div *ngIf="weeks.length > 0">
 
-    <!-- Barra de navegación de semanas -->
-    <div class="week-nav">
-      <button
-        class="btn-nav"
-        (click)="goToPreviousWeek()"
-        [disabled]="selectedWeekIndex === 0">
-        ⬅ Semana anterior
-      </button>
+    <!-- Barra de navegación de semanas + acciones -->
+    <div class="week-header">
+      <div class="week-nav">
+        <button
+          class="btn-nav"
+          (click)="goToPreviousWeek()
+          "
+          [disabled]="selectedWeekIndex === 0">
+          ⬅ Semana anterior
+        </button>
 
-      <div class="week-info">
-        <div class="week-title">
-          Mobiliario semanal - Semana {{ selectedWeekNumber }}
+        <div class="week-info">
+          <div class="week-title">
+            Mobiliario semanal
+          </div>
+          <small class="week-range">
+            {{ selectedWeekRange }}
+          </small>
         </div>
-        <small class="week-range">
-          {{ selectedWeekRange }}
-        </small>
+
+        <button
+          class="btn-nav"
+          (click)="goToNextWeek()"
+          [disabled]="selectedWeekIndex === weeks.length - 1">
+          Semana siguiente ➡
+        </button>
       </div>
 
-      <button
-        class="btn-nav"
-        (click)="goToNextWeek()"
-        [disabled]="selectedWeekIndex === weeks.length - 1">
-        Semana siguiente ➡
-      </button>
+      <div class="week-actions">
+        <button class="btn-action" (click)="printWeek()">
+          🖨 Imprimir
+        </button>
+        <button class="btn-action" (click)="exportToExcel()">
+          ⬇ Exportar Excel
+        </button>
+      </div>
     </div>
 
     <!-- Si la semana seleccionada no tiene items -->
@@ -51,13 +63,19 @@
 
       <!-- Tabla de mobiliarios agregados por día -->
       <table class="items-table">
+        <thead>
+          <tr>
+            <th class="col-mob">MOBILIARIO</th>
+            <th class="col-cant">CANT.</th>
+          </tr>
+        </thead>
         <tbody>
           <tr *ngFor="let acc of day.accessories">
             <td class="item-description">
-              {{ acc.totalAmount }} - {{ acc.description }}
+              {{ acc.description }}
             </td>
-            <td class="item-status">
-              OK
+            <td class="item-quantity">
+              {{ acc.totalAmount }}
             </td>
           </tr>
         </tbody>

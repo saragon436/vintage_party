@@ -12,21 +12,30 @@ import {
   AggregatedAccessoryView,
 } from '../models/weekly-summary.model';
 
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+
+// 🔴 IDs de accesorios que NO deben aparecer en el resumen semanal
+const EXCLUDED_ACCESSORY_IDS: string[] = [
+  '646635fe4c19f94ae45758ef', // MOVILIDAD
+  '6484877ece523caa9d3016a6', // IGV
+  '6474d1e4ce523caa9d300720', // RECOJO
+];
+
 @Component({
   selector: 'app-weekly-work',
   templateUrl: './weekly-work.component.html',
   styleUrls: ['./weekly-work.component.css'],
 })
 export class WeeklyWorkComponent implements OnInit {
-  weeks: WeekSummaryDto[] = [];     // 🔹 todas las semanas que devuelve el API
-  currentWeekView: DayView[] = [];  // 🔹 días + contratos de la semana seleccionada
+  weeks: WeekSummaryDto[] = [];     // todas las semanas devueltas por el API
+  currentWeekView: DayView[] = [];  // vista actual (día → mobiliarios agregados)
 
-  currentWeekNumber!: number;       // semana actual (según hoy) – solo para setear índice inicial
+  currentWeekNumber!: number;
   currentYear!: number;
   currentMonth!: number;
 
-  selectedWeekIndex = 0;            // índice dentro de this.weeks
-  
+  selectedWeekIndex = 0;
 
   constructor(
     private contractService: ContractService,
@@ -43,7 +52,7 @@ export class WeeklyWorkComponent implements OnInit {
     this.loadWeeks();
   }
 
-  // ================== Carga de semanas ==================
+  // ================== Cargar semanas del mes ==================
 
   private loadWeeks(): void {
     const headers = new HttpHeaders().set(
@@ -55,20 +64,24 @@ export class WeeklyWorkComponent implements OnInit {
       .getWeeklySummary(this.currentYear, this.currentMonth, headers)
       .subscribe({
         next: (weeks: WeekSummaryDto[]) => {
-          console.log('✅ Semanas recibidas:', weeks);
-          this.weeks = weeks || [];
+          // ordenar semanas de la más antigua a la más reciente
+          this.weeks = (weeks || []).sort(
+            (a, b) => a.weekNumber - b.weekNumber
+          );
 
           if (this.weeks.length === 0) {
             this.currentWeekView = [];
             return;
           }
 
-          // Buscar índice de la semana actual; si no existe, usar la primera
+          // buscar semana actual según fecha de hoy
           let index = this.weeks.findIndex(
             (w) => w.weekNumber === this.currentWeekNumber
           );
+
+          // si no se encuentra, usamos la última semana con datos
           if (index === -1) {
-            index = 0;
+            index = this.weeks.length - 1;
           }
 
           this.selectedWeekIndex = index;
@@ -77,10 +90,7 @@ export class WeeklyWorkComponent implements OnInit {
         error: (error) => {
           console.error('❌ Error al obtener weekly-summary', error);
           if (error.status === 401) {
-            console.log('usuario o claves incorrectos');
             this.router.navigate(['/app-login']);
-          } else {
-            console.log('error desconocido en weekly-summary');
           }
         },
       });
@@ -124,12 +134,10 @@ export class WeeklyWorkComponent implements OnInit {
       return;
     }
     this.currentWeekView = this.buildDayView(week.days);
-    console.log('👀 currentWeekView (semana index', this.selectedWeekIndex, '):', this.currentWeekView);
   }
 
   // ================== Helpers de transformación ==================
 
-  // misma lógica de número de semana que en backend
   private getWeekNumber(d: Date): number {
     const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
     const dayNum = date.getUTCDay() || 7;
@@ -140,37 +148,96 @@ export class WeeklyWorkComponent implements OnInit {
     );
   }
 
-private buildDayView(days: DaySummaryDto[]): DayView[] {
-  // ordenar por fecha usando el string (yyyy-mm-dd)
-  const sortedDays = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  /**
+   * Construye la vista de la semana:
+   *  - Ordena los días
+   *  - Excluye MOVILIDAD / IGV / RECOJO por accessoryId
+   *  - Agrupa por descripción de mobiliario sumando cantidades
+   */
+  private buildDayView(days: DaySummaryDto[]): DayView[] {
+    const sortedDays = [...days].sort((a, b) => a.date.localeCompare(b.date));
 
-  return sortedDays.map((day) => {
-    // Mapa: descripción → total acumulado
-    const accessoriesMap = new Map<string, number>();
+    return sortedDays.map((day) => {
+      // 1) filtrar los items excluidos por ID
+      const filteredItems = day.items.filter(
+        (item) => !EXCLUDED_ACCESSORY_IDS.includes(item.accessoryId)
+      );
 
-    for (const item of day.items) {
-      const key = item.description; // puedes usar description o description+id si quieres ser ultra estricto
-      const prev = accessoriesMap.get(key) ?? 0;
-      accessoriesMap.set(key, prev + item.amount);
+      // 2) agrupar por descripción sumando la cantidad
+      const accessoriesMap = new Map<string, number>();
+
+      for (const item of filteredItems) {
+        const key = item.description; // si quisieras ser ultra estricto, podrías usar item.accessoryId
+        const prev = accessoriesMap.get(key) ?? 0;
+        accessoriesMap.set(key, prev + item.amount);
+      }
+
+      const accessories: AggregatedAccessoryView[] = Array.from(
+        accessoriesMap.entries()
+      )
+        .map(([description, totalAmount]) => ({ description, totalAmount }))
+        .sort((a, b) => a.description.localeCompare(b.description));
+
+      // 3) formatear fecha usando el string del backend (evitamos problemas de timezone)
+      const [year, month, dayNum] = day.date.split('-'); // "2025-11-20"
+      const dateLabel = `${day.dayName} ${dayNum}/${month}`;
+
+      return {
+        date: dateLabel,
+        accessories,
+      };
+    });
+  }
+
+  // ================== Exportar semana actual a Excel ==================
+
+  exportToExcel(): void {
+    if (!this.currentWeekView || this.currentWeekView.length === 0) {
+      return;
     }
 
-    // Convertir el mapa a arreglo ordenado por descripción
-    const accessories: AggregatedAccessoryView[] = Array.from(
-      accessoriesMap.entries()
-    )
-      .map(([description, totalAmount]) => ({ description, totalAmount }))
-      .sort((a, b) => a.description.localeCompare(b.description));
+    const rows: any[] = [];
 
-    // Formatear fecha usando el string del backend (evitamos problemas de timezone)
-    const [year, month, dayNum] = day.date.split('-'); // "2025-11-20"
-    const dateLabel = `${day.dayName} ${dayNum}/${month}`;
+    this.currentWeekView.forEach((day) => {
+      day.accessories.forEach((acc) => {
+        rows.push({
+          Fecha: day.date,
+          Mobiliario: acc.description,
+          Cantidad: acc.totalAmount,
+        });
+      });
+    });
 
-    return {
-      date: dateLabel,
-      accessories,
-    };
-  });
+    if (rows.length === 0) {
+      return;
+    }
 
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      `Semana_${this.selectedWeekNumber ?? ''}`
+    );
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    });
+
+    const excelBlob = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    const fileName = `mobiliario_semana_${this.selectedWeekNumber ?? 'N'}.xlsx`;
+    FileSaver.saveAs(excelBlob, fileName);
+  }
+
+  // ================== Imprimir ==================
+
+  printWeek(): void {
+    window.print();
+  }
 }
 
-}
+

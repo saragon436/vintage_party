@@ -1,40 +1,59 @@
+/* ===========================
+   CONTENEDOR PRINCIPAL
+   =========================== */
+
 .weekly-container {
-  padding: 16px;
-  max-width: 900px;
+  padding: 20px;
+  max-width: 1100px;
   margin: 0 auto;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Estado vacío */
+/* ===========================
+   ESTADO VACÍO
+   =========================== */
+
 .empty-state {
-  padding: 32px;
   text-align: center;
-  color: #666;
+  margin-top: 40px;
+  color: #555;
 }
 
-.empty-state h2 {
-  margin-bottom: 8px;
+/* ===========================
+   ENCABEZADO DE SEMANA
+   =========================== */
+
+.week-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+
+  /* espaciar botones de navegación e info */
+  gap: 20px;
 }
 
-/* Barra de navegación de semanas */
+/* ===========================
+   NAVEGACIÓN DE SEMANAS
+   =========================== */
+
 .week-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background-color: #f3f3f3;
-  border: 1px solid #ddd;
+  gap: 15px;
 }
 
 .btn-nav {
-  padding: 4px 10px;
-  font-size: 12px;
-  border-radius: 4px;
-  border: 1px solid #aaa;
-  background-color: #ffffff;
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #888;
+  background-color: #fafafa;
+  border-radius: 5px;
   cursor: pointer;
+}
+
+.btn-nav:hover:not([disabled]) {
+  background-color: #ececec;
 }
 
 .btn-nav:disabled {
@@ -42,110 +61,152 @@
   cursor: not-allowed;
 }
 
+/* ===========================
+   INFO DE SEMANA
+   =========================== */
+
 .week-info {
   text-align: center;
 }
 
 .week-title {
-  font-weight: 600;
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: bold;
+  color: #333;
 }
 
 .week-range {
-  font-size: 11px;
-  color: #666;
+  font-size: 12px;
+  color: #777;
 }
 
-/* Bloque de día */
+/* ===========================
+   BOTONES DE ACCIÓN
+   =========================== */
+
+.week-actions {
+  display: flex;
+  flex-direction: row;       /* botones en fila */
+  gap: 12px;                 /* espacio entre botones */
+}
+
+.btn-action {
+  padding: 7px 14px;
+  font-size: 13px;
+  background-color: #fff;
+  border: 1px solid #555;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-action:hover {
+  background-color: #f0f0f0;
+}
+
+/* ===========================
+   BLOQUE DE DÍA
+   =========================== */
+
 .day-block {
-  margin-bottom: 24px;
+  margin-bottom: 35px;
 }
 
-/* Separador entre días */
+/* Separador horizontal del día */
 .day-separator {
-  border-top: 3px solid #8d8d8d;
-  margin: 32px 0 12px 0;
-  width: 100%;
-  opacity: 0.35;
+  border-top: 3px solid #222;
+  margin: 25px 0 10px 0;
 }
 
 .day-title {
   margin: 0;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: bold;
   color: #555;
 }
 
 .day-date {
-  margin: 4px 0 12px 0;
-  font-size: 17px;
-  font-weight: 700;
+  margin: 5px 0 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
 }
 
-/* Tarjeta de contrato */
-.contract-card {
-  background: #fafafa;
-  padding: 10px 16px 12px 16px;
-  margin-bottom: 14px;
-  border-radius: 6px;
-  border: 1px solid #e3e3e3;
-  position: relative;
-}
+/* ===========================
+   TABLA DE MOBILIARIOS
+   =========================== */
 
-/* Separador lateral del contrato */
-.contract-separator {
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 4px;
-  background-color: #c4c4c4;
-  border-radius: 4px;
-}
-
-/* Header del contrato */
-.contract-header {
-  margin-left: 8px; /* para que no choque con la barra lateral */
-  margin-bottom: 8px;
-}
-
-.contract-title {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.contract-address {
-  font-size: 12px;
-  color: #6f6f6f;
-}
-
-/* Tabla de mobiliarios */
 .items-table {
   width: 100%;
   border-collapse: collapse;
-  margin-left: 8px; /* alinear con header */
+  margin-top: 5px;
+}
+
+.items-table thead tr {
+  background-color: #eaeaea;
+}
+
+.items-table th {
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 2px solid #ccc;
 }
 
 .items-table td {
-  padding: 3px 0;
-  vertical-align: top;
+  padding: 8px;
+  font-size: 14px;
+  border-bottom: 1px solid #ddd;
 }
 
-.item-description {
-  font-size: 13px;
+/* Columnas */
+.col-mob {
+  width: 75%;
 }
 
-.item-status {
-  font-size: 13px;
-  color: green;
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
+.col-cant {
+  width: 25%;
+  text-align: center;
 }
 
-/* Línea final entre días (si quieres una más fuerte al final)
-hr {
-  margin-top: 16px;
-  margin-bottom: 16px;
+/* Cantidad resaltada */
+.item-quantity {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
 }
-*/
+
+/* ===========================
+   IMPRESIÓN
+   =========================== */
+
+@media print {
+
+  /* Ocultar navegación y botones */
+  .week-header,
+  .week-actions,
+  .btn-nav,
+  .btn-action {
+    display: none !important;
+  }
+
+  .weekly-container {
+    padding: 0;
+  }
+
+  .day-separator {
+    border-top: 2px solid #000;
+    margin-top: 20px;
+  }
+
+  .items-table td,
+  .items-table th {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .day-date {
+    font-size: 15px;
+  }
+}

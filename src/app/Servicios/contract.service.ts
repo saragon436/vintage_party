@@ -72,4 +72,14 @@ export class ContractService {
       { headers }
     );
   }
+
+   // 🔥 NUEVO: consumir /contracts/year/:year/status/:status
+  getContractsByYearAndStatus(
+    year: number,
+    status: string,
+    headers: HttpHeaders
+  ): Observable<any[]> {
+    const url = `${environment.apiUrl}/contract/year/${year}/status/${encodeURIComponent(status)}`;
+    return this.http.get<any[]>(url, { headers });
+  }
 }
