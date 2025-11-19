@@ -3,11 +3,9 @@ import { Component, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@an
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { ContractService } from '../Servicios/contract.service';
-import { addDays, subDays, startOfWeek,getDay ,endOfWeek, addWeeks, subWeeks, isTuesday } from 'date-fns';
-
-import * as dateFns from 'date-fns';
-
+import { addDays, isTuesday } from 'date-fns';
 import * as XLSX from 'xlsx';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 interface Contract {
   _id: string;
@@ -32,12 +30,19 @@ interface Contract {
   comment: string;
   listAccessories: [];
   onAccount: [];
-  customer: { name: string, documentNumber: string, phone: string };
+  customer: { name: string; documentNumber: string; phone: string };
   userCreate: { userName: string };
   isSelected: boolean;
   isSelectedPickup: boolean;
 }
 
+type TaskType = 'ENTREGA' | 'RECOJO';
+
+interface DailyTask {
+  type: TaskType;
+  contract: Contract;
+  routePos: number; // posición en la ruta del día
+}
 
 @Component({
   selector: 'app-calendar',
@@ -45,45 +50,62 @@ interface Contract {
   styleUrls: ['./calendar.component.css']
 })
 export class CalendarComponent implements OnInit {
-  @ViewChild('table') table!: ElementRef; // Obtén una referencia a la tabla HTML
+  @ViewChild('table') table!: ElementRef;
+
   week: Date[] = [];
-  contract: Contract[];
-  constructor(private route: Router,
+  contract: Contract[] = [];
+
+  /**
+   * Rutas de calle (sin almacén)
+   */
+  dailySchedules: { [dateKey: string]: DailyTask[] } = {};
+
+  /**
+   * Entregas en almacén por fecha
+   */
+  storeDeliveries: { [dateKey: string]: Contract[] } = {};
+
+  /**
+   * Recojos en almacén por fecha
+   */
+  storePickups: { [dateKey: string]: Contract[] } = {};
+
+  constructor(
+    private route: Router,
     private cd: ChangeDetectorRef,
     private authenticationToken: AuthenticationToken,
-    private contractService: ContractService) {
-    this.contract = [];
-  }
+    private contractService: ContractService
+  ) {}
 
   public nombresDias: string[] = [
-    
-    "Martes",
-    "Miércoles",
-    "Jueves",
-    "Viernes",
-    "Sábado",
-    "Domingo",
-    "Lunes"
+    'Martes',
+    'Miércoles',
+    'Jueves',
+    'Viernes',
+    'Sábado',
+    'Domingo',
+    'Lunes'
   ];
 
   public nombresMeses: string[] = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre"
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre'
   ];
 
-  // Function to toggle the isSelected property
-  toggleHighlight(contract: Contract) {
-    contract.isSelected = !contract.isSelected;
+  ngOnInit(): void {
+    const currentDate = new Date();
+    this.week = this.calculateWeek(currentDate);
+    this.findContract();
   }
 
   exportToExcel(): void {
@@ -91,73 +113,30 @@ export class CalendarComponent implements OnInit {
     const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(tableToExport);
     const wb: XLSX.WorkBook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Hoja1');
-
-    // Guarda el archivo Excel
     XLSX.writeFile(wb, 'Programacion.xlsx');
   }
 
-  ngOnInit(): void {
-    const currentDate = new Date();
-    this.week = this.calculateWeek(currentDate);
-    console.log("semansa : ", this.week)
-    this.findContract();
-  }
-
-  // calculateWeek(currentDate: Date): Date[] {
-  //   const startOfWeek = dateFns.startOfWeek(currentDate);
-  //   const week = [startOfWeek];
-
-  //   for (let i = 1; i < 7; i++) {
-  //     const nextDay = dateFns.addDays(startOfWeek, i);
-  //     week.push(nextDay);
-  //   }
-
-  //   return week;
-  // }
-
-   calculateWeek(currentDate: Date): Date[] {
-    // Encontrar el martes anterior al currentDate
+  calculateWeek(currentDate: Date): Date[] {
     let startOfWeek: Date = currentDate;
-    while (!isTuesday(startOfWeek)) { // Comprobamos si es martes
+    while (!isTuesday(startOfWeek)) {
       startOfWeek = addDays(startOfWeek, -1);
     }
-  
+
     const week: Date[] = [startOfWeek];
-  
     for (let i = 1; i < 7; i++) {
       const nextDay: Date = addDays(startOfWeek, i);
       week.push(nextDay);
     }
-  
     return week;
-  }
-
-  calculateNextWeek(startDate: Date): Date[] {
-    const lastDayOfWeek = this.calculateWeek(startDate)[6]; // Obtén el último día de la semana calculada
-  
-    const nextWeek: Date[] = [];
-    for (let i = 1; i <= 7; i++) {
-      const nextDay = new Date(lastDayOfWeek);
-      nextDay.setDate(lastDayOfWeek.getDate() + i);
-      nextWeek.push(nextDay);
-    }
-  
-    return nextWeek;
   }
 
   calcularNext() {
     if (this.week && this.week.length > 0) {
-      // Obtén el último día de la semana actual
       const lastDayOfWeek = this.week[this.week.length - 1];
-      
-      // Calcula la fecha de inicio de la próxima semana
       const nextWeekStartDate = new Date(lastDayOfWeek);
-      nextWeekStartDate.setDate(lastDayOfWeek.getDate() + 1); // Avanzar un día
-      
-      // Calcula la próxima semana
+      nextWeekStartDate.setDate(lastDayOfWeek.getDate() + 1);
       this.week = this.calculateWeek(nextWeekStartDate);
     } else {
-      // Si this.week no está definido, calcula la semana actual
       const currentDate = new Date();
       this.week = this.calculateWeek(currentDate);
     }
@@ -165,661 +144,300 @@ export class CalendarComponent implements OnInit {
 
   calcularbefore() {
     if (this.week && this.week.length > 0) {
-      // Obtén el primer día de la semana actual
       const firstDayOfWeek = this.week[0];
-      
-      // Calcula la fecha de inicio de la semana anterior
       const previousWeekStartDate = new Date(firstDayOfWeek);
-      previousWeekStartDate.setDate(firstDayOfWeek.getDate() - 7); // Retroceder una semana
-      
-      // Calcula la semana anterior
+      previousWeekStartDate.setDate(firstDayOfWeek.getDate() - 7);
       this.week = this.calculateWeek(previousWeekStartDate);
     } else {
-      // Si this.week no está definido, calcula la semana actual
       const currentDate = new Date();
       this.week = this.calculateWeek(currentDate);
     }
   }
 
+  // ===========================
+  //  Carga contratos desde API
+  // ===========================
   findContract() {
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken ' + this.authenticationToken)
-    this.contractService
-      .listContract(headers)
-      .subscribe(
-        (contract) => {
-          this.contract = contract;
-          console.log("contract ", this.contract)
-        },
-        (error) => {
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      'Bearer ' + this.authenticationToken.myValue
+    );
 
-          if (error.status === 401) {
-
-            console.log('usuario o claves incorrectos');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('error desconocido en el login');
-          }
-        });
-  }
-
-  //  getContractsForDay(day: Date): Contract[] {
-  //   return this.contract.filter((contract) => {
-  //     const installDate = new Date(contract.installDate);
-  //     return (
-  //       installDate.getDate() === day.getDate() -1 &&
-  //       installDate.getMonth() === day.getMonth() &&
-  //       installDate.getFullYear() === day.getFullYear()
-  //     );
-  //   });
-  // }
-
-  // getContractsForDay(day: Date): Contract[] {
-  //   const contractsForDay = this.contract.filter((contract) => {
-  //     const installDate = new Date(contract.installDate);
-  //     return (
-  //       installDate.getDate() === day.getDate() - 1 &&
-  //       installDate.getMonth() === day.getMonth() &&
-  //       installDate.getFullYear() === day.getFullYear()
-  //     );
-  //   });
-
-  //   // Asignar un valor por defecto a 'order' si es null o undefined
-  //   contractsForDay.forEach((contract, index) => {
-  //     if (contract.order == null) {
-  //       contract.order = index + 1;
-  //     }
-  //   });
-
-  //   return contractsForDay;
-  // }
-
-  getContractsForDay(day: Date): Contract[] {
-
-    // const contractsForDay = this.contract.filter((contract) => {
-    //   const installDate = new Date(Date.parse(contract.installDate));
-    //   //console.log("dia ",day.getDate() +" fecha instalacion "+ contract.installDate +"conrato "+contract.codContract)
-    //   contract.codContract=="2023-0000002280"?console.log("dia ",day.getMonth() +"mes "+day.getDate() +"cDia "+ installDate.getMonth()+"cMes "+installDate.getDate()):""
-    //   return (
-    //     //installDate.getDay() === (day.getDate()-1 == 31 ? 1 : day.getDate() - 1) &&
-        
-
-    //     installDate.getDate() === day.getDate() &&
-    //     installDate.getMonth() === day.getMonth() &&
-    //     installDate.getFullYear() === day.getFullYear()
-    //   );
-    // });
-
-    const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
-
-  const contractsForDay = this.contract.filter((contract) => {
-    const installDate = contract.installDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
-    return installDate === dayFormatted;
-  });
-      // Filtrar los contratos que no tienen 'almacen' como dirección
-    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
-    return contract.district !== 'Almacen';
-    });
-
-    // Asignar un valor por defecto a 'order' si es null o undefined
-    contractsExcludingAlmacen.forEach((contract, index) => {
-      if (contract.order == null) {
-        contract.order = index + 1;
-      }
-    });
-
-    // Ordenar los contratos por 'order' en orden ascendente
-    contractsExcludingAlmacen.sort((a, b) => a.order - b.order);
-
-    return contractsExcludingAlmacen;
-  }
-
-  // getContractsForDay(day: Date): Contract[] {
-  //   debugger
-  //   // Ajustar la zona horaria de day para eliminarla
-  //   day.setUTCHours(0, 0, 0, 0);
-    
-  //   const dayFormatted = this.datePipe.transform(day, 'yyyy-MM-dd');
-    
-  //   const contractsForDay = this.contract.filter((contract) => {
-  //     const installDate = new Date(contract.installDate);
-  //     const installDateFormatted = this.datePipe.transform(installDate, 'yyyy-MM-dd');
-  //     return installDateFormatted === dayFormatted;
-  //   });
-  
-  //   // Filtrar los contratos que no tienen 'Almacen' como dirección
-  //   const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
-  //     return contract.district !== 'Almacen';
-  //   });
-  
-  //   // Asignar un valor por defecto a 'order' si es null o undefined
-  //   contractsExcludingAlmacen.forEach((contract, index) => {
-  //     if (contract.order == null) {
-  //       contract.order = index + 1;
-  //     }
-  //   });
-  
-  //   // Ordenar los contratos por 'order' en orden ascendente
-  //   contractsExcludingAlmacen.sort((a, b) => a.order - b.order);
-  
-  //   return contractsExcludingAlmacen;
-  // }
-
-  getContractsStoreForDay(day: Date): Contract[] {
-    // const contractsForDay = this.contract.filter((contract) => {
-    //   const installDate = new Date(contract.installDate);
-    //   return (
-    //     installDate.getDate() == day.getDate() &&
-    //     installDate.getMonth() === day.getMonth() &&
-    //     installDate.getFullYear() === day.getFullYear()
-    //   );
-    // });
-    const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
-
-  const contractsForDay = this.contract.filter((contract) => {
-    const installDate = contract.installDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
-    return installDate === dayFormatted;
-  });
-
-      // Filtrar los contratos que no tienen 'almacen' como dirección
-    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
-    return contract.district == 'Almacen';
-    });
-
-    // Asignar un valor por defecto a 'order' si es null o undefined
-    contractsExcludingAlmacen.forEach((contract, index) => {
-      if (contract.order == null) {
-        contract.order = index + 1;
-      }
-    });
-
-    // Ordenar los contratos por 'order' en orden ascendente
-    contractsExcludingAlmacen.sort((a, b) => a.order - b.order);
-
-    return contractsExcludingAlmacen;
-  }
-
-
-  getContractsPikupDateForDay(day: Date): Contract[] {
-    const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
-
-    const contractsForDay = this.contract.filter((contract) => {
-      const installDate = contract.pickupDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
-      return installDate === dayFormatted;
-    });
-
-    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
-      return contract.district !== 'Almacen';
-      });
-
-    // Asignar un valor por defecto a 'order' si es null o undefined
-    contractsExcludingAlmacen.forEach((contract, index) => {
-      if (contract.orderPickup == null) {
-        contract.orderPickup = index + 1;
-      }
-    });
-
-    // Ordenar los contratos por 'order' en orden ascendente
-    contractsExcludingAlmacen.sort((a, b) => a.orderPickup - b.orderPickup);
-
-    return contractsExcludingAlmacen;
-  }
-
-  getContractsPikupDateStoreForDay(day: Date): Contract[] {
-    const contractsForDay = this.contract.filter((contract) => {
-      const installDate = new Date(contract.pickupDate);
-      return (
-        installDate.getDate() === day.getDate() - 1 &&
-        installDate.getMonth() === day.getMonth() &&
-        installDate.getFullYear() === day.getFullYear()
-      );
-    });
-
-    const contractsExcludingAlmacen = contractsForDay.filter((contract) => {
-      return contract.district == 'Almacen';
-      });
-
-    // Asignar un valor por defecto a 'order' si es null o undefined
-    contractsExcludingAlmacen.forEach((contract, index) => {
-      if (contract.orderPickup == null) {
-        contract.orderPickup = index + 1;
-      }
-    });
-
-    // Ordenar los contratos por 'order' en orden ascendente
-    contractsExcludingAlmacen.sort((a, b) => a.orderPickup - b.orderPickup);
-
-    return contractsExcludingAlmacen;
-  }
-
-
-  getBothcontract(day:Date): Contract[]{
-    const contractsForDay = this.getContractsForDay(day);
-    const contractsForDayPickup = this.getContractsPikupDateForDay(day);
-    const combinedContracts = contractsForDay.concat(contractsForDayPickup);
-    console.log("arreglo unificado : ",combinedContracts)
-    return combinedContracts;
-  }
-
-  // getContractsPikupDateForDay(day: Date): Contract[] {
-  //   return this.contract.filter((contract) => {
-  //     const pikcupDate = new Date(contract.pickupDate);
-  //     return (
-  //       pikcupDate.getDate() === day.getDate() -1 &&
-  //       pikcupDate.getMonth() === day.getMonth() &&
-  //       pikcupDate.getFullYear() === day.getFullYear()
-  //     );
-  //   });
-  // }
-
-
-  onOptionChange(id: string, isSelected: boolean) {
-    var payload = {
-      _id: id,
-      isSelected: isSelected,
-      onAccount: []
-      //pickupDate: this.form.controls['pickupDate'].value
-    };
-    console.log('payload ' + payload);
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken ' + this.authenticationToken)
-    this.contractService.updateContract(payload, headers).subscribe(
-      (data: any) => {
-        console.log('ejemplo de cambiar estado')
-        this.findContract();
+    this.contractService.listContract(headers).subscribe(
+      (contract) => {
+        this.contract = contract;
+        this.buildDailySchedules(); // ← construye rutas y almacén
+        this.cd.detectChanges();
       },
       (error) => {
-
         if (error.status === 401) {
-
           console.log('usuario o claves incorrectos');
           this.route.navigate(['/app-login']);
         } else {
           console.log('error desconocido en el login');
         }
-      });
+      }
+    );
+  }
 
+  // ===========================
+  //  Construir rutas + almacén
+  // ===========================
+  private buildDailySchedules() {
+    this.dailySchedules = {};
+    this.storeDeliveries = {};
+    this.storePickups = {};
+
+    for (const c of this.contract) {
+      // ENTREGAS
+      if (c.installDate) {
+        const dateKey = c.installDate.slice(0, 10); // yyyy-MM-dd
+
+        if (c.district === 'Almacen') {
+          if (!this.storeDeliveries[dateKey]) {
+            this.storeDeliveries[dateKey] = [];
+          }
+          this.storeDeliveries[dateKey].push(c);
+        } else {
+          if (!this.dailySchedules[dateKey]) {
+            this.dailySchedules[dateKey] = [];
+          }
+          this.dailySchedules[dateKey].push({
+            type: 'ENTREGA',
+            contract: c,
+            routePos: c.order || 0
+          });
+        }
+      }
+
+      // RECOJOS
+      if (c.pickupDate) {
+        const dateKey = c.pickupDate.slice(0, 10);
+
+        if (c.district === 'Almacen') {
+          if (!this.storePickups[dateKey]) {
+            this.storePickups[dateKey] = [];
+          }
+          this.storePickups[dateKey].push(c);
+        } else {
+          if (!this.dailySchedules[dateKey]) {
+            this.dailySchedules[dateKey] = [];
+          }
+          this.dailySchedules[dateKey].push({
+            type: 'RECOJO',
+            contract: c,
+            routePos: c.orderPickup || 0
+          });
+        }
+      }
+    }
+
+    // Ajustar orden en cada fecha para la ruta de calle
+    Object.keys(this.dailySchedules).forEach((dateKey) => {
+      const tasks = this.dailySchedules[dateKey];
+      const hasAnyOrder = tasks.some((t) => t.routePos && t.routePos > 0);
+
+      if (!hasAnyOrder) {
+        tasks.forEach((t, index) => (t.routePos = index + 1));
+      } else {
+        tasks.sort((a, b) => (a.routePos || 0) - (b.routePos || 0));
+      }
+    });
+  }
+
+  // yyyy-MM-dd usando hora local (sin UTC)
+  getDayKey(day: Date): string {
+    const year = day.getFullYear();
+    const month = (day.getMonth() + 1).toString().padStart(2, '0');
+    const date = day.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${date}`;
+  }
+
+  // Rutas de calle (sin almacén)
+  getDailyScheduleForDay(day: Date): DailyTask[] {
+    const key = this.getDayKey(day);
+    return this.dailySchedules[key] || [];
+  }
+
+  // Entregas en almacén
+  getStoreDeliveriesForDay(day: Date): Contract[] {
+    const key = this.getDayKey(day);
+    return this.storeDeliveries[key] || [];
+  }
+
+  // Recojos en almacén
+  getStorePickupsForDay(day: Date): Contract[] {
+    const key = this.getDayKey(day);
+    return this.storePickups[key] || [];
+  }
+
+ // Total de filas del día (ruta + header ALMACÉN + filas de almacén)
+getTotalRowsForDay(day: Date): number {
+  const rutas = this.getDailyScheduleForDay(day).length;
+  const storeD = this.getStoreDeliveriesForDay(day).length;
+  const storeP = this.getStorePickupsForDay(day).length;
+
+  const filasAlmacen = storeD + storeP;
+  const headerAlmacen = filasAlmacen > 0 ? 1 : 0; // 1 fila que dice "ALMACÉN"
+
+  const total = rutas + filasAlmacen + headerAlmacen;
+  return total > 0 ? total : 1;
+}
+
+  // ===========================
+  //  Drag & Drop ruta calle
+  // ===========================
+  dropDailySchedule(day: Date, event: CdkDragDrop<DailyTask[]>) {
+    const key = this.getDayKey(day);
+    const tasks = this.dailySchedules[key];
+
+    if (!tasks) {
+      return;
+    }
+
+    moveItemInArray(tasks, event.previousIndex, event.currentIndex);
+
+    tasks.forEach((task, index) => {
+      const newPos = index + 1;
+      task.routePos = newPos;
+
+      if (task.type === 'ENTREGA') {
+        task.contract.order = newPos;
+      } else {
+        task.contract.orderPickup = newPos;
+      }
+    });
+
+    this.saveDailyOrder(tasks);
+  }
+
+  private saveDailyOrder(tasks: DailyTask[]) {
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      'Bearer ' + this.authenticationToken.myValue
+    );
+
+    tasks.forEach((task) => {
+      const payload: any = {
+        _id: task.contract._id,
+        onAccount: []
+      };
+
+      if (task.type === 'ENTREGA') {
+        payload.order = task.contract.order;
+      } else {
+        payload.orderPickup = task.contract.orderPickup;
+      }
+
+      this.contractService.updateContract(payload, headers).subscribe(
+        () => {
+          console.log(`Ruta actualizada para contrato ${task.contract._id}`);
+        },
+        (error) => {
+          if (error.status === 401) {
+            console.log('Credenciales incorrectas');
+            this.route.navigate(['/app-login']);
+          } else {
+            console.log('Error desconocido en el login');
+          }
+        }
+      );
+    });
+  }
+
+  // ===========================
+  //  Updates varios
+  // ===========================
+  onOptionChange(id: string, isSelected: boolean) {
+    const payload = {
+      _id: id,
+      isSelected,
+      onAccount: []
+    };
+    this.updateSimple(payload);
   }
 
   onOptionChangePickup(id: string, isSelectedPickup: boolean) {
-    var payload = {
+    const payload = {
       _id: id,
-      isSelectedPickup: isSelectedPickup,
+      isSelectedPickup,
       onAccount: []
-      //pickupDate: this.form.controls['pickupDate'].value
     };
-    console.log('payload ' + payload);
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken ' + this.authenticationToken)
-    this.contractService.updateContract(payload, headers).subscribe(
-      (data: any) => {
-        console.log('ejemplo de cambiar estado')
-        this.findContract();
-      },
-      (error) => {
-
-        if (error.status === 401) {
-
-          console.log('usuario o claves incorrectos');
-          this.route.navigate(['/app-login']);
-        } else {
-          console.log('error desconocido en el login');
-        }
-      });
-
+    this.updateSimple(payload);
   }
 
   onOptionChangeMobility(id: string, mobility: string) {
-    var payload = {
+    const payload = {
       _id: id,
-      mobility: mobility,
+      mobility,
       onAccount: []
-      //pickupDate: this.form.controls['pickupDate'].value
     };
-    console.log('payload ' + payload);
-
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken ' + this.authenticationToken)
-    this.contractService.updateContract(payload, headers).subscribe(
-      (data: any) => {
-        console.log('ejemplo de cambiar estado')
-        this.findContract();
-      },
-      (error) => {
-
-        if (error.status === 401) {
-
-          console.log('usuario o claves incorrectos');
-          this.route.navigate(['/app-login']);
-        } else {
-          console.log('error desconocido en el login');
-        }
-      });
-
-
+    this.updateSimple(payload);
   }
 
   onOptionChangeMobilityPickup(id: string, mobilityPickup: string) {
-    var payload = {
+    const payload = {
       _id: id,
-      mobilityPickup: mobilityPickup,
+      mobilityPickup,
       onAccount: []
-      //pickupDate: this.form.controls['pickupDate'].value
     };
-    console.log('payload ' + payload);
+    this.updateSimple(payload);
+  }
 
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-    //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-    console.log('this.authenticationToken ' + this.authenticationToken)
+  saveHour(id: string, hourIni: string) {
+    const payload = {
+      _id: id,
+      hourIni,
+      onAccount: []
+    };
+    this.updateSimple(payload);
+  }
+
+  saveHourFin(id: string, hourFin: string) {
+    const payload = {
+      _id: id,
+      hourFin,
+      onAccount: []
+    };
+    this.updateSimple(payload);
+  }
+
+  saveHourPickup(id: string, hourIniPickup: string) {
+    const payload = {
+      _id: id,
+      hourIniPickup,
+      onAccount: []
+    };
+    this.updateSimple(payload);
+  }
+
+  saveHourFinPickup(id: string, hourFinPickup: string) {
+    const payload = {
+      _id: id,
+      hourFinPickup,
+      onAccount: []
+    };
+    this.updateSimple(payload);
+  }
+
+  private updateSimple(payload: any) {
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      'Bearer ' + this.authenticationToken.myValue
+    );
+
     this.contractService.updateContract(payload, headers).subscribe(
-      (data: any) => {
-        console.log('ejemplo de cambiar estado')
-        this.findContract();
+      () => {
+        this.findContract(); // recarga y reconstruye rutas/almacén
       },
       (error) => {
-
         if (error.status === 401) {
-
           console.log('usuario o claves incorrectos');
           this.route.navigate(['/app-login']);
         } else {
           console.log('error desconocido en el login');
         }
-      });
-
-
+      }
+    );
   }
-
-  moveRowUp(day: Date, contract: Contract) {
-    if (contract.order > 1) {
-      const contractsForDay = this.getContractsForDay(day);
-      const currentIndex = contractsForDay.findIndex((c) => c._id === contract._id);
-      const previousIndex = contractsForDay.findIndex((c) => c.order === contract.order - 1);
-
-      contract.order--;
-      contractsForDay[previousIndex].order++;
-
-      // Reordena la matriz en función del nuevo índice de orden
-      contractsForDay.sort((a, b) => a.order - b.order);
-      //this.onOptionChangeOrder(contract._id,contract.order);
-    }
-  }
-
-  moveRowDown(day: Date, contract: Contract) {
-    const contractsForDay = this.getContractsForDay(day);
-    if (contract.order < contractsForDay.length) {
-      const currentIndex = contractsForDay.findIndex((c) => c._id === contract._id);
-      const nextIndex = contractsForDay.findIndex((c) => c.order === contract.order + 1);
-
-      contract.order++;
-      contractsForDay[nextIndex].order--;
-
-      // Reordena la matriz en función del nuevo índice de orden
-      contractsForDay.sort((a, b) => a.order - b.order);
-      //this.onOptionChangeOrder(contract._id,contract.order);
-    }
-  }
-
-  // moveRowUp(day: Date, index: number) {
-  //   if (index > 0) {
-  //     const contracts = this.getBothcontract(day);
-  //     const temp = contracts[index];
-  //     contracts[index] = contracts[index - 1];
-  //     contracts[index - 1] = temp;
-  //   }
-  // }
-  
-  // moveRowDown(day: Date, index: number) {
-  //   const contracts = this.getBothcontract(day);
-  //   if (index < contracts.length - 1) {
-  //     const temp = contracts[index];
-  //     contracts[index] = contracts[index + 1];
-  //     contracts[index + 1] = temp;
-  //   }
-  // }
-  
-
-  moveRowUpPickup(day: Date, contract: Contract) {
-    if (contract.orderPickup > 1) {
-      const contractsForDay = this.getContractsPikupDateForDay(day);
-      const currentIndex = contractsForDay.findIndex((c) => c._id === contract._id);
-      const previousIndex = contractsForDay.findIndex((c) => c.orderPickup === contract.orderPickup - 1);
-
-      contract.orderPickup--;
-      contractsForDay[previousIndex].orderPickup++;
-
-      // Reordena la matriz en función del nuevo índice de orden
-      contractsForDay.sort((a, b) => a.orderPickup - b.orderPickup);
-      //this.onOptionChangeOrderPikcup(contract._id,contract.orderPickup);
-    }
-  }
-
-  moveRowDownPickup(day: Date, contract: Contract) {
-    const contractsForDay = this.getContractsPikupDateForDay(day);
-    if (contract.orderPickup < contractsForDay.length) {
-      const currentIndex = contractsForDay.findIndex((c) => c._id === contract._id);
-      const nextIndex = contractsForDay.findIndex((c) => c.orderPickup === contract.orderPickup + 1);
-
-      contract.orderPickup++;
-      contractsForDay[nextIndex].orderPickup--;
-
-      // Reordena la matriz en función del nuevo índice de orden
-      contractsForDay.sort((a, b) => a.orderPickup - b.orderPickup);
-      //this.onOptionChangeOrderPikcup(contract._id,contract.orderPickup);
-    }
-  }
-
-  // onOptionChangeOrder(id:string,order:number){
-  //   var payload = {
-  //     _id : id,
-  //     order : order,
-  //     onAccount: []
-  //     //pickupDate: this.form.controls['pickupDate'].value
-  //   };
-  //   console.log('payload '+payload);
-
-  //     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-  //     //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-  //     console.log('this.authenticationToken '+this.authenticationToken)
-  //     this.contractService.updateContract(payload, headers).subscribe(
-  //       (data: any) => {
-  //         console.log('ejemplo de cambiar estado')
-  //         this.findContract();
-  //       },
-  //       (error) => {
-
-  //         if( error.status === 401){
-
-  //           console.log('usuario o claves incorrectos');
-  //           this.route.navigate(['/app-login']);
-  //         }else{
-  //           console.log('error desconocido en el login');
-  //         }
-  //       });
-
-
-  // }
-
-  // Modifica la firma de la función para aceptar la lista de contratos
-  onOptionChangeOrder(contracts: Contract[]) {
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-  
-    // Recorre el arreglo de contratos
-    for (const contract of contracts) {
-      const payload = {
-        _id: contract._id,
-        order: contract.order,
-        onAccount: [],
-      };
-  
-      this.contractService.updateContract(payload, headers).subscribe(
-        (data: any) => {
-          console.log(`Orden actualizada para el contrato con _id: ${contract._id}`);
-          // Puedes manejar más lógica si es necesario
-        },
-        (error) => {
-          if (error.status === 401) {
-            console.log('Credenciales incorrectas');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('Error desconocido en el login');
-          }
-        }
-      );
-    }
-  }
-  
-
-  onOptionChangeOrderPickup(contracts: Contract[]) {
-    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-  
-    // Recorre el arreglo de contratos
-    for (const contract of contracts) {
-      const payload = {
-        _id: contract._id,
-        orderPickup: contract.orderPickup,
-        onAccount: [],
-      };
-  
-      this.contractService.updateContract(payload, headers).subscribe(
-        (data: any) => {
-          console.log(`Orden actualizada para el contrato con _id: ${contract._id}`);
-          // Puedes manejar más lógica si es necesario
-        },
-        (error) => {
-          if (error.status === 401) {
-            console.log('Credenciales incorrectas');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('Error desconocido en el login');
-          }
-        }
-      );
-    }
-  }
-
-  saveHour(id: string, hourIni: string) {
-    // Recorre el arreglo de contratos
-
-    var payload = {
-        _id: id,
-        hourIni: hourIni,
-        onAccount: [],
-      };
-  
-      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-      console.log('this.authenticationToken ' + this.authenticationToken)
-      this.contractService.updateContract(payload, headers).subscribe(
-        (data: any) => {
-          console.log('ejemplo de cambiar estado')
-          this.findContract();
-        },
-        (error) => {
-  
-          if (error.status === 401) {
-  
-            console.log('usuario o claves incorrectos');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('error desconocido en el login');
-          }
-        });
-    
-  }
-
-  saveHourFin(id: string, hourFin: string) {
-    // Recorre el arreglo de contratos
-    var payload = {
-        _id: id,
-        hourFin: hourFin,
-        onAccount: [],
-      };
-      console.log('payload ' + payload);
-  
-      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-      console.log('this.authenticationToken ' + this.authenticationToken)
-      this.contractService.updateContract(payload, headers).subscribe(
-        (data: any) => {
-          console.log('ejemplo de cambiar estado')
-          this.findContract();
-        },
-        (error) => {
-  
-          if (error.status === 401) {
-  
-            console.log('usuario o claves incorrectos');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('error desconocido en el login');
-          }
-        });
-  
-  }
-
-  saveHourPickup(id: string, hourIniPickup: string) {
-    // Recorre el arreglo de contratos
-
-    var payload = {
-        _id: id,
-        hourIniPickup: hourIniPickup,
-        onAccount: [],
-      };
-  
-      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-      console.log('this.authenticationToken ' + this.authenticationToken)
-      this.contractService.updateContract(payload, headers).subscribe(
-        (data: any) => {
-          console.log('ejemplo de cambiar estado')
-          this.findContract();
-        },
-        (error) => {
-  
-          if (error.status === 401) {
-  
-            console.log('usuario o claves incorrectos');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('error desconocido en el login');
-          }
-        });
-    
-  }
-
-  saveHourFinPickup(id: string, hourFinPickup: string) {
-    // Recorre el arreglo de contratos
-    var payload = {
-        _id: id,
-        hourFinPickup: hourFinPickup,
-        onAccount: [],
-      };
-      console.log('payload ' + payload);
-  
-      const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-      //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-      console.log('this.authenticationToken ' + this.authenticationToken)
-      this.contractService.updateContract(payload, headers).subscribe(
-        (data: any) => {
-          console.log('ejemplo de cambiar estado')
-          this.findContract();
-        },
-        (error) => {
-  
-          if (error.status === 401) {
-  
-            console.log('usuario o claves incorrectos');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('error desconocido en el login');
-          }
-        });
-  
-  }
-
 }

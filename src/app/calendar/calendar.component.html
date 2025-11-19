@@ -4,126 +4,321 @@
     <button class="btn btn-primary" (click)="exportToExcel()">Exportar a Excel</button>
     <button class="btn btn-primary" (click)="calcularNext()">Siguiente</button>
   </div>
+
   <div id="salto"></div>
+
   <div class="vertical-container">
     <table #table>
-      <tr>
-        <th width="5%">Fecha</th>
-        <th width="10%">Boton</th>
-        <!-- <th width="10%">Orden</th> -->
-        <th width="5%">Código de Contrato</th>
-        <th width="15%">Usuario</th>
-        <th width="5%">Horario</th>
-        <th width="5%">Mobilidad</th>
-        <th width="10%">Distrito</th>
-        <th width="60%">Direccion</th>
-        <th width="10%">Estado</th>
-      </tr>
+      <thead>
+        <tr>
+          <th width="8%">Fecha</th>
+          <th width="6%">Ruta</th>
+          <th width="7%">Tipo</th>
+          <th width="10%">Código</th>
+          <th width="18%">Cliente</th>
+          <th width="15%">Horario</th>
+          <th width="10%">Movilidad</th>
+          <th width="10%">Distrito</th>
+          <th width="30%">Dirección</th>
+          <th width="8%">Estado</th>
+        </tr>
+      </thead>
+
+      <!-- Recorremos cada día de la semana -->
       <ng-container *ngFor="let day of week; let i = index">
-        <tr>
-          <td [attr.rowspan]="getContractsForDay(day).length + 3 + getContractsStoreForDay(day).length + getContractsPikupDateStoreForDay(day).length  + getContractsPikupDateForDay(day).length">
-            {{ nombresDias[i] }} {{ day | date: 'd' }} de {{ nombresMeses[day.getMonth()] }} de {{ day.getFullYear() }}
-          </td>
-        </tr>
-        <tr>
-          <td style="background-color: rgb(72, 182, 241);">Entrega</td>
-          <div>
-            <button class="boton" (click)="onOptionChangeOrder(getContractsForDay(day));onOptionChangeOrderPickup(getContractsPikupDateForDay(day))">Guardar Orden</button>
-          </div>
-        </tr>
-        <tr *ngFor="let contract of getContractsForDay(day); let i = index" [class.yellow-background]="contract.isSelected">
-          <td>
-            <button class="boton" (click)="moveRowUp(day,contract)">Subir</button>
-            <button class="boton" (click)="moveRowDown(day,contract)">Bajar</button>
-            <input type="text" [(ngModel)]="contract.order" [value]=" i + 1" [hidden]="true">
-          </td>
-          <!-- <td>{{ i + 1 }}</td> -->
-          <td>{{ contract.codContract }}</td>
-          <td>{{ contract.customer.name }}</td>
-          <td><input type="time" [(ngModel)]="contract.hourIni" (keyup.enter)="saveHour(contract._id,contract.hourIni)">
-            <input type="time" [(ngModel)]="contract.hourFin" (keyup.enter)="saveHourFin(contract._id,contract.hourFin)"></td>
-          <!-- <td>{{ contract.hourIni }}-{{ contract.hourFin }}</td> -->
-          <td>
-            <select [(ngModel)]="contract.mobility" (change)="onOptionChangeMobility(contract._id,contract.mobility)" >
-              <option value="ROJO">ROJO</option>
-              <option value="AZUL">AZUL</option>
-              <option value="EDUARDO">EDUARDO</option>
-            </select>
-          </td>
-          <td>{{ contract.district }}</td>
-          <td>{{ contract.address }}</td>
-          <td><input type="checkbox" [(ngModel)]="contract.isSelected" (change)="onOptionChange(contract._id,contract.isSelected)">Entregado</td>
-        </tr>
-        <tr *ngFor="let contract of getContractsStoreForDay(day); let i = index" [class.yellow-background]="contract.isSelected">
-          <td>
-            <!-- <button class="boton" (click)="moveRowUpPickup(day,contract)">Subir</button>
-            <button class="boton" (click)="moveRowDownPickup(day,contract)">Bajar</button>
-            <input type="number" [(ngModel)]="contract.orderPickup" [value]="i + 1" [hidden]="true"> -->
-          </td>
-          <!-- <td>{{ i + 1 }}</td> -->
-          <td>{{ contract.codContract }}</td>
-          <td>{{ contract.customer.name }}</td>
-          <td><input type="time" [(ngModel)]="contract.hourIni" (keyup.enter)="saveHour(contract._id,contract.hourIni)">
-            <input type="time" [(ngModel)]="contract.hourFin" (keyup.enter)="saveHourFin(contract._id,contract.hourFin)"></td>
-          <!-- <td>{{ contract.hourIni }}-{{ contract.hourFin }}</td> -->
-          <td>
-            <!-- <select [(ngModel)]="contract.mobilityPickup" (change)="onOptionChangeMobilityPickup(contract._id,contract.mobilityPickup)" >
-              <option value="ROJO">ROJO</option>
-              <option value="AZUL">AZUL</option>
-              <option value="EDUARDO">EDUARDO</option>
-            </select> -->
-          </td>
-          <td>{{ contract.district }}</td>
-          <td>{{ contract.address }}</td>
-          <td><input type="checkbox" [(ngModel)]="contract.isSelected" (change)="onOptionChange(contract._id,contract.isSelected)">Entregado</td>
-        </tr>
-        <tr>
-          <td style="background-color: rgb(69, 77, 230);">Recojo</td>
-        </tr>
-        <tr *ngFor="let contract of getContractsPikupDateForDay(day); let i = index" [class.yellow-background]="contract.isSelectedPickup">
-          <td>
-            <button class="boton" (click)="moveRowUpPickup(day,contract)">Subir</button>
-            <button class="boton" (click)="moveRowDownPickup(day,contract)">Bajar</button>
-            <input type="number" [(ngModel)]="contract.orderPickup" [value]="i + 1" [hidden]="true">
-          </td>
-          <!-- <td>{{ i + 1 }}</td> -->
-          <td>{{ contract.codContract }}</td>
-          <td>{{ contract.customer.name }}</td>
-          <td><input type="time" [(ngModel)]="contract.hourIniPickup" (keyup.enter)="saveHourPickup(contract._id,contract.hourIniPickup)">
-            <input type="time" [(ngModel)]="contract.hourFinPickup" (keyup.enter)="saveHourFinPickup(contract._id,contract.hourFinPickup)"></td>
-          <td>
-            <select [(ngModel)]="contract.mobilityPickup" (change)="onOptionChangeMobilityPickup(contract._id,contract.mobilityPickup)" >
-              <option value="ROJO">ROJO</option>
-              <option value="AZUL">AZUL</option>
-              <option value="EDUARDO">EDUARDO</option>
-            </select>
-          </td>
-          <td>{{ contract.district }}</td>
-          <td>{{ contract.address }}</td>
-          <td><input type="checkbox" [(ngModel)]="contract.isSelectedPickup" (change)="onOptionChangePickup(contract._id,contract.isSelectedPickup)">Recojo</td>
-        </tr>
-        <tr *ngFor="let contract of getContractsPikupDateStoreForDay(day); let i = index" [class.yellow-background]="contract.isSelectedPickup">
-          <td>
-            <!-- <button class="boton" (click)="moveRowUpPickup(day,contract)">Subir</button>
-            <button class="boton" (click)="moveRowDownPickup(day,contract)">Bajar</button>
-            <input type="number" [(ngModel)]="contract.orderPickup" [value]="i + 1" [hidden]="true"> -->
-          </td>
-          <!-- <td>{{ i + 1 }}</td> -->
-          <td>{{ contract.codContract }}</td>
-          <td>{{ contract.customer.name }}</td>
-          <td><input type="time" [(ngModel)]="contract.hourIniPickup" (keyup.enter)="saveHourPickup(contract._id,contract.hourIniPickup)">
-            <input type="time" [(ngModel)]="contract.hourFinPickup" (keyup.enter)="saveHourFinPickup(contract._id,contract.hourFinPickup)"></td>
-          <td>
-            <!-- <select [(ngModel)]="contract.mobilityPickup" (change)="onOptionChangeMobilityPickup(contract._id,contract.mobilityPickup)" >
-              <option value="ROJO">ROJO</option>
-              <option value="AZUL">AZUL</option>
-              <option value="EDUARDO">EDUARDO</option>
-            </select> -->
-          </td>
-          <td>{{ contract.district }}</td>
-          <td>{{ contract.address }}</td>
-          <td><input type="checkbox" [(ngModel)]="contract.isSelectedPickup" (change)="onOptionChangePickup(contract._id,contract.isSelectedPickup)">Recojo</td>
-        </tr>
+
+        <tbody
+          cdkDropList
+          [cdkDropListData]="getDailyScheduleForDay(day)"
+          (cdkDropListDropped)="dropDailySchedule(day, $event)"
+        >
+          <!-- ============================
+               CASO 1: HAY RUTA (ENTREGA/RECOJO)
+               ============================ -->
+          <ng-container *ngIf="getDailyScheduleForDay(day).length > 0; else onlyStore">
+
+            <!-- FILAS DE RUTA (ENTREGA + RECOJO) -->
+            <tr
+              *ngFor="let task of getDailyScheduleForDay(day); let idx = index"
+              cdkDrag
+              [class.yellow-background]="task.type === 'ENTREGA'
+                ? task.contract.isSelected
+                : task.contract.isSelectedPickup"
+            >
+              <!-- FECHA SOLO EN LA PRIMERA FILA DEL DÍA -->
+              <td *ngIf="idx === 0"
+                  [attr.rowspan]="getTotalRowsForDay(day)">
+                {{ nombresDias[i] }}
+                {{ day | date:'d' }} de
+                {{ nombresMeses[day.getMonth()] }} de
+                {{ day.getFullYear() }}
+              </td>
+
+              <!-- RUTA (NÚMERO + DRAG HANDLE) -->
+              <td cdkDragHandle class="drag-handle">
+                ☰ {{ idx + 1 }}
+              </td>
+
+              <!-- TIPO -->
+              <td>{{ task.type === 'ENTREGA' ? 'Entrega' : 'Recojo' }}</td>
+
+              <!-- CÓDIGO -->
+              <td>{{ task.contract.codContract }}</td>
+
+              <!-- CLIENTE -->
+              <td>{{ task.contract.customer.name }}</td>
+
+              <!-- HORARIO -->
+              <td>
+                <!-- ENTREGA -->
+                <ng-container *ngIf="task.type === 'ENTREGA'; else pickupTime">
+                  <input
+                    type="time"
+                    [(ngModel)]="task.contract.hourIni"
+                    (keyup.enter)="saveHour(task.contract._id, task.contract.hourIni)"
+                  />
+                  <input
+                    type="time"
+                    [(ngModel)]="task.contract.hourFin"
+                    (keyup.enter)="saveHourFin(task.contract._id, task.contract.hourFin)"
+                  />
+                </ng-container>
+
+                <!-- RECOJO -->
+                <ng-template #pickupTime>
+                  <input
+                    type="time"
+                    [(ngModel)]="task.contract.hourIniPickup"
+                    (keyup.enter)="saveHourPickup(task.contract._id, task.contract.hourIniPickup)"
+                  />
+                  <input
+                    type="time"
+                    [(ngModel)]="task.contract.hourFinPickup"
+                    (keyup.enter)="saveHourFinPickup(task.contract._id, task.contract.hourFinPickup)"
+                  />
+                </ng-template>
+              </td>
+
+              <!-- MOVILIDAD -->
+              <td>
+                <ng-container *ngIf="task.type === 'ENTREGA'; else mobPickup">
+                  <select
+                    [(ngModel)]="task.contract.mobility"
+                    (change)="onOptionChangeMobility(task.contract._id, task.contract.mobility)"
+                  >
+                    <option value="ROJO">ROJO</option>
+                    <option value="AZUL">AZUL</option>
+                    <option value="EDUARDO">EDUARDO</option>
+                  </select>
+                </ng-container>
+
+                <ng-template #mobPickup>
+                  <select
+                    [(ngModel)]="task.contract.mobilityPickup"
+                    (change)="onOptionChangeMobilityPickup(task.contract._id, task.contract.mobilityPickup)"
+                  >
+                    <option value="ROJO">ROJO</option>
+                    <option value="AZUL">AZUL</option>
+                    <option value="EDUARDO">EDUARDO</option>
+                  </select>
+                </ng-template>
+              </td>
+
+              <!-- DISTRITO -->
+              <td>{{ task.contract.district }}</td>
+
+              <!-- DIRECCIÓN -->
+              <td>{{ task.contract.address }}</td>
+
+              <!-- ESTADO -->
+              <td>
+                <ng-container *ngIf="task.type === 'ENTREGA'; else statePickup">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="task.contract.isSelected"
+                    (change)="onOptionChange(task.contract._id, task.contract.isSelected)"
+                  />
+                  Entregado
+                </ng-container>
+
+                <ng-template #statePickup>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="task.contract.isSelectedPickup"
+                    (change)="onOptionChangePickup(task.contract._id, task.contract.isSelectedPickup)"
+                  />
+                  Recojo
+                </ng-template>
+              </td>
+            </tr>
+
+            <!-- ============================
+                 BLOQUE ALMACÉN (SIN DRAG)
+                 ============================ -->
+            <ng-container *ngIf="getStoreDeliveriesForDay(day).length +
+                                 getStorePickupsForDay(day).length > 0">
+
+              <!-- Fila de cabecera ALMACÉN:
+                   empieza en columna RUTA y ocupa hasta ESTADO -->
+              <tr class="almacen-header-row">
+                <td colspan="9" class="almacen-header">
+                  ALMACÉN
+                </td>
+              </tr>
+
+              <!-- ENTREGAS EN ALMACÉN -->
+              <tr *ngFor="let contract of getStoreDeliveriesForDay(day)">
+                <td class="almacen-symbol">·</td>
+                <td>Entrega</td>
+                <td>{{ contract.codContract }}</td>
+                <td>{{ contract.customer.name }}</td>
+                <td>
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourIni"
+                    (keyup.enter)="saveHour(contract._id, contract.hourIni)"
+                  />
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourFin"
+                    (keyup.enter)="saveHourFin(contract._id, contract.hourFin)"
+                  />
+                </td>
+                <td></td>
+                <td>{{ contract.district }}</td>
+                <td>{{ contract.address }}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="contract.isSelected"
+                    (change)="onOptionChange(contract._id, contract.isSelected)"
+                  />
+                  Entregado
+                </td>
+              </tr>
+
+              <!-- RECOJOS EN ALMACÉN -->
+              <tr *ngFor="let contract of getStorePickupsForDay(day)">
+                <td class="almacen-symbol">·</td>
+                <td>Recojo</td>
+                <td>{{ contract.codContract }}</td>
+                <td>{{ contract.customer.name }}</td>
+                <td>
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourIniPickup"
+                    (keyup.enter)="saveHourPickup(contract._id, contract.hourIniPickup)"
+                  />
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourFinPickup"
+                    (keyup.enter)="saveHourFinPickup(contract._id, contract.hourFinPickup)"
+                  />
+                </td>
+                <td></td>
+                <td>{{ contract.district }}</td>
+                <td>{{ contract.address }}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="contract.isSelectedPickup"
+                    (change)="onOptionChangePickup(contract._id, contract.isSelectedPickup)"
+                  />
+                  Recojo
+                </td>
+              </tr>
+
+            </ng-container>
+          </ng-container>
+
+          <!-- ============================
+               CASO 2: SOLO ALMACÉN (SIN RUTA)
+               ============================ -->
+          <ng-template #onlyStore>
+            <ng-container *ngIf="getStoreDeliveriesForDay(day).length +
+                                 getStorePickupsForDay(day).length > 0">
+
+              <!-- Cabecera ALMACÉN CON FECHA -->
+              <tr class="almacen-header-row">
+                <td [attr.rowspan]="getTotalRowsForDay(day)">
+                  {{ nombresDias[i] }}
+                  {{ day | date:'d' }} de
+                  {{ nombresMeses[day.getMonth()] }} de
+                  {{ day.getFullYear() }}
+                </td>
+                <!-- ALMACÉN desde columna RUTA hasta ESTADO -->
+                <td colspan="9" class="almacen-header">
+                  ALMACÉN
+                </td>
+              </tr>
+
+              <!-- ENTREGAS EN ALMACÉN -->
+              <tr *ngFor="let contract of getStoreDeliveriesForDay(day)">
+                <td class="almacen-symbol">·</td>
+                <td>Entrega</td>
+                <td>{{ contract.codContract }}</td>
+                <td>{{ contract.customer.name }}</td>
+                <td>
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourIni"
+                    (keyup.enter)="saveHour(contract._id, contract.hourIni)"
+                  />
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourFin"
+                    (keyup.enter)="saveHourFin(contract._id, contract.hourFin)"
+                  />
+                </td>
+                <td></td>
+                <td>{{ contract.district }}</td>
+                <td>{{ contract.address }}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="contract.isSelected"
+                    (change)="onOptionChange(contract._id, contract.isSelected)"
+                  />
+                  Entregado
+                </td>
+              </tr>
+
+              <!-- RECOJOS EN ALMACÉN -->
+              <tr *ngFor="let contract of getStorePickupsForDay(day)">
+                <td class="almacen-symbol">·</td>
+                <td>Recojo</td>
+                <td>{{ contract.codContract }}</td>
+                <td>{{ contract.customer.name }}</td>
+                <td>
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourIniPickup"
+                    (keyup.enter)="saveHourPickup(contract._id, contract.hourIniPickup)"
+                  />
+                  <input
+                    type="time"
+                    [(ngModel)]="contract.hourFinPickup"
+                    (keyup.enter)="saveHourFinPickup(contract._id, contract.hourFinPickup)"
+                  />
+                </td>
+                <td></td>
+                <td>{{ contract.district }}</td>
+                <td>{{ contract.address }}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="contract.isSelectedPickup"
+                    (change)="onOptionChangePickup(contract._id, contract.isSelectedPickup)"
+                  />
+                  Recojo
+                </td>
+              </tr>
+
+            </ng-container>
+          </ng-template>
+
+        </tbody>
+
       </ng-container>
     </table>
   </div>

@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
-import { FormsModule,ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { DashboardComponent } from './dashboard.component';
 import { ContractComponent } from '../contract/contract.component';
@@ -13,6 +13,9 @@ import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
 
+// 👉 IMPORTAR DRAG & DROP
+import { DragDropModule } from '@angular/cdk/drag-drop';
+
 @NgModule({
   declarations: [
     DashboardComponent,
@@ -22,13 +25,16 @@ import { NgSelectModule } from '@ng-select/ng-select';
     CalendarV2Component
   ],
   imports: [
-    CommonModule,    
+    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
     DashboardRoutingModule,
     NgbModule,
-    NgSelectModule
+    NgSelectModule,
+
+    // 👉 AGREGAR AQUÍ
+    DragDropModule
   ],
   providers: [],
   bootstrap: []
