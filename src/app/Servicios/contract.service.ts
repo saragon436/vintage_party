@@ -3,7 +3,7 @@ import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { catchError, map, Observable,of, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { WeekSummaryDto } from '../kardex/models/weekly-summary.model';
-
+import { HttpParams } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
 })
@@ -82,4 +82,39 @@ export class ContractService {
     const url = `${environment.apiUrl}/contract/year/${year}/status/${encodeURIComponent(status)}`;
     return this.http.get<any[]>(url, { headers });
   }
+
+  getContractsFiltered(
+  year: number | null,
+  status: string | null,
+  search: string | null,
+  onlyRecent: boolean,
+  headers: HttpHeaders
+) {
+  let params = new HttpParams();
+
+  if (year) params = params.set('year', year.toString());
+  if (status) params = params.set('status', status);
+  if (search && search.trim() !== '') params = params.set('search', search.trim());
+  if (onlyRecent) params = params.set('onlyRecent', 'true');
+
+  return this.http.get<any[]>(`${environment.apiUrl}/contract/search`, {
+    headers,
+    params,
+  });
+}
+  getRecentContracts(headers: HttpHeaders) {
+    return this.http.get<any[]>(environment.apiUrl + '/contract/search?onlyRecent=true', { headers });
+  }
+
+  searchContracts(term: string, headers: HttpHeaders) {
+  return this.http.get<any[]>(
+    environment.apiUrl + '/contract/search',
+    {
+      headers,
+      params: { q: term }
+    }
+  );
+}
+
+
 }

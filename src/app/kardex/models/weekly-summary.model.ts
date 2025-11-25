@@ -8,6 +8,7 @@ export interface AccessorySummaryDto {
   customerName: string;
   address: string;
   district: string;
+  warehouse?: number; // 👈 IMPORTANTE: aunque sea opcional, debe existir
 }
 
 export interface DaySummaryDto {
@@ -27,6 +28,7 @@ export interface WeekSummaryDto {
 export interface AggregatedAccessoryView {
   description: string;
   totalAmount: number;
+  warehouse: number; // 👈 nuevo
 }
 
 // 👇 NUEVO DayView (ya sin contratos)
