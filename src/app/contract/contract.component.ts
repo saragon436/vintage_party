@@ -1,5 +1,5 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, Input, Optional  } from '@angular/core';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -11,7 +11,7 @@ import {
 import { CustomerService } from '../Servicios/customer.service';
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
-import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, ModalDismissReasons, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CustomerComponent } from '../customer/customer.component';
 import {
   FormArray,
@@ -85,6 +85,10 @@ interface Contract {
   styleUrls: ['./contract.component.css'],
 })
 export class ContractComponent {
+  // 👇 NUEVO: cuando se usa en modal, el calendar pasa aquí el contrato seleccionado
+  @Input() initialContract?: Contract | null;
+
+
   fechaActual: string = '';
   fechaCreacion: string = '';
 
@@ -145,6 +149,8 @@ export class ContractComponent {
     private contractService: ContractService,
     private authenticationToken: AuthenticationToken,
     private route: Router,
+    //ublic activeModal: NgbActiveModal,  // 👈 aquí
+    @Optional() public activeModal: NgbActiveModal,   // 👈 OPCIONAL
     private formBuilder: FormBuilder
   ) {
     this.unsubscribe = new Subject();
@@ -173,6 +179,7 @@ export class ContractComponent {
       listAccessories: this.formBuilder.array([]),
       onAccount: this.formBuilder.array([]),
     });
+    
   }
 
   // ==========================
@@ -206,7 +213,15 @@ export class ContractComponent {
 
     this.findClient();
     this.searchStock();
-    this.loadRecentContracts(); // 👈 por defecto, contratos de últimos 30 días
+
+    // 👇 AQUÍ DECIDIMOS el modo:
+    // - Si viene desde calendar (modal) -> cargamos ese contrato directamente
+    // - Si NO, se comporta como siempre: lista de recientes
+    if (this.initialContract) {
+      this.cargarContratoDesdeObjeto(this.initialContract);
+    } else {
+      this.loadRecentContracts(); // por defecto, contratos de últimos 90 días
+    }
   }
 
   buildYears(): void {
@@ -294,7 +309,7 @@ export class ContractComponent {
     this.customer$ = this.customerService.listCustomer(headers);
   }
 
-  // 🔹 contratos recientes (últimos 30 días)
+  // 🔹 contratos recientes (últimos 90 días)
   loadRecentContracts(): void {
     const headers = new HttpHeaders().set(
       'Authorization',
@@ -833,12 +848,9 @@ export class ContractComponent {
     }
   }
 
+  // 🔹 ahora solo busca en this.contract y delega al helper
   findAccesoryById(valor: string) {
     this.isDisabled = false;
-
-    // limpiar arrays antes de cargar
-    this.arrayAccessory.clear();
-    this.arrayOnAccount.clear();
 
     const response = this.contract.find((c) => c._id === valor);
     if (!response) {
@@ -846,8 +858,17 @@ export class ContractComponent {
       return;
     }
 
-    this._idContrat = valor;
-    this.idItemDelete = valor;
+    this.cargarContratoDesdeObjeto(response);
+  }
+
+  // 🔹 NUEVO: usado tanto por findAccesoryById como por initialContract (modal)
+  private cargarContratoDesdeObjeto(response: Contract) {
+    // limpiar arrays antes de cargar
+    this.arrayAccessory.clear();
+    this.arrayOnAccount.clear();
+
+    this._idContrat = response._id;
+    this.idItemDelete = response._id;
     this.selectedCustomer = response.customer;
     this.form.controls['customer'].setValue(
       response.customer.documentNumber + ' ' + response.customer.name
@@ -986,4 +1007,10 @@ export class ContractComponent {
   }
 
   imprimir(valor: string) {}
+
+  closeModal() {
+  if (this.activeModal) {
+    this.activeModal.dismiss('close-click');
+  }
+}
 }

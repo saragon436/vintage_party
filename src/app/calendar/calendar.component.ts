@@ -6,6 +6,8 @@ import { ContractService } from '../Servicios/contract.service';
 import { addDays, isTuesday } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ContractComponent } from '../contract/contract.component';
 
 interface Contract {
   _id: string;
@@ -74,7 +76,8 @@ export class CalendarComponent implements OnInit {
     private route: Router,
     private cd: ChangeDetectorRef,
     private authenticationToken: AuthenticationToken,
-    private contractService: ContractService
+    private contractService: ContractService,
+    private modalService: NgbModal
   ) {}
 
   public nombresDias: string[] = [
@@ -271,18 +274,18 @@ export class CalendarComponent implements OnInit {
     return this.storePickups[key] || [];
   }
 
- // Total de filas del día (ruta + header ALMACÉN + filas de almacén)
-getTotalRowsForDay(day: Date): number {
-  const rutas = this.getDailyScheduleForDay(day).length;
-  const storeD = this.getStoreDeliveriesForDay(day).length;
-  const storeP = this.getStorePickupsForDay(day).length;
+  // Total de filas del día (ruta + header ALMACÉN + filas de almacén)
+  getTotalRowsForDay(day: Date): number {
+    const rutas = this.getDailyScheduleForDay(day).length;
+    const storeD = this.getStoreDeliveriesForDay(day).length;
+    const storeP = this.getStorePickupsForDay(day).length;
 
-  const filasAlmacen = storeD + storeP;
-  const headerAlmacen = filasAlmacen > 0 ? 1 : 0; // 1 fila que dice "ALMACÉN"
+    const filasAlmacen = storeD + storeP;
+    const headerAlmacen = filasAlmacen > 0 ? 1 : 0; // 1 fila que dice "ALMACÉN"
 
-  const total = rutas + filasAlmacen + headerAlmacen;
-  return total > 0 ? total : 1;
-}
+    const total = rutas + filasAlmacen + headerAlmacen;
+    return total > 0 ? total : 1;
+  }
 
   // ===========================
   //  Drag & Drop ruta calle
@@ -439,5 +442,28 @@ getTotalRowsForDay(day: Date): number {
         }
       }
     );
+  }
+
+  // ===========================
+  //  Modal de contrato
+  // ===========================
+  openContractModal(contractId: string) {
+    const contrato = this.contract.find(c => c._id === contractId);
+    if (!contrato) {
+      console.warn('Contrato no encontrado para id', contractId);
+      return;
+    }
+
+    const modalRef = this.modalService.open(ContractComponent, {
+      size: 'xl',
+      scrollable: true,
+      centered: true
+    });
+
+    modalRef.componentInstance.initialContract = contrato;
+
+    // Opcional: recargar programación al cerrar
+    modalRef.closed.subscribe(() => this.findContract());
+    modalRef.dismissed.subscribe(() => this.findContract());
   }
 }

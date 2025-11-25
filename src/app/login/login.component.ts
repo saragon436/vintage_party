@@ -1,55 +1,75 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { AuthenticationService } from '../Servicios/authentication.service';
-import { Router } from '@angular/router';
-import { AuthenticationToken } from '../Servicios/autentication-token.service'
+import { Router, ActivatedRoute } from '@angular/router';
+import { AuthenticationToken } from '../Servicios/autentication-token.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   @Output() customEvent = new EventEmitter<any>();
-  constructor(private authenticationToken:AuthenticationToken,private route: Router, private authenticationService: AuthenticationService) { }
 
   username = '';
   password = '';
 
+  // 👇 ruta a donde redirigir después del login
+  redirectUrl: string = '/dashboard';
+
+  constructor(
+    private authenticationToken: AuthenticationToken,
+    private route: Router,
+    private activatedRoute: ActivatedRoute,
+    private authenticationService: AuthenticationService
+  ) {}
+
+  ngOnInit(): void {
+    // Leer el parámetro redirect de la URL, por ejemplo:
+    // /app-login?redirect=/dashboard/calendar
+    const redirect = this.activatedRoute.snapshot.queryParamMap.get('redirect');
+    if (redirect) {
+      this.redirectUrl = redirect;
+      console.log('Redirect configurado a:', this.redirectUrl);
+    }
+  }
+
   onSubmit() {
     console.log('Username: ', this.username);
     console.log('Password: ', this.password);
-    var payload = {
+
+    const payload = {
       userName: this.username,
       password: this.password
     };
-    console.log(payload);
-    //this.customEvent.emit('Hello from parent');
-    //const headers = new HttpHeaders().set('Authorization', 'Bearer ' + token);
+
     const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
+
     this.authenticationService.sendPostRequest(payload, headers).subscribe(
       (data: any) => {
         if (data.status === undefined) {
           console.log(data.token);
+
+          // Guardar token y usuario como ya tenías
           this.authenticationToken.myValue = data.token;
-          this.authenticationToken.user=this.username;
-          console.log('this.authenticationToken.myValue ',this.authenticationToken.myValue)
-          console.log('informacion de validacion ', data.status)
-          this.route.navigate(['dashboard']);
+          this.authenticationToken.user = this.username;
+
+          console.log('this.authenticationToken.myValue ', this.authenticationToken.myValue);
+          console.log('informacion de validacion ', data.status);
+
+          // 🔥 Antes: this.route.navigate(['dashboard']);
+          // Ahora: navegar a la ruta que vino en redirect o a /dashboard por defecto
+          this.route.navigateByUrl(this.redirectUrl);
         }
       },
       (error) => {
-        
-        if( error.status === 401){
-        
+        if (error.status === 401) {
           console.log('usuario o claves incorrectos');
-  
-        }else{
+        } else {
           console.log('error desconocido en el login');
         }
-      });
-
-
+      }
+    );
   }
 }

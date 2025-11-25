@@ -62,8 +62,16 @@
               <!-- TIPO -->
               <td>{{ task.type === 'ENTREGA' ? 'Entrega' : 'Recojo' }}</td>
 
-              <!-- CÓDIGO -->
-              <td>{{ task.contract.codContract }}</td>
+              <!-- CÓDIGO → abre modal -->
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-link p-0 code-link"
+                  (click)="openContractModal(task.contract._id)"
+                >
+                  {{ task.contract.codContract }}
+                </button>
+              </td>
 
               <!-- CLIENTE -->
               <td>{{ task.contract.customer.name }}</td>
@@ -170,7 +178,15 @@
               <tr *ngFor="let contract of getStoreDeliveriesForDay(day)">
                 <td class="almacen-symbol">·</td>
                 <td>Entrega</td>
-                <td>{{ contract.codContract }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 code-link"
+                    (click)="openContractModal(contract._id)"
+                  >
+                    {{ contract.codContract }}
+                  </button>
+                </td>
                 <td>{{ contract.customer.name }}</td>
                 <td>
                   <input
@@ -201,7 +217,15 @@
               <tr *ngFor="let contract of getStorePickupsForDay(day)">
                 <td class="almacen-symbol">·</td>
                 <td>Recojo</td>
-                <td>{{ contract.codContract }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 code-link"
+                    (click)="openContractModal(contract._id)"
+                  >
+                    {{ contract.codContract }}
+                  </button>
+                </td>
                 <td>{{ contract.customer.name }}</td>
                 <td>
                   <input
@@ -256,7 +280,15 @@
               <tr *ngFor="let contract of getStoreDeliveriesForDay(day)">
                 <td class="almacen-symbol">·</td>
                 <td>Entrega</td>
-                <td>{{ contract.codContract }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 code-link"
+                    (click)="openContractModal(contract._id)"
+                  >
+                    {{ contract.codContract }}
+                  </button>
+                </td>
                 <td>{{ contract.customer.name }}</td>
                 <td>
                   <input
@@ -287,7 +319,15 @@
               <tr *ngFor="let contract of getStorePickupsForDay(day)">
                 <td class="almacen-symbol">·</td>
                 <td>Recojo</td>
-                <td>{{ contract.codContract }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 code-link"
+                    (click)="openContractModal(contract._id)"
+                  >
+                    {{ contract.codContract }}
+                  </button>
+                </td>
                 <td>{{ contract.customer.name }}</td>
                 <td>
                   <input

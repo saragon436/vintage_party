@@ -116,5 +116,9 @@ export class ContractService {
   );
 }
 
+getContractById(id: string, headers: HttpHeaders) {
+  return this.http.get<any>(`${environment.apiUrl}/contract/${id}`, { headers });
+}
+
 
 }

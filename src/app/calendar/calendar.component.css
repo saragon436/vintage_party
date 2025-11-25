@@ -106,3 +106,8 @@ tbody[cdkDropList] tr:hover {
   text-transform: uppercase;
 }
 
+.code-link {
+  font-weight: 600;
+  text-decoration: underline;
+}
+

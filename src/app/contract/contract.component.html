@@ -1,4 +1,17 @@
-<div id="formulario" *ngIf="condicion; else otraPlantilla">
+<div id="formulario" *ngIf="condicion; else otraPlantilla" [ngClass]="{ 'modal-body-scroll': initialContract }">
+  <!-- Header solo cuando se abre como modal desde programación -->
+<div *ngIf="initialContract" class="modal-header border-0 pb-0">
+  <h5 class="modal-title">
+    Contrato {{ numberContract || initialContract?.codContract }}
+  </h5>
+  <button
+    type="button"
+    class="btn-close"
+    aria-label="Close"
+    (click)="closeModal()">
+  </button>
+</div>
+
   <form [formGroup]="form">
     <div class="row" id="salto">
       <a>Crear Contrato</a>
@@ -57,7 +70,7 @@
 
     <!-- Fechas -->
     <div class="row" id="salto">
-      <div class="col-lg-3">
+      <div class="col-lg-4">
         <div class="input-group">
           <label class="input-group-text" for="fe_instalacion" id="instalacion-titulo">
             F. Instalación
@@ -72,7 +85,7 @@
         </div>
       </div>
 
-      <div class="col-lg-3">
+      <div class="col-lg-4">
         <div class="input-group">
           <label class="input-group-text" for="fe_evento" id="evento-titulo">
             F. Evento
@@ -87,7 +100,7 @@
         </div>
       </div>
 
-      <div class="col-lg-3">
+      <div class="col-lg-4">
         <div class="input-group">
           <label class="input-group-text" for="fe_recojo" id="salto-titulo">
             F. Recojo
@@ -466,62 +479,71 @@
       </div>
     </div>
 
-    <!-- Botones acción contrato -->
     <div class="row" id="salto">
-      <button
-        type="button"
-        class="btn btn-success"
-        [disabled]="form.status !== 'VALID'"
-        *ngIf="!mostrarBotones"
-        (click)="onAddCustomer(ddlcustomer); onSave(); deleteContract()"
-      >
-        Actualizar Contrato
-      </button>
+  <!-- Estos dos siempre visibles (modal o página) -->
+  <button
+    type="button"
+    class="btn btn-success"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="!mostrarBotones && !activeModal"
+    (click)="onAddCustomer(ddlcustomer); onSave(); deleteContract()"
+  >
+    Actualizar Contrato
+  </button>
 
-      <button
-        type="button"
-        class="btn btn-success"
-        [disabled]="form.status !== 'VALID'"
-        *ngIf="mostrarBotones"
-        (click)="onAddCustomer(ddlcustomer); onSave()"
-      >
-        Registrar Contrato
-      </button>
+  <button
+    type="button"
+    class="btn btn-success"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="mostrarBotones"
+    (click)="onAddCustomer(ddlcustomer); onSave()"
+  >
+    Registrar Contrato
+  </button>
 
-      <button
-        type="button"
-        class="btn btn-warning"
-        [disabled]="form.status !== 'VALID'"
-        *ngIf="!mostrarBotones"
-        (click)="printDocument()"
-      >
-        Imprimir Guía
-      </button>
+  <!-- 👇 Estos TRES se ocultan cuando está en modal (activeModal definido) -->
+  <button
+    type="button"
+    class="btn btn-warning"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="!mostrarBotones && !activeModal"
+    (click)="printDocument()"
+  >
+    Imprimir Guia
+  </button>
 
-      <button
-        type="button"
-        class="btn btn-primary"
-        [disabled]="form.status !== 'VALID'"
-        *ngIf="!mostrarBotones"
-        (click)="printDocumentDetalle()"
-      >
-        Imprimir Detalle
-      </button>
+  <button
+    type="button"
+    class="btn btn-primary"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="!mostrarBotones && !activeModal"
+    (click)="printDocumentDetalle()"
+  >
+    Imprimir Detalle
+  </button>
 
-      <button
-        type="button"
-        class="btn btn-warning"
-        [disabled]="form.status !== 'VALID'"
-        *ngIf="mostrarBotones"
-        (click)="onAddCustomer(ddlcustomer); printDocument()"
-      >
-        Imprimir Cotización
-      </button>
+  <!-- Imprimir Cotización solo para alta normal; en modal casi nunca se usa -->
+  <button
+    type="button"
+    class="btn btn-warning"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="mostrarBotones && !activeModal"
+    (click)="onAddCustomer(ddlcustomer); printDocument()"
+  >
+    Imprimir Cotizacion
+  </button>
 
-      <button type="button" class="btn btn-danger" (click)="onSubmitExit()">
-        Volver
-      </button>
-    </div>
+  <!-- Botón Volver escondido en modal -->
+  <button
+    type="submit"
+    class="btn btn-danger"
+    (click)="onSubmitExit()"
+    *ngIf="!activeModal"
+  >
+    Volver
+  </button>
+</div>
+
   </form>
 </div>
 
@@ -914,19 +936,38 @@
     </div>
   </div>
 
-  <!-- fin cabecera -->
-  <div id="salto"></div>
+   <div id="salto"></div>
   <div class="row">
+    <!-- Dirección + Distrito -->
     <div class="col-8">
-      <div class="input-group">
-        <label class="input-group-text" id="aumentar-letra">
-          Dirección:
-        </label>
-        <label class="form-control" id="aumentar-letra">
-          {{ form.controls['address'].value }}
-        </label>
+      <div class="row">
+        <!-- Dirección -->
+        <div class="col-8">
+          <div class="input-group">
+            <label class="input-group-text" id="aumentar-letra">
+              Dirección:
+            </label>
+            <label class="form-control" id="aumentar-letra">
+              {{ form.controls['address'].value }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Distrito (al costado de Dirección) -->
+        <div class="col-4">
+          <div class="input-group">
+            <label class="input-group-text" id="aumentar-letra">
+              Distrito:
+            </label>
+            <label class="form-control" id="aumentar-letra">
+              {{ form.controls['district'].value || distritoSeleccionado }}
+            </label>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Teléfono -->
     <div class="col-4">
       <div class="input-group">
         <label class="input-group-text" id="aumentar-letra">
@@ -938,6 +979,60 @@
       </div>
     </div>
   </div>
+
+  <!-- ==========================
+     FILA DE HORARIOS
+     ========================== -->
+<div id="salto"></div>
+<div class="row">
+  <!-- Hora Instalación Inicio -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Inst. Ini
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourIni'].value }}
+      </label>
+    </div>
+  </div>
+
+  <!-- Hora Instalación Fin -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Inst. Fin
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourFin'].value }}
+      </label>
+    </div>
+  </div>
+
+  <!-- Hora Recojo Inicio -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Recojo Ini
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourIniPickup'].value }}
+      </label>
+    </div>
+  </div>
+
+  <!-- Hora Recojo Fin -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Recojo Fin
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourFinPickup'].value }}
+      </label>
+    </div>
+  </div>
+</div>
 
   <div id="salto"></div>
   <div class="col-lg-12">
