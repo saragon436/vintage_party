@@ -20,7 +20,6 @@
           <th width="10%">Movilidad</th>
           <th width="10%">Distrito</th>
           <th width="30%">Dirección</th>
-          <th width="8%">Estado</th>
         </tr>
       </thead>
 
@@ -41,9 +40,6 @@
             <tr
               *ngFor="let task of getDailyScheduleForDay(day); let idx = index"
               cdkDrag
-              [class.yellow-background]="task.type === 'ENTREGA'
-                ? task.contract.isSelected
-                : task.contract.isSelectedPickup"
             >
               <!-- FECHA SOLO EN LA PRIMERA FILA DEL DÍA -->
               <td *ngIf="idx === 0"
@@ -139,25 +135,6 @@
               <td>{{ task.contract.address }}</td>
 
               <!-- ESTADO -->
-              <td>
-                <ng-container *ngIf="task.type === 'ENTREGA'; else statePickup">
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="task.contract.isSelected"
-                    (change)="onOptionChange(task.contract._id, task.contract.isSelected)"
-                  />
-                  Entregado
-                </ng-container>
-
-                <ng-template #statePickup>
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="task.contract.isSelectedPickup"
-                    (change)="onOptionChangePickup(task.contract._id, task.contract.isSelectedPickup)"
-                  />
-                  Recojo
-                </ng-template>
-              </td>
             </tr>
 
             <!-- ============================
@@ -203,14 +180,6 @@
                 <td></td>
                 <td>{{ contract.district }}</td>
                 <td>{{ contract.address }}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="contract.isSelected"
-                    (change)="onOptionChange(contract._id, contract.isSelected)"
-                  />
-                  Entregado
-                </td>
               </tr>
 
               <!-- RECOJOS EN ALMACÉN -->
@@ -242,14 +211,6 @@
                 <td></td>
                 <td>{{ contract.district }}</td>
                 <td>{{ contract.address }}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="contract.isSelectedPickup"
-                    (change)="onOptionChangePickup(contract._id, contract.isSelectedPickup)"
-                  />
-                  Recojo
-                </td>
               </tr>
 
             </ng-container>
@@ -305,14 +266,6 @@
                 <td></td>
                 <td>{{ contract.district }}</td>
                 <td>{{ contract.address }}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="contract.isSelected"
-                    (change)="onOptionChange(contract._id, contract.isSelected)"
-                  />
-                  Entregado
-                </td>
               </tr>
 
               <!-- RECOJOS EN ALMACÉN -->
@@ -344,14 +297,6 @@
                 <td></td>
                 <td>{{ contract.district }}</td>
                 <td>{{ contract.address }}</td>
-                <td>
-                  <input
-                    type="checkbox"
-                    [(ngModel)]="contract.isSelectedPickup"
-                    (change)="onOptionChangePickup(contract._id, contract.isSelectedPickup)"
-                  />
-                  Recojo
-                </td>
               </tr>
 
             </ng-container>
