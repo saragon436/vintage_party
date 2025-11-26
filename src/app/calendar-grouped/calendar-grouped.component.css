@@ -1,0 +1,166 @@
+#formulario {
+  padding: 20px 30px 40px 10px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+.contract-row {
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.contract-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.contract-data-item {
+  margin-bottom: 5px;
+}
+
+ul {
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+}
+
+.contract-cell,
+.dni-cell,
+.comment-cell {
+  border-bottom: 1px solid #ccc;
+}
+
+.contract {
+  list-style: none;
+  padding: 5px;
+  background-color: #4caf50;
+  color: white;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.contract-number {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.yellow-background {
+  background-color: yellow;
+}
+
+#salto {
+  padding: 10px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Drag & drop */
+.drag-handle {
+  cursor: grab;
+  font-weight: bold;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cdk-drag-preview {
+  background: #ffffff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 5px;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms ease;
+}
+
+tbody[cdkDropList] tr:hover {
+  background-color: #f8f8f8;
+}
+
+.almacen-header-row .almacen-header {
+  background-color: #f3f3f3;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.code-link {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+
+/* ======== FECHA (columna izquierda) ======== */
+.date-cell {
+  background: #f0f0f0;      /* gris suave */
+  border-right: 2px solid #bbb;
+  border-left: 2px solid #bbb;
+  vertical-align: top;
+  padding: 10px;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+  width: 160px;
+}
+
+/* ======== Títulos de sección ======== */
+.section-header-row {
+  background: #dfe8ff;        /* azul muy suave */
+  font-weight: bold;
+  text-align: left;
+  padding: 6px;
+}
+
+.almacen-header-row {
+  background: #ffecc2;        /* amarillo suave */
+  font-weight: bold;
+  text-align: left;
+}
+
+/* ======== Resaltado por check ======== */
+.yellow-background {
+  background: #fff5a8 !important;
+}
+
+/* ======== Separación entre grupos ======== */
+tbody tr td {
+  padding: 6px;
+}
+
+/* Código (botón) */
+.code-link {
+  font-weight: bold;
+  color: #004b9f !important;
+}
+
+.code-link:hover {
+  text-decoration: underline;
+}
+
+/* Tabla más legible */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}

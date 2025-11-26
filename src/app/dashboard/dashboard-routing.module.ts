@@ -7,6 +7,7 @@ import { CalendarComponent } from '../calendar/calendar.component';
 import { CalendarV2Component } from '../calendar-v2/calendar-v2.component';
 import { DashboardComponent } from './dashboard.component';
 import { WeeklyWorkComponent } from '../kardex/weekly-work/weekly-work.component';
+import { CalendarGroupedComponent } from '../calendar-grouped/calendar-grouped.component';
 
 
 const routes: Routes = [
@@ -17,7 +18,8 @@ const routes: Routes = [
       { path: 'contract', component: ContractComponent },
       { path: 'calendar', component: CalendarComponent },
       { path: 'calendar-v2', component: CalendarV2Component },
-      { path: 'weekly-work', component: WeeklyWorkComponent }  // 👈 NUEVO
+      { path: 'weekly-work', component: WeeklyWorkComponent },  // 👈 NUEVO
+       { path: 'calendar-grouped', component: CalendarGroupedComponent }  // 👈 NUEVO
     ]
   },
 ];
