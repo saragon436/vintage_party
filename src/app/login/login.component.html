@@ -20,3 +20,16 @@
     <button type="submit"  class="btn btn-primary">Log in</button>
   </form>
 </div>
+
+<ng-template #errorModal let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title">Error de Autenticación</h4>
+		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+	</div>
+	<div class="modal-body">
+		<p>Usuario o contraseña incorrectos. Por favor, inténtelo de nuevo.</p>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-secondary" (click)="modal.close('Close click')">Cerrar</button>
+	</div>
+</ng-template>

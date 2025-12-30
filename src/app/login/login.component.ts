@@ -1,5 +1,6 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, EventEmitter, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, ViewChild, TemplateRef } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AuthenticationService } from '../Servicios/authentication.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
@@ -11,6 +12,7 @@ import { AuthenticationToken } from '../Servicios/autentication-token.service';
 })
 export class LoginComponent implements OnInit {
   @Output() customEvent = new EventEmitter<any>();
+  @ViewChild('errorModal') errorModal!: TemplateRef<any>;
 
   username = '';
   password = '';
@@ -22,8 +24,9 @@ export class LoginComponent implements OnInit {
     private authenticationToken: AuthenticationToken,
     private route: Router,
     private activatedRoute: ActivatedRoute,
-    private authenticationService: AuthenticationService
-  ) {}
+    private authenticationService: AuthenticationService,
+    private modalService: NgbModal
+  ) { }
 
   ngOnInit(): void {
     // Leer el parámetro redirect de la URL, por ejemplo:
@@ -66,10 +69,15 @@ export class LoginComponent implements OnInit {
       (error) => {
         if (error.status === 401) {
           console.log('usuario o claves incorrectos');
+          this.openErrorModal();
         } else {
           console.log('error desconocido en el login');
         }
       }
     );
+  }
+
+  openErrorModal() {
+    this.modalService.open(this.errorModal, { centered: true });
   }
 }
