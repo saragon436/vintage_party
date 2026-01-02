@@ -1,47 +1,51 @@
-<header>    
-    <nav class="navbar navbar-expand-lg" style="background-color: #ecf0f3;">
-        <div class="container-fluid">
-          <a routerLink='/dashboard' routerLinkActive="active" class="navbar-brand">Vintage Party</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a routerLink='/dashboard' routerLinkActive="active" class="nav-link" ariaCurrentWhenActive="page" >Inicio</a>
-              </li>
-              <li class="nav-item">
-                <a routerLink='/dashboard/customer' routerLinkActive="active" ariaCurrentWhenActive="page" class="nav-link" >Cliente</a>
-              </li>
-              <li class="nav-item">
-                <a routerLink='/dashboard/accessory' routerLinkActive="active"  class="nav-link" >Mobiliario</a>
-              </li>
-              <li class="nav-item">
-                <a routerLink='/dashboard/contract' routerLinkActive="active"  class="nav-link" >Contrato</a>
-              </li>
-              <li class="nav-item">
-                <a routerLink='/dashboard/calendar-grouped' routerLinkActive="active"  class="nav-link" >Agrupados</a>
-              </li>
-              <li class="nav-item">
-                <a routerLink='/dashboard/calendar' routerLinkActive="active"  class="nav-link" >Programacion</a>
-              </li>
-              <li class="nav-item">
-                <a routerLink='/dashboard/calendar-v2' routerLinkActive="active"  class="nav-link" >Calendario</a>
-              </li>
-               <li class="nav-item">
-                <a routerLink='/dashboard/weekly-work' routerLinkActive="active"  class="nav-link">Ver mobiliario semanal</a>
+<header>
+  <nav class="navbar navbar-expand-lg" style="background-color: #ecf0f3;">
+    <div class="container-fluid">
+      <a routerLink='/dashboard' routerLinkActive="active" class="navbar-brand">Vintage Party</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a routerLink='/dashboard' routerLinkActive="active" class="nav-link"
+              ariaCurrentWhenActive="page">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/customer' routerLinkActive="active" ariaCurrentWhenActive="page"
+              class="nav-link">Cliente</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/accessory' routerLinkActive="active" class="nav-link">Mobiliario</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/contract' routerLinkActive="active" class="nav-link">Contrato</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/quotation' routerLinkActive="active" class="nav-link">Cotizaciones</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/calendar-grouped' routerLinkActive="active" class="nav-link">Agrupados</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/calendar' routerLinkActive="active" class="nav-link">Programacion</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/calendar-v2' routerLinkActive="active" class="nav-link">Calendario</a>
+          </li>
+          <li class="nav-item">
+            <a routerLink='/dashboard/weekly-work' routerLinkActive="active" class="nav-link">Ver mobiliario semanal</a>
 
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 </header>
 <section>
-    <router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </section>
 <div *ngIf="isOnDashboardRoute()" class="centered-content">
   <img src="./assets/vintage.png" class="centered-image">
 </div>
-
-

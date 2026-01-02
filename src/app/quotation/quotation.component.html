@@ -1,0 +1,413 @@
+<div id="formularioQuotation">
+    <div class="row" *ngIf="!condicion">
+        <div class="col-md-12">
+            <h2>{{ listTitle }}</h2>
+        </div>
+        <div class="col-md-12 mb-3">
+            <button class="btn btn-primary" (click)="onSubmitAdd()">Nueva Cotización</button>
+        </div>
+
+        <div class="col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Evento</th>
+                        <th>Monto</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of quotations">
+                        <td>{{ item.createDate | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ item.customer?.name }}</td>
+                        <td>{{ item.eventDate | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ item.amount | currency:'S/ ' }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-2" (click)="onEdit(item)" title="Ver Detalles">
+                                <i class="bi bi-pencil"></i> Detalle
+                            </button>
+
+                            <button class="btn btn-sm"
+                                [ngClass]="item.status === 'CONVERTED' ? 'btn-secondary' : 'btn-success'"
+                                (click)="item.status !== 'CONVERTED' && convertToContract(item)"
+                                [disabled]="item.status === 'CONVERTED'" title="Pasar a Contrato">
+                                <i class="bi"
+                                    [ngClass]="item.status === 'CONVERTED' ? 'bi-check-circle' : 'bi-file-earmark-check'"></i>
+                                {{ item.status === 'CONVERTED' ? 'Contrato Generado' : 'Generar Contrato' }}
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row" *ngIf="condicion">
+        <div class="col-md-12">
+            <h3>{{ mostrarBotones ? 'Nueva Cotización' : 'Ver Cotización' }}</h3>
+        </div>
+
+        <form [formGroup]="form">
+            <!-- Sections similar to Contract: Customer, Dates, Items -->
+
+            <!-- Customer -->
+            <div class="card p-3 mb-3">
+                <h5>Cliente</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Buscar Cliente</label>
+                        <ng-select [items]="customer$ | async" bindLabel="name" formControlName="customer"
+                            (change)="onAddCustomer($event)" #selectCustomer>
+                        </ng-select>
+                    </div>
+                    <div class="col-md-2 mt-4">
+                        <button class="btn btn-secondary" (click)="openModalCustomer()">+</button>
+                    </div>
+
+                    <div class="col-md-4">
+                        <p>Doc: {{ documentNumber }}</p>
+                        <p>Tel: {{ phone }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dates & Address -->
+            <div class="card p-3 mb-3">
+                <h5>Detalles del Evento</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Fecha Creación</label>
+                        <input type="date" class="form-control" formControlName="createDate" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Fecha Instalación</label>
+                        <input type="datetime-local" class="form-control" formControlName="installDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Fecha Evento</label>
+                        <input type="datetime-local" class="form-control" formControlName="eventDate">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Fecha Recojo</label>
+                        <input type="datetime-local" class="form-control" formControlName="pickupDate">
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <label>Dirección</label>
+                        <input type="text" class="form-control" formControlName="address">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Distrito</label>
+                        <select class="form-control" formControlName="district">
+                            <option *ngFor="let d of listaDistritos" [value]="d">{{d}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <label>Comentario</label>
+                        <textarea class="form-control" formControlName="comment" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accessories -->
+            <div class="card p-3 mb-3">
+                <h5>Mobiliario</h5>
+                <div class="row mb-2">
+                    <div class="col-md-8">
+                        <ng-select [items]="accessory$ | async" bindLabel="description"
+                            formControlName="searchAccessory" placeholder="Buscar mobiliario..."
+                            (change)="onAddItem($event)" #selectAccessory [clearable]="false"
+                            notFoundText="Para que se carguen los accesorios seleccione las fechas de instalación y recojo">
+                            <ng-template ng-option-tmp let-item="item">
+                                {{ item.description }} {{ item.color }} {{ item.design }}
+                                Alto= {{ item.high }} Ancho= {{ item.width }} Largo= {{ item.large }}
+                                Diámetro= {{ item.diameter }} Fondo= {{ item.bottom }} - stock :
+                                {{ item.stock }}
+                            </ng-template>
+                        </ng-select>
+                    </div>
+                </div>
+
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Producto</th>
+                            <th>Stock</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody formArrayName="listAccessories">
+                        <tr *ngFor="let item of arrayAccessory.controls; let i = index" [formGroupName]="i">
+                            <td>{{ i + 1 }}</td>
+                            <td>
+                                <label>
+                                    <ng-container *ngIf="item.get('description')?.value">
+                                        {{ item.get('description')?.value }}
+                                    </ng-container>
+                                    <ng-container *ngIf="item.get('color')?.value">
+                                        {{ item.get('color')?.value }}
+                                    </ng-container>
+                                    <ng-container *ngIf="item.get('design')?.value">
+                                        {{ item.get('design')?.value }}
+                                    </ng-container>
+                                    <ng-container *ngIf="item.get('high')?.value">
+                                        Alto= {{ item.get('high')?.value }}
+                                    </ng-container>
+                                    <ng-container *ngIf="item.get('width')?.value">
+                                        Ancho= {{ item.get('width')?.value }}
+                                    </ng-container>
+                                    <ng-container *ngIf="item.get('large')?.value">
+                                        Largo= {{ item.get('large')?.value }}
+                                    </ng-container>
+                                    <ng-container *ngIf="item.get('diameter')?.value">
+                                        Diámetro= {{ item.get('diameter')?.value }}
+                                    </ng-container>
+                                    <ng-container *ngIf="item.get('bottom')?.value">
+                                        Fondo= {{ item.get('bottom')?.value }}
+                                    </ng-container>
+                                </label>
+                            </td>
+                            <td>
+                                {{ item.value.stock }}
+                            </td>
+                            <td>
+                                <input type="number" formControlName="amount" (change)="sumarValores()"
+                                    class="form-control form-control-sm" style="width: 80px;"
+                                    [class.is-invalid]="item.get('amount')?.errors?.['max']">
+                                <div *ngIf="item.get('amount')?.errors?.['max']" class="text-danger"
+                                    style="font-size: 0.7em;">
+                                    Supera stock ({{item.get('stock')?.value}})
+                                </div>
+                            </td>
+                            <td>
+                                <input type="number" formControlName="price" (change)="sumarValores()"
+                                    class="form-control form-control-sm" style="width: 80px;">
+                            </td>
+                            <td>
+                                {{ (item.value.price * item.value.amount) | number:'1.2-2' }}
+                            </td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" (click)="onDeleteItem(i)">X</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="row justify-content-end">
+                    <div class="col-md-4 text-end">
+                        <h4>Total: {{ total | currency:'S/ ' }}</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12 text-end">
+                    <button class="btn btn-secondary me-2" (click)="onSubmitExit()">Cancelar</button>
+                    <button class="btn btn-outline-secondary me-2" type="button"
+                        [disabled]="arrayAccessory.length === 0" (click)="printQuotation(false)">Imprimir</button>
+                    <button class="btn btn-success" (click)="onSave()"
+                        [disabled]="isDisabled || form.invalid || arrayAccessory.length === 0">Guardar
+                        Cotización</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================
+     Área de Impresión
+     ========================== -->
+<div class="pagePrint">
+    <div class="pagePrint-inner col-lg-12">
+        <div class="row">
+            <div class="col-4">
+                <div id="mi-div">
+                    <img src="./assets/vintage.png" id="mi-imagen" alt="Vintage Party" />
+                </div>
+                <div>
+                    <pre>
+      Cal. Casuarinas Mz C Lote 32 
+            Coop. Uranmarca
+   Lima - Lima - San juan de Miraflores
+          </pre>
+                </div>
+            </div>
+            <div class="col-4" rowspan="2">
+                <pre>
+        ALQUILER Y VENTA DE ACCESORIOS
+           MOBILIARIO PARA ENVENTOS
+
+              RUC 20603879016
+           VINTAGE PARTY E.I.R.L.
+
+         vintageparty2016@gmail.com
+              Cel: 936942342    
+                  944566160
+        </pre>
+            </div>
+            <div class="col-4">
+                <div class="input-group">
+                    <label class="input-group-text" id="aumentar-letra">
+                        N - Cotizacion:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ quotationNumber || form.controls['_id'].value }}
+                    </label>
+                </div>
+                <div id="salto"></div>
+                <div class="input-group">
+                    <label class="input-group-text" id="aumentar-letra">
+                        Fecha Creacion:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ form.controls['createDate'].value }}
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="salto"></div>
+        <div class="row">
+            <div class="col-8">
+                <div class="input-group" id="aumentar-letra">
+                    <label class="input-group-text" id="aumentar-letra">
+                        Senor(es):
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ customerName }}
+                    </label>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="input-group" id="aumentar-letra">
+                    <label class="input-group-text" id="aumentar-letra">
+                        RUC/DNI:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ documentNumber }}
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="salto"></div>
+        <div class="row">
+            <div class="col-8">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="input-group">
+                            <label class="input-group-text" id="aumentar-letra">
+                                Direccion:
+                            </label>
+                            <label class="form-control" id="aumentar-letra">
+                                {{ form.controls['address'].value }}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="input-group">
+                            <label class="input-group-text" id="aumentar-letra">
+                                Distrito:
+                            </label>
+                            <label class="form-control" id="aumentar-letra">
+                                {{ form.controls['district'].value }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="input-group">
+                    <label class="input-group-text" id="aumentar-letra">
+                        Telefono:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ phone }}
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="salto"></div>
+        <div class="row">
+            <div class="col-4">
+                <div class="input-group">
+                    <label class="input-group-text" id="aumentar-letra">
+                        F. Instalacion:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ form.controls['installDate'].value }}
+                    </label>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="input-group">
+                    <label class="input-group-text" id="aumentar-letra">
+                        F. Evento:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ form.controls['eventDate'].value }}
+                    </label>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="input-group">
+                    <label class="input-group-text" id="aumentar-letra">
+                        F. Recojo:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ form.controls['pickupDate'].value }}
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="salto"></div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of arrayValuesAccessory; let i = index">
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                        {{ item.description }} {{ item.color }} {{ item.design }}
+                        Alto={{ item.high }} Ancho={{ item.width }} Largo={{ item.large }}
+                        Diametro={{ item.diameter }} Fondo={{ item.bottom }}
+                    </td>
+                    <td>{{ item.amount }}</td>
+                    <td>{{ item.price | number:'1.2-2' }}</td>
+                    <td>{{ (item.price * item.amount) | number:'1.2-2' }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="row">
+            <div class="col-12 label-total">
+                <div class="input-group">
+                    <label class="input-group-text" id="aumentar-letra">
+                        Total:
+                    </label>
+                    <label class="form-control" id="aumentar-letra">
+                        {{ total | number:'1.2-2' }}
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
