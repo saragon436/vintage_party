@@ -1,11 +1,12 @@
 /* Copying styles from contract or just basic styling */
 .card {
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: none;
 }
+
 .table thead th {
-   background-color: #343a40;
-   color: #fff;
+  background-color: #343a40 !important;
+  color: #fff !important;
 }
 
 #formularioQuotation {
@@ -77,7 +78,8 @@ table tbody tr:nth-child(odd) {
 }
 
 table thead tr th {
-  background-color: #ffffff;
+  background-color: #343a40;
+  color: #fff;
   border-bottom: 2px solid #ddd;
   position: sticky;
   top: 0;
