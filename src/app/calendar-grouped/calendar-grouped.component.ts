@@ -1,11 +1,10 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { ContractService } from '../Servicios/contract.service';
 import { addDays, isTuesday } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ContractComponent } from '../contract/contract.component';
 
@@ -47,11 +46,11 @@ interface DailyTask {
 }
 
 @Component({
-  selector: 'app-calendar',
-  templateUrl: './calendar.component.html',
-  styleUrls: ['./calendar.component.css']
+  selector: 'app-calendar-grouped',
+  templateUrl: './calendar-grouped.component.html',
+  styleUrls: ['./calendar-grouped.component.css'],
 })
-export class CalendarComponent implements OnInit {
+export class CalendarGroupedComponent implements OnInit {
   @ViewChild('table') table!: ElementRef;
 
   week: Date[] = [];
@@ -59,26 +58,21 @@ export class CalendarComponent implements OnInit {
 
   /**
    * Rutas de calle (sin almacén)
+   * key: yyyy-MM-dd
    */
   dailySchedules: { [dateKey: string]: DailyTask[] } = {};
 
   /**
    * Entregas en almacén por fecha
+   * key: yyyy-MM-dd
    */
   storeDeliveries: { [dateKey: string]: Contract[] } = {};
 
   /**
    * Recojos en almacén por fecha
+   * key: yyyy-MM-dd
    */
   storePickups: { [dateKey: string]: Contract[] } = {};
-
-  constructor(
-    private route: Router,
-    private cd: ChangeDetectorRef,
-    private authenticationToken: AuthenticationToken,
-    private contractService: ContractService,
-    private modalService: NgbModal
-  ) {}
 
   public nombresDias: string[] = [
     'Martes',
@@ -87,7 +81,7 @@ export class CalendarComponent implements OnInit {
     'Viernes',
     'Sábado',
     'Domingo',
-    'Lunes'
+    'Lunes',
   ];
 
   public nombresMeses: string[] = [
@@ -102,8 +96,15 @@ export class CalendarComponent implements OnInit {
     'Septiembre',
     'Octubre',
     'Noviembre',
-    'Diciembre'
+    'Diciembre',
   ];
+
+  constructor(
+    private route: Router,
+    private authenticationToken: AuthenticationToken,
+    private contractService: ContractService,
+    private modalService: NgbModal
+  ) {}
 
   ngOnInit(): void {
     const currentDate = new Date();
@@ -111,14 +112,23 @@ export class CalendarComponent implements OnInit {
     this.findContract();
   }
 
+  // ===========================
+  //  Excel
+  // ===========================
   exportToExcel(): void {
+    if (!this.table) {
+      return;
+    }
     const tableToExport = this.table.nativeElement;
     const ws: XLSX.WorkSheet = XLSX.utils.table_to_sheet(tableToExport);
     const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Hoja1');
-    XLSX.writeFile(wb, 'Programacion.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Programacion');
+    XLSX.writeFile(wb, 'Programacion_Agrupada.xlsx');
   }
 
+  // ===========================
+  //  Calcular semana (Martes - Lunes)
+  // ===========================
   calculateWeek(currentDate: Date): Date[] {
     let startOfWeek: Date = currentDate;
     while (!isTuesday(startOfWeek)) {
@@ -133,29 +143,36 @@ export class CalendarComponent implements OnInit {
     return week;
   }
 
-  calcularNext() {
-    if (this.week && this.week.length > 0) {
-      const lastDayOfWeek = this.week[this.week.length - 1];
-      const nextWeekStartDate = new Date(lastDayOfWeek);
-      nextWeekStartDate.setDate(lastDayOfWeek.getDate() + 1);
-      this.week = this.calculateWeek(nextWeekStartDate);
-    } else {
-      const currentDate = new Date();
-      this.week = this.calculateWeek(currentDate);
-    }
+calcularNext() {
+  if (this.week && this.week.length > 0) {
+    const lastDayOfWeek = this.week[this.week.length - 1];
+    const nextWeekStartDate = new Date(lastDayOfWeek);
+    nextWeekStartDate.setDate(lastDayOfWeek.getDate() + 1);
+    this.week = this.calculateWeek(nextWeekStartDate);
+  } else {
+    const currentDate = new Date();
+    this.week = this.calculateWeek(currentDate);
   }
 
-  calcularbefore() {
-    if (this.week && this.week.length > 0) {
-      const firstDayOfWeek = this.week[0];
-      const previousWeekStartDate = new Date(firstDayOfWeek);
-      previousWeekStartDate.setDate(firstDayOfWeek.getDate() - 7);
-      this.week = this.calculateWeek(previousWeekStartDate);
-    } else {
-      const currentDate = new Date();
-      this.week = this.calculateWeek(currentDate);
-    }
+  // 🔁 Recargar programación para asegurar refresco
+  this.findContract();
+}
+
+calcularbefore() {
+  if (this.week && this.week.length > 0) {
+    const firstDayOfWeek = this.week[0];
+    const previousWeekStartDate = new Date(firstDayOfWeek);
+    previousWeekStartDate.setDate(firstDayOfWeek.getDate() - 7);
+    this.week = this.calculateWeek(previousWeekStartDate);
+  } else {
+    const currentDate = new Date();
+    this.week = this.calculateWeek(currentDate);
   }
+
+  // 🔁 Recargar programación
+  this.findContract();
+}
+
 
   // ===========================
   //  Carga contratos desde API
@@ -169,8 +186,7 @@ export class CalendarComponent implements OnInit {
     this.contractService.listContract(headers).subscribe(
       (contract) => {
         this.contract = contract;
-        this.buildDailySchedules(); // ← construye rutas y almacén
-        this.cd.detectChanges();
+        this.buildDailySchedules(); // construye rutas y almacén
       },
       (error) => {
         if (error.status === 401) {
@@ -208,7 +224,7 @@ export class CalendarComponent implements OnInit {
           this.dailySchedules[dateKey].push({
             type: 'ENTREGA',
             contract: c,
-            routePos: c.order || 0
+            routePos: c.order || 0,
           });
         }
       }
@@ -229,7 +245,7 @@ export class CalendarComponent implements OnInit {
           this.dailySchedules[dateKey].push({
             type: 'RECOJO',
             contract: c,
-            routePos: c.orderPickup || 0
+            routePos: c.orderPickup || 0,
           });
         }
       }
@@ -248,7 +264,10 @@ export class CalendarComponent implements OnInit {
     });
   }
 
-  // yyyy-MM-dd usando hora local (sin UTC)
+  // ===========================
+  //  Helpers de fecha y grupos
+  // ===========================
+  // yyyy-MM-dd usando hora local
   getDayKey(day: Date): string {
     const year = day.getFullYear();
     const month = (day.getMonth() + 1).toString().padStart(2, '0');
@@ -256,7 +275,7 @@ export class CalendarComponent implements OnInit {
     return `${year}-${month}-${date}`;
   }
 
-  // Rutas de calle (sin almacén)
+  // Rutas de calle (sin almacén) para la tabla principal
   getDailyScheduleForDay(day: Date): DailyTask[] {
     const key = this.getDayKey(day);
     return this.dailySchedules[key] || [];
@@ -274,88 +293,54 @@ export class CalendarComponent implements OnInit {
     return this.storePickups[key] || [];
   }
 
-  // Total de filas del día (ruta + header ALMACÉN + filas de almacén)
+  // Total de filas del día en la tabla principal (ruta + header ALMACÉN + filas de almacén)
   getTotalRowsForDay(day: Date): number {
-    const rutas = this.getDailyScheduleForDay(day).length;
-    const storeD = this.getStoreDeliveriesForDay(day).length;
-    const storeP = this.getStorePickupsForDay(day).length;
+  const deliveries = this.getDeliveriesOnRouteForDay(day).length;
+  const pickups   = this.getPickupsOnRouteForDay(day).length;
+  const storeD    = this.getStoreDeliveriesForDay(day).length;
+  const storeP    = this.getStorePickupsForDay(day).length;
 
-    const filasAlmacen = storeD + storeP;
-    const headerAlmacen = filasAlmacen > 0 ? 1 : 0; // 1 fila que dice "ALMACÉN"
+  // Bloque ALMACÉN: 1 cabecera + filas de entrega + filas de recojo
+  const almacenBlock = storeD + storeP > 0 ? 1 + storeD + storeP : 0;
 
-    const total = rutas + filasAlmacen + headerAlmacen;
-    return total > 0 ? total : 1;
+  // Filas "de contenido" (sin contar la fila que lleva la celda de la fecha)
+  const rowsWithoutDate = deliveries + pickups + almacenBlock;
+
+  // +1 por la fila donde está la celda de la fecha
+  const total = rowsWithoutDate + 1;
+  return total > 0 ? total : 1;
+}
+
+  // ¿Hay algo para mostrar (ruta o almacén) en el día? (segunda tabla)
+hasAnyGroupedDataForDay(day: Date): boolean {
+  const deliveries = this.getDeliveriesOnRouteForDay(day).length;
+  const pickups   = this.getPickupsOnRouteForDay(day).length;
+  const storeD    = this.getStoreDeliveriesForDay(day).length;
+  const storeP    = this.getStorePickupsForDay(day).length;
+
+  return deliveries + pickups + storeD + storeP > 0;
+}
+
+  // ¿Hay algo "en ruta" ese día? (segunda tabla)
+  hasAnyRouteForDay(day: Date): boolean {
+    return this.getDailyScheduleForDay(day).length > 0;
+  }
+
+  // Tareas EN RUTA por tipo (ENTREGA o RECOJO) para la segunda tabla
+  getRouteTasksByType(day: Date, type: TaskType): DailyTask[] {
+    return this.getDailyScheduleForDay(day)
+      .filter((t) => t.type === type)
+      .sort((a, b) => (a.routePos || 0) - (b.routePos || 0));
   }
 
   // ===========================
-  //  Drag & Drop ruta calle
-  // ===========================
-  dropDailySchedule(day: Date, event: CdkDragDrop<DailyTask[]>) {
-    const key = this.getDayKey(day);
-    const tasks = this.dailySchedules[key];
-
-    if (!tasks) {
-      return;
-    }
-
-    moveItemInArray(tasks, event.previousIndex, event.currentIndex);
-
-    tasks.forEach((task, index) => {
-      const newPos = index + 1;
-      task.routePos = newPos;
-
-      if (task.type === 'ENTREGA') {
-        task.contract.order = newPos;
-      } else {
-        task.contract.orderPickup = newPos;
-      }
-    });
-
-    this.saveDailyOrder(tasks);
-  }
-
-  private saveDailyOrder(tasks: DailyTask[]) {
-    const headers = new HttpHeaders().set(
-      'Authorization',
-      'Bearer ' + this.authenticationToken.myValue
-    );
-
-    tasks.forEach((task) => {
-      const payload: any = {
-        _id: task.contract._id,
-        onAccount: []
-      };
-
-      if (task.type === 'ENTREGA') {
-        payload.order = task.contract.order;
-      } else {
-        payload.orderPickup = task.contract.orderPickup;
-      }
-
-      this.contractService.updateContract(payload, headers).subscribe(
-        () => {
-          console.log(`Ruta actualizada para contrato ${task.contract._id}`);
-        },
-        (error) => {
-          if (error.status === 401) {
-            console.log('Credenciales incorrectas');
-            this.route.navigate(['/app-login']);
-          } else {
-            console.log('Error desconocido en el login');
-          }
-        }
-      );
-    });
-  }
-
-  // ===========================
-  //  Updates varios
+  //  Actualizaciones simples
   // ===========================
   onOptionChange(id: string, isSelected: boolean) {
     const payload = {
       _id: id,
       isSelected,
-      onAccount: []
+      onAccount: [],
     };
     this.updateSimple(payload);
   }
@@ -364,25 +349,7 @@ export class CalendarComponent implements OnInit {
     const payload = {
       _id: id,
       isSelectedPickup,
-      onAccount: []
-    };
-    this.updateSimple(payload);
-  }
-
-  onOptionChangeMobility(id: string, mobility: string) {
-    const payload = {
-      _id: id,
-      mobility,
-      onAccount: []
-    };
-    this.updateSimple(payload);
-  }
-
-  onOptionChangeMobilityPickup(id: string, mobilityPickup: string) {
-    const payload = {
-      _id: id,
-      mobilityPickup,
-      onAccount: []
+      onAccount: [],
     };
     this.updateSimple(payload);
   }
@@ -391,7 +358,7 @@ export class CalendarComponent implements OnInit {
     const payload = {
       _id: id,
       hourIni,
-      onAccount: []
+      onAccount: [],
     };
     this.updateSimple(payload);
   }
@@ -400,7 +367,7 @@ export class CalendarComponent implements OnInit {
     const payload = {
       _id: id,
       hourFin,
-      onAccount: []
+      onAccount: [],
     };
     this.updateSimple(payload);
   }
@@ -409,7 +376,7 @@ export class CalendarComponent implements OnInit {
     const payload = {
       _id: id,
       hourIniPickup,
-      onAccount: []
+      onAccount: [],
     };
     this.updateSimple(payload);
   }
@@ -418,7 +385,7 @@ export class CalendarComponent implements OnInit {
     const payload = {
       _id: id,
       hourFinPickup,
-      onAccount: []
+      onAccount: [],
     };
     this.updateSimple(payload);
   }
@@ -431,7 +398,8 @@ export class CalendarComponent implements OnInit {
 
     this.contractService.updateContract(payload, headers).subscribe(
       () => {
-        this.findContract(); // recarga y reconstruye rutas/almacén
+        // recargar para mantener sincronizadas ambas tablas
+        this.findContract();
       },
       (error) => {
         if (error.status === 401) {
@@ -448,6 +416,30 @@ export class CalendarComponent implements OnInit {
   //  Modal de contrato
   // ===========================
   openContractModal(contractId: string) {
+    // const contrato = this.contract.find(c => c._id === contractId);
+    // if (!contrato) {
+    //   console.warn('Contrato no encontrado para id', contractId);
+    //   return;
+    // }
+    // const modalRef = this.modalService.open(ContractComponent, {
+    //   size: 'xl',
+    //   scrollable: true,
+    //   backdrop: 'static',
+    // });
+
+    // // Estos @Input deben existir en tu ContractComponent
+    // (modalRef.componentInstance as any).modalMode = true;
+    // (modalRef.componentInstance as any).contractIdFromCalendar = contractId;
+
+    // modalRef.result
+    //   .then(() => {
+    //     // al cerrar, recargamos programación
+    //     this.findContract();
+    //   })
+    //   .catch(() => {
+    //     // al cerrar por X o fondo, también recargamos por si cambió algo
+    //     this.findContract();
+    //   });
     const contrato = this.contract.find(c => c._id === contractId);
     if (!contrato) {
       console.warn('Contrato no encontrado para id', contractId);
@@ -466,4 +458,48 @@ export class CalendarComponent implements OnInit {
     modalRef.closed.subscribe(() => this.findContract());
     modalRef.dismissed.subscribe(() => this.findContract());
   }
+
+  // Devuelve todas las tareas (ENTREGA) en ruta para ese día
+getDeliveriesOnRouteForDay(day: Date): DailyTask[] {
+  return (this.getDailyScheduleForDay(day) || []).filter(
+    (t) => t.type === 'ENTREGA'
+  );
+}
+
+// Devuelve todas las tareas (RECOJO) en ruta para ese día
+getPickupsOnRouteForDay(day: Date): DailyTask[] {
+  return (this.getDailyScheduleForDay(day) || []).filter(
+    (t) => t.type === 'RECOJO'
+  );
+}
+
+getRowSpanForDay(day: Date): number {
+  const deliveriesRoute = this.getDeliveriesOnRouteForDay(day).length;
+  const pickupsRoute    = this.getPickupsOnRouteForDay(day).length;
+  const storeDeliveries = this.getStoreDeliveriesForDay(day).length;
+  const storePickups    = this.getStorePickupsForDay(day).length;
+
+  // 4 filas de cabecera de grupo (ruta entrega, ruta recojo, almacén entrega, almacén recojo)
+  const headerRows = 4;
+
+  const total =
+    deliveriesRoute +
+    pickupsRoute +
+    storeDeliveries +
+    storePickups +
+    headerRows;
+
+  return total > 0 ? total : 1;
+}
+
+hasAnyDataForDay(day: Date): boolean {
+  return (
+    this.getDeliveriesOnRouteForDay(day).length > 0 ||
+    this.getPickupsOnRouteForDay(day).length > 0 ||
+    this.getStoreDeliveriesForDay(day).length > 0 ||
+    this.getStorePickupsForDay(day).length > 0
+  );
+}
+
+
 }

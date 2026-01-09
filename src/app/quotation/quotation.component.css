@@ -1,0 +1,87 @@
+/* Copying styles from contract or just basic styling */
+.card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.table thead th {
+  background-color: #343a40 !important;
+  color: #fff !important;
+}
+
+#formularioQuotation {
+  padding: 20px 30px 40px 10px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* =========================
+   Estilos impresión
+   ========================= */
+.pagePrint {
+  zoom: 0.5;
+  display: none;
+}
+
+.pagePrint-inner {
+  padding: 20px 30px 40px 10px;
+  max-width: 950px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media print {
+  .pagePrint {
+    display: block;
+  }
+
+  #formularioQuotation {
+    display: none;
+  }
+
+  .pagePrint-inner {
+    padding: 0;
+    margin: 0;
+    max-width: none;
+  }
+}
+
+#salto {
+  padding: 20px;
+}
+
+#aumentar-letra {
+  font-size: 30px;
+}
+
+.label-total {
+  justify-content: end;
+  text-align: right;
+}
+
+#mi-div {
+  width: 80%;
+}
+
+#mi-imagen {
+  width: 100%;
+  height: auto;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+table tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+table thead tr th {
+  background-color: #343a40;
+  color: #fff;
+  border-bottom: 2px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}

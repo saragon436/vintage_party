@@ -1,13 +1,16 @@
+/* =========================
+   Layout general formulario
+   ========================= */
 #formulario {
-    padding: 20px   30px   40px   10px;
-  }
-
-#salto{
-    padding:20px;
+  padding: 20px 30px 40px 10px;
 }
 
-#salto-titulo{
-  padding:5px;
+#salto {
+  padding: 20px;
+}
+
+#salto-titulo {
+  padding: 5px;
 }
 
 #aumentar-letra {
@@ -16,26 +19,46 @@
 
 .error {
   border-color: red;
-  border-width: 2px ;
+  border-width: 2px;
 }
 
-.label-total{
+.label-total {
   justify-content: end;
   text-align: right;
 }
 
-.label-date{
+.label-date {
   width: 120px;
 }
 
+/* =========================
+   Filtros (año / estado)
+   ========================= */
+#formularioListado .form-select {
+  max-width: 250px;
+}
+
+#formularioListado label {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+#formularioListado .btn-outline-secondary {
+  padding: 4px 10px;
+  font-size: 0.9rem;
+}
+
+/* Un poco de separación vertical entre filtros y tabla */
+#formularioListado .row#salto:nth-of-type(2) {
+  margin-bottom: 10px;
+}
+
+/* =========================
+   Estilos impresión
+   ========================= */
 .pagePrint {
   zoom: 0.5;
   display: none;
-  /* position: absolute;
-  top: 30%;
-  left: 25%; 
-  width: 45%;
-  transform: translate(-50%, -50%); */
 }
 
 @media print {
@@ -43,15 +66,13 @@
     display: block;
   }
 
-  #formulario {
+  #formulario,
+  #formularioListado {
     display: none;
   }
-
-  /* @page{
-    size: landscape;
-  } */
 }
 
+/* Logo contrato */
 #mi-div {
   width:80%;
 }
@@ -61,18 +82,97 @@
   height: auto;
 }
 
-/* thead tr th { 
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: #ffffff;
-} */
-/* Estilo para las filas pares */
-tr:nth-child(even) {
+/* =========================
+   Tablas (zebra)
+   ========================= */
+/* Importante: aplica solo a filas de datos (tbody),
+   así no pinta el thead ni listas de otros lados si no quieres */
+table tbody tr:nth-child(even) {
   background-color: #f2f2f2;
 }
 
-/* Estilo para las filas impares */
-tr:nth-child(odd) {
+table tbody tr:nth-child(odd) {
   background-color: #ffffff;
 }
+
+/* Opcional: header de tabla un poco más marcado */
+table thead tr th {
+  background-color: #ffffff;
+  border-bottom: 2px solid #ddd;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+/* =========================
+   Panel de filtros contrato
+   ========================= */
+.filters-panel {
+  background-color: #f8f9fa;
+  border: 1px solid #e2e6ea;
+  padding: 10px 14px;
+}
+
+.filters-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.filters-header .btn {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+}
+
+.filters-body .form-label {
+  font-size: 0.8rem;
+}
+
+.filters-body .form-select-sm {
+  font-size: 0.8rem;
+  height: 30px;
+  padding: 2px 6px;
+}
+
+/* ============================
+   Panel full-width de filtros
+   ============================ */
+.filters-panel-full {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 15px 18px;
+}
+
+.filters-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.toggle-btn {
+  padding: 2px 10px;
+  font-size: 0.8rem;
+}
+
+.filters-body .form-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.filters-body .form-select-sm {
+  font-size: 0.85rem;
+  height: 32px;
+  padding: 4px 8px;
+}
+
+.modal-body-scroll {
+  max-height: 75vh;
+  overflow-y: auto;
+  padding-right: 0.75rem;
+}
+
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1057;
+  background-color: #fff;
+}
+
