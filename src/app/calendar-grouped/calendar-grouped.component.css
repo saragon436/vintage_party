@@ -111,3 +111,82 @@ tbody[cdkDropList] tr:hover {
   text-decoration: underline;
 }
 
+
+/* ======== FECHA (columna izquierda) ======== */
+.date-cell {
+  background: #f0f0f0;      /* gris suave */
+  border-right: 2px solid #bbb;
+  border-left: 2px solid #bbb;
+  vertical-align: top;
+  padding: 10px;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+  width: 160px;
+}
+
+/* ======== Títulos de sección ======== */
+.section-header-row {
+  background: #dfe8ff;        /* azul muy suave */
+  font-weight: bold;
+  text-align: left;
+  padding: 6px;
+}
+
+.almacen-header-row {
+  background: #ffecc2;        /* amarillo suave */
+  font-weight: bold;
+  text-align: left;
+}
+
+/* ======== Resaltado por check ======== */
+.yellow-background {
+  background: #fff5a8 !important;
+}
+
+/* ======== Separación entre grupos ======== */
+tbody tr td {
+  padding: 6px;
+}
+
+/* Código (botón) */
+.code-link {
+  font-weight: bold;
+  color: #004b9f !important;
+}
+
+.code-link:hover {
+  text-decoration: underline;
+}
+
+/* Tabla más legible */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.date-cell {
+  vertical-align: middle !important;
+  text-align: center; 
+  padding: 0;
+}
+
+.date-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;      /* Centra verticalmente */
+  align-items: center;          /* Centra horizontalmente */
+  height: 100%;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.group-header {
+  background-color: #e6e6e6;   /* gris/plomo ligero */
+  font-weight: bold;
+  text-align: left;
+  padding: 8px 10px;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+

@@ -14,12 +14,16 @@ import { AppRoutingModule } from './app-routing.module'
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { WeeklyWorkComponent } from './kardex/weekly-work/weekly-work.component';
+import { CalendarGroupedComponent } from './calendar-grouped/calendar-grouped.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
-    CustomerComponent
+    CustomerComponent,
+    WeeklyWorkComponent,
+    CalendarGroupedComponent
   ],
   imports: [
     BrowserModule,

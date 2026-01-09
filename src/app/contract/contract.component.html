@@ -1,131 +1,251 @@
-<div id="formulario" *ngIf="condicion ; else otraPlantilla">
+<div id="formulario" *ngIf="condicion; else otraPlantilla" [ngClass]="{ 'modal-body-scroll': initialContract }">
+  <!-- Header solo cuando se abre como modal desde programación -->
+<div *ngIf="initialContract" class="modal-header border-0 pb-0">
+  <h5 class="modal-title">
+    Contrato {{ numberContract || initialContract?.codContract }}
+  </h5>
+  <button
+    type="button"
+    class="btn-close"
+    aria-label="Close"
+    (click)="closeModal()">
+  </button>
+</div>
+
   <form [formGroup]="form">
     <div class="row" id="salto">
       <a>Crear Contrato</a>
     </div>
+
+    <!-- Cliente + contrato + fecha creación -->
     <div class="row" id="salto">
-      <div class="col-lg-4" >
-          <ng-select
+      <div class="col-lg-4">
+        <ng-select
           [clearable]="false"
-          notFoundText = 'seleccione clientes'
+          notFoundText="seleccione clientes"
           placeholder="Seleccione Cliente"
           formControlName="customer"
           #ddlcustomer
+        >
+          <ng-option
+            *ngFor="let item of customer$ | async"
+            [value]="item"
           >
-          <ng-option *ngFor="let item of customer$ | async" [value]="item" >{{item.documentNumber}} {{item.name}}</ng-option>
+            {{ item.documentNumber }} {{ item.name }}
+          </ng-option>
         </ng-select>
       </div>
+
       <div class="col-lg-4">
         <div class="input-group">
-          <!-- <button type="button" (click)="openModal()" class="btn btn-primary">Agregar</button> -->
-          <label class="input-group-text" for="co-contrato" id="co-contrato"># Contrato</label>
-        <input type="text" class="form-control" placeholder="# Contrato" id="co-contrato" value="{{this.numberContract}}" readonly>
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="input-group">
-          <!--<input type="number" class="form-control" placeholder="# de Contrato" formControlName="number">-->
-          <label class="input-group-text" for="fe_creacion" id="instalacion-titulo">F. Creacion</label>
-        <input type="date" class="form-control" placeholder="Fecha Creacion" id="fe_creacion" formControlName="createDate">
+          <label class="input-group-text" for="co-contrato" id="co-contrato">
+            # Contrato
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="# Contrato"
+            id="co-contrato"
+            [value]="numberContract"
+            readonly
+          />
         </div>
       </div>
 
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="fe_creacion" id="instalacion-titulo">
+            F. Creación
+          </label>
+          <input
+            type="date"
+            class="form-control"
+            placeholder="Fecha Creación"
+            id="fe_creacion"
+            formControlName="createDate"
+          />
+        </div>
+      </div>
     </div>
+
+    <!-- Fechas -->
     <div class="row" id="salto">
-      <div class="col-lg-4"> <div class="input-group">
-        <label class="input-group-text" for="fe_instalacion" id="instalacion-titulo">F. Instalación</label>
-        <input type="date" class="form-control" placeholder="Fecha Intalacion" id="fe_instalacion" formControlName="installDate">
-      </div>
-    </div>
       <div class="col-lg-4">
         <div class="input-group">
-          <label class="input-group-text" for="fe_evento" id="evento-titulo">F. Evento</label>
-          <input type="date" class="form-control" placeholder="Fecha Evento" id="fe_evento" formControlName="eventDate">
+          <label class="input-group-text" for="fe_instalacion" id="instalacion-titulo">
+            F. Instalación
+          </label>
+          <input
+            type="date"
+            class="form-control"
+            placeholder="Fecha Instalación"
+            id="fe_instalacion"
+            formControlName="installDate"
+          />
         </div>
       </div>
+
       <div class="col-lg-4">
         <div class="input-group">
-          <label class="input-group-text" for="fe_recojo" id="salto-titulo">F. Recojo</label>
-          <input type="date" class="form-control" placeholder="Fecha Recojo" id="fe_recojo" formControlName="pickupDate" >
+          <label class="input-group-text" for="fe_evento" id="evento-titulo">
+            F. Evento
+          </label>
+          <input
+            type="date"
+            class="form-control"
+            placeholder="Fecha Evento"
+            id="fe_evento"
+            formControlName="eventDate"
+          />
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="input-group">
+          <label class="input-group-text" for="fe_recojo" id="salto-titulo">
+            F. Recojo
+          </label>
+          <input
+            type="date"
+            class="form-control"
+            placeholder="Fecha Recojo"
+            id="fe_recojo"
+            formControlName="pickupDate"
+          />
         </div>
       </div>
     </div>
+
+    <!-- Dirección -->
     <div class="row" id="salto">
       <div class="col-lg-3">
         <div class="input-group">
           <div class="form-floating">
-              <select class="form-control" formControlName="district" id="district">
-                <option value="">Selecciona un distrito</option>
-                <option *ngFor="let distrito of listaDistritos" [value]="distrito">{{ distrito }}</option>
-              </select>
+            <select class="form-control" formControlName="district" id="district">
+              <option value="">Selecciona un distrito</option>
+              <option *ngFor="let distrito of listaDistritos" [value]="distrito">
+                {{ distrito }}
+              </option>
+            </select>
           </div>
         </div>
       </div>
+
       <div class="col-lg-9">
         <div class="input-group">
           <div class="form-floating">
-            <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"  formControlName="address"
-              style="height: 100px"></textarea>
-            <label for="floatingTextarea2">Direccion</label>
+            <textarea
+              class="form-control"
+              id="floatingTextarea2"
+              formControlName="address"
+              style="height: 100px"
+            ></textarea>
+            <label for="floatingTextarea2">Dirección</label>
           </div>
         </div>
       </div>
-      
     </div>
+
+    <!-- Horarios -->
     <div class="row" id="salto">
       <div class="col-lg-3">
         <div class="input-group">
           <div class="form-floating">
-            <input type="time" class="form-control" id="floatingTextarea3"  formControlName="hourIni">
+            <input
+              type="time"
+              class="form-control"
+              id="floatingTextarea3"
+              formControlName="hourIni"
+            />
             <label for="floatingTextarea3">Hora Inicio Entrega</label>
           </div>
         </div>
       </div>
+
       <div class="col-lg-3">
         <div class="input-group">
           <div class="form-floating">
-            <input type="time" class="form-control" id="floatingTextarea4"  formControlName="hourFin">
+            <input
+              type="time"
+              class="form-control"
+              id="floatingTextarea4"
+              formControlName="hourFin"
+            />
             <label for="floatingTextarea4">Hora Fin Entrega</label>
           </div>
         </div>
       </div>
+
       <div class="col-lg-3">
         <div class="input-group">
           <div class="form-floating">
-            <input type="time" class="form-control" id="floatingTextarea5"  formControlName="hourIniPickup">
+            <input
+              type="time"
+              class="form-control"
+              id="floatingTextarea5"
+              formControlName="hourIniPickup"
+            />
             <label for="floatingTextarea5">Hora Inicio Recojo</label>
           </div>
         </div>
       </div>
+
       <div class="col-lg-3">
         <div class="input-group">
           <div class="form-floating">
-            <input type="time" class="form-control" id="floatingTextarea6"  formControlName="hourFinPickup">
+            <input
+              type="time"
+              class="form-control"
+              id="floatingTextarea6"
+              formControlName="hourFinPickup"
+            />
             <label for="floatingTextarea6">Hora Fin Recojo</label>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Mobiliario -->
     <div class="row" id="salto">
       <div class="col-lg-12">
         <h4>Mobiliario</h4>
       </div>
+
       <div class="col-lg-10">
-        <ng-select          
+        <ng-select
           [clearable]="false"
-          notFoundText = 'Para que se carguen los accesorios seleccione las fechas de instalación y recojo'
+          notFoundText="Para que se carguen los accesorios seleccione las fechas de instalación y recojo"
           placeholder="Seleccione Accesorio o elemento"
           formControlName="searchAccessory"
-          #ddlAccessory>
-          <ng-option *ngFor="let item of accessory$ | async" [value]="item" >{{item.description}} {{item.color}} {{item.design}} Alto= {{item.high}} Ancho= {{item.width}} Largo= {{item.large}} Diametro= {{item.diameter}} Fondo= {{item.bottom}} - stock : {{item.stock}}</ng-option>
+          #ddlAccessory
+        >
+          <ng-option
+            *ngFor="let item of accessory$ | async"
+            [value]="item"
+          >
+            {{ item.description }} {{ item.color }} {{ item.design }}
+            Alto= {{ item.high }} Ancho= {{ item.width }} Largo= {{ item.large }}
+            Diámetro= {{ item.diameter }} Fondo= {{ item.bottom }} - stock :
+            {{ item.stock }}
+          </ng-option>
         </ng-select>
       </div>
+
       <div class="col-lg-2 d-grid gap-2 mb-3">
-        <button type="button" (click)="onAddItem(ddlAccessory)" class="btn btn-primary">Agregar selección</button>
+        <button
+          type="button"
+          (click)="onAddItem(ddlAccessory)"
+          class="btn btn-primary"
+        >
+          Agregar selección
+        </button>
       </div>
 
       <div class="col-lg-12">
-        <table id="dt_basic" class="table table-striped table-bordered table-hover" >
+        <table
+          id="dt_basic"
+          class="table table-striped table-bordered table-hover"
+        >
           <thead>
             <tr>
               <th>#</th>
@@ -133,43 +253,81 @@
               <th width="20%">Stock</th>
               <th width="10%">Cantidad</th>
               <th width="10%">Precio</th>
-              <th style="text-align:center;">Eliminar</th>
+              <th style="text-align: center">Eliminar</th>
             </tr>
           </thead>
           <tbody class="table-group-divider" formArrayName="listAccessories">
             <tr *ngIf="arrayAccessory.controls.length == 0">
               <td colspan="8" style="text-align: center">No Existen Registros</td>
             </tr>
-            <tr *ngFor="let item of arrayAccessory.controls; let i = index;" [formGroupName]="i">
+
+            <tr
+              *ngFor="let item of arrayAccessory.controls; let i = index"
+              [formGroupName]="i"
+            >
               <td>{{ i + 1 }}</td>
               <td>
-                <!-- <label>{{ item.get('description')?.value }} {{ item.get('color')?.value }} {{ item.get('design')?.value }} Largo= {{ item.get('large')?.value }} Fondo= {{ item.get('bottom')?.value }} Alto= {{ item.get('high')?.value }} Ancho= {{ item.get('width')?.value }} </label>  -->
                 <label>
-                  <ng-container *ngIf="item.get('description')?.value">{{ item.get('description')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('color')?.value">{{ item.get('color')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('design')?.value">{{ item.get('design')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('high')?.value != 0">Alto= {{ item.get('high')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('width')?.value != 0">Ancho= {{ item.get('width')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('large')?.value != 0">Largo= {{ item.get('large')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('diameter')?.value != 0">Diametro= {{ item.get('diameter')?.value }} </ng-container>
-                  <ng-container *ngIf="item.get('bottom')?.value != 0">Fondo= {{ item.get('bottom')?.value }} </ng-container>  
+                  <ng-container *ngIf="item.get('description')?.value">
+                    {{ item.get('description')?.value }}
+                  </ng-container>
+                  <ng-container *ngIf="item.get('color')?.value">
+                    {{ item.get('color')?.value }}
+                  </ng-container>
+                  <ng-container *ngIf="item.get('design')?.value">
+                    {{ item.get('design')?.value }}
+                  </ng-container>
+                  <ng-container *ngIf="item.get('high')?.value != 0">
+                    Alto= {{ item.get('high')?.value }}
+                  </ng-container>
+                  <ng-container *ngIf="item.get('width')?.value != 0">
+                    Ancho= {{ item.get('width')?.value }}
+                  </ng-container>
+                  <ng-container *ngIf="item.get('large')?.value != 0">
+                    Largo= {{ item.get('large')?.value }}
+                  </ng-container>
+                  <ng-container *ngIf="item.get('diameter')?.value != 0">
+                    Diámetro= {{ item.get('diameter')?.value }}
+                  </ng-container>
+                  <ng-container *ngIf="item.get('bottom')?.value != 0">
+                    Fondo= {{ item.get('bottom')?.value }}
+                  </ng-container>
                 </label>
               </td>
+
               <td>
                 {{ item.get('stock')?.value }}
               </td>
-              <td>
-                <input class="form-control" type="number" formControlName="amount" min="1" 
-                [ngClass]="{'error': item.get('amount')?.errors}" (input)="sumarValores()" required>
-                
-              </td>
-              <td>
-                <input class="form-control" type="number" formControlName="price" value="{{ item.get('price')?.value }}" (input)="sumarValores()">
-              </td>
-              <td style="text-align: center;">
 
-                <button class='btn btn-md btn-default' title="Eliminar Registro" (click)="onDeleteItem(i)"><i
-                    class='fa-solid fa-trash'>X</i></button>
+              <td>
+                <input
+                  class="form-control"
+                  type="number"
+                  formControlName="amount"
+                  min="1"
+                  [ngClass]="{ error: item.get('amount')?.errors }"
+                  (input)="sumarValores()"
+                  required
+                />
+              </td>
+
+              <td>
+                <input
+                  class="form-control"
+                  type="number"
+                  formControlName="price"
+                  (input)="sumarValores()"
+                />
+              </td>
+
+              <td style="text-align: center">
+                <button
+                  class="btn btn-md btn-default"
+                  title="Eliminar Registro"
+                  (click)="onDeleteItem(i)"
+                >
+                  <i class="fa-solid fa-trash">X</i>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -177,65 +335,144 @@
       </div>
     </div>
 
+    <!-- A cuenta / montos -->
     <div class="row" id="salto">
       <div class="col-lg-4">
         <div class="input-group">
-          <label class="input-group-text" for="a_cuenta" id="aCuenta">A Cuenta</label>
-          <input type="number" class="form-control" placeholder="A cuenta" id="a_cuenta" formControlName="onAccountvalues" [(ngModel)]="onAccount">
-          <button type="button" (click)="onAddCustomer(ddlcustomer);onAddItemOnAccount(this.onAccount)" class="btn btn-primary" *ngIf="mostrarBotones">Agregar a en Cuenta</button>
-          <button type="button" (click)="openAcount(myAcounnt)" class="btn btn-primary" *ngIf="!mostrarBotones">Agregar a en Cuenta</button>
+          <label class="input-group-text" for="a_cuenta" id="aCuenta">
+            A Cuenta
+          </label>
+          <input
+            type="number"
+            class="form-control"
+            placeholder="A cuenta"
+            id="a_cuenta"
+            formControlName="onAccountvalues"
+            [(ngModel)]="onAccount"
+            name="aCuentaInput"
+          />
+          <button
+            type="button"
+            (click)="onAddCustomer(ddlcustomer); onAddItemOnAccount(onAccount)"
+            class="btn btn-primary"
+            *ngIf="mostrarBotones"
+          >
+            Agregar a en Cuenta
+          </button>
+          <button
+            type="button"
+            (click)="openAcount(myAcounnt)"
+            class="btn btn-primary"
+            *ngIf="!mostrarBotones"
+          >
+            Agregar a en Cuenta
+          </button>
         </div>
+
         <div>
-          <table id="dt_onAccount" class="table table-striped table-bordered table-hover" >
+          <table
+            id="dt_onAccount"
+            class="table table-striped table-bordered table-hover"
+          >
             <thead>
               <tr>
                 <th>#</th>
-                <th width="40%"># Operacion</th>
+                <th width="40%"># Operación</th>
                 <th width="20%">Adelanto</th>
-                <th style="text-align:center;">Eliminar</th>
+                <th style="text-align: center">Eliminar</th>
               </tr>
             </thead>
             <tbody class="table-group-divider" formArrayName="onAccount">
               <tr *ngIf="arrayOnAccount.controls.length == 0">
-                <td colspan="8" style="text-align: center">No Existen Registros</td>
+                <td colspan="8" style="text-align: center">
+                  No Existen Registros
+                </td>
               </tr>
-              <tr *ngFor="let item of arrayOnAccount.controls; let i = index;" [formGroupName]="i">
+
+              <tr
+                *ngFor="let item of arrayOnAccount.controls; let i = index"
+                [formGroupName]="i"
+              >
                 <td>{{ i + 1 }}</td>
                 <td>
-                  <input class="form-control" type="text" formControlName="number"  >
+                  <input
+                    class="form-control"
+                    type="text"
+                    formControlName="number"
+                  />
                 </td>
                 <td>
-                  <input class="form-control" type="number"  value="{{ item.get('amount')?.value }}" >
+                  <input
+                    class="form-control"
+                    type="number"
+                    [value]="item.get('amount')?.value"
+                    readonly
+                  />
                 </td>
-                <td style="text-align: center;">
-  
-                  <button class='btn btn-md btn-default' title="Eliminar Registro" (click)="onDeleteItemOnAccount(i)"><i
-                      class='fa-solid fa-trash'>X</i></button>
+                <td style="text-align: center">
+                  <button
+                    class="btn btn-md btn-default"
+                    title="Eliminar Registro"
+                    (click)="onDeleteItemOnAccount(i)"
+                  >
+                    <i class="fa-solid fa-trash">X</i>
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
       <div class="col-lg-4">
         <div class="input-group">
-          <label class="input-group-text" for="fe_evento" id="saldo">Saldo</label>
-          <input type="text" class="form-control" placeholder="Saldo" formControlName="saldo" [(ngModel)]="this.totalBalance" readonly>
+          <label class="input-group-text" for="saldo" id="saldo">
+            Saldo
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Saldo"
+            formControlName="saldo"
+            [(ngModel)]="totalBalance"
+            name="saldoInput"
+            readonly
+          />
         </div>
       </div>
+
       <div class="col-lg-4">
         <div class="input-group">
-          <label class="input-group-text" for="fe_evento" id="evento-titulo">TOTAL SERVICIOS s/</label>
-          <input type="text" id="disabledTextInput" class="form-control" placeholder="Total Servicios" formControlName="amount" readonly>
+          <label
+            class="input-group-text"
+            for="totalServicios"
+            id="evento-titulo"
+          >
+            TOTAL SERVICIOS s/
+          </label>
+          <input
+            type="text"
+            id="totalServicios"
+            class="form-control"
+            placeholder="Total Servicios"
+            formControlName="amount"
+            readonly
+          />
         </div>
       </div>
     </div>
+
+    <!-- Comentarios -->
     <div class="row" id="salto">
       <div class="col-lg-12">
         <div class="input-group">
           <div class="form-floating">
-            <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea7"  formControlName="comment"
-              style="height: 100px"></textarea>
+            <textarea
+              class="form-control"
+              id="floatingTextarea7"
+              formControlName="comment"
+              style="height: 100px"
+            ></textarea>
             <label for="floatingTextarea7">Comentarios</label>
           </div>
         </div>
@@ -243,27 +480,184 @@
     </div>
 
     <div class="row" id="salto">
-      <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones" (click)="onAddCustomer(ddlcustomer);onSave();deleteContract()" >Actualizar Contrato</button>
-      <button type="button" class="btn btn-success" [disabled] = 'form.status !== "VALID"' *ngIf="mostrarBotones" (click)="onAddCustomer(ddlcustomer);onSave()" >Registrar Contrato</button>
-      <button type="button" class="btn btn-warning" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones"(click)="printDocument()" >Imprimir Guia</button>
-      <button type="button" class="btn btn-primary" [disabled] = 'form.status !== "VALID"' *ngIf="!mostrarBotones"(click)="printDocumentDetalle()" >Imprimir Detalle</button>
-      <button type="button" class="btn btn-warning" [disabled] = 'form.status !== "VALID"' *ngIf="mostrarBotones"(click)="onAddCustomer(ddlcustomer);printDocument()" >Imprimir Cotizacion</button>
-      <button type="submit" (click)="onSubmitExit()" class="btn btn-danger" >Volver</button>
-    </div>
+  <!-- Estos dos siempre visibles (modal o página) -->
+  <button
+    type="button"
+    class="btn btn-success"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="!mostrarBotones && !activeModal"
+    (click)="onAddCustomer(ddlcustomer); onSave(); deleteContract()"
+  >
+    Actualizar Contrato
+  </button>
+
+  <button
+    type="button"
+    class="btn btn-success"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="mostrarBotones"
+    (click)="onAddCustomer(ddlcustomer); onSave()"
+  >
+    Registrar Contrato
+  </button>
+
+  <!-- 👇 Estos TRES se ocultan cuando está en modal (activeModal definido) -->
+  <button
+    type="button"
+    class="btn btn-warning"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="!mostrarBotones && !activeModal"
+    (click)="printDocument()"
+  >
+    Imprimir Guia
+  </button>
+
+  <button
+    type="button"
+    class="btn btn-primary"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="!mostrarBotones && !activeModal"
+    (click)="printDocumentDetalle()"
+  >
+    Imprimir Detalle
+  </button>
+
+  <!-- Imprimir Cotización solo para alta normal; en modal casi nunca se usa -->
+  <button
+    type="button"
+    class="btn btn-warning"
+    [disabled]="form.status !== 'VALID'"
+    *ngIf="mostrarBotones && !activeModal"
+    (click)="onAddCustomer(ddlcustomer); printDocument()"
+  >
+    Imprimir Cotizacion
+  </button>
+
+  <!-- Botón Volver escondido en modal -->
+  <button
+    type="submit"
+    class="btn btn-danger"
+    (click)="onSubmitExit()"
+    *ngIf="!activeModal"
+  >
+    Volver
+  </button>
+</div>
+
   </form>
 </div>
+
+<!-- ==========================
+     LISTADO (otraPlantilla)
+     ========================== -->
 <ng-template #otraPlantilla>
-  <div id="formularioListado"> 
-    <div class="row" id="salto" >
+  <div id="formularioListado">
+    <!-- Botones superiores -->
+    <div class="row" id="salto">
       <form>
         <div class="row" id="salto">
-          <button type="submit" (click)="onSubmitAdd()" class="btn btn-primary">Agregar Contrato</button>
-          <button type="submit" (click)="exportToExcel()" class="btn btn-md" >Descargar Contratos</button>
-          <button type="submit" (click)="exportToExcelAccount()" class="btn btn-default" >Descargar A Cuentas</button>
+          <button
+            type="submit"
+            (click)="onSubmitAdd()"
+            class="btn btn-primary"
+          >
+            Agregar Contrato
+          </button>
+          <button
+            type="submit"
+            (click)="exportToExcel()"
+            class="btn btn-md"
+          >
+            Descargar Contratos
+          </button>
+          <button
+            type="submit"
+            (click)="exportToExcelAccount()"
+            class="btn btn-default"
+          >
+            Descargar A Cuentas
+          </button>
         </div>
       </form>
     </div>
-    <div class="row" id="salto" >
+
+    <!-- Buscar + Filtros en la misma fila -->
+    <div class="row" id="salto">
+      <!-- Buscar -->
+      <div class="col-lg-8">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por código, cliente, dirección o distrito"
+            [(ngModel)]="searchValue"
+            name="globalSearch"
+          />
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="onGlobalSearch()"
+          >
+            Buscar
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="clearGlobalSearch()"
+          >
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros año + estado -->
+      <div class="col-lg-4">
+        <div class="d-flex gap-2">
+          <select
+            class="form-select form-select-sm"
+            [(ngModel)]="selectedYear"
+            (ngModelChange)="onYearChange($event)"
+            name="yearSelect"
+          >
+            <option [ngValue]="currentYear">
+              Año actual ({{ currentYear }})
+            </option>
+            <option *ngFor="let year of years" [ngValue]="year">
+              {{ year }}
+            </option>
+          </select>
+
+          <select
+            class="form-select form-select-sm"
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="onStatusChange($event)"
+            name="statusSelect"
+          >
+            <option *ngFor="let status of statuses" [ngValue]="status">
+              {{ status }}
+            </option>
+          </select>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary"
+            (click)="applyFilters()"
+          >
+            Aplicar filtros
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Título de la lista -->
+    <div class="row" id="salto">
+      <div class="col-12">
+        <h5>{{ listTitle }}</h5>
+      </div>
+    </div>
+
+    <!-- Tabla única de contratos -->
+    <div class="row" id="salto">
       <table>
         <thead sticky>
           <tr>
@@ -271,115 +665,217 @@
             <th>Visualizar</th>
             <th>Co. Contrato</th>
             <th>Cliente</th>
-            <th>Fe. Creacion</th>
-            <th>Fe. Instalacion</th>
+            <th>Fe. Creación</th>
+            <th>Fe. Instalación</th>
             <th>Fe. Evento</th>
             <th>Fe. Recojo</th>
             <th>Estado</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of contract" >
-            <td *ngIf="item.status!='Archivado'"><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)" >Eliminar</button></td>
-            <td *ngIf="item.status=='Archivado'"><button type="button" class="btn btn-danger"   disabled>Eliminar</button></td>
-            <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">Visualizar</button></td>
+          <tr *ngFor="let item of contract">
+            <td *ngIf="item.status != 'Archivado'">
+              <button
+                type="button"
+                class="btn btn-danger"
+                (click)="open(mymodal, item._id)"
+              >
+                Eliminar
+              </button>
+            </td>
+            <td *ngIf="item.status == 'Archivado'">
+              <button type="button" class="btn btn-danger" disabled>
+                Eliminar
+              </button>
+            </td>
+
+            <td>
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="findAccesoryById(item._id)"
+              >
+                Visualizar
+              </button>
+            </td>
+
             <td>{{ item.codContract }}</td>
             <td>{{ item.customer.name }}</td>
-            <td>{{ item.createDate.slice(0,10) }}</td>
-            <td>{{ item.installDate.slice(0,10) }}</td>
-            <td>{{ item.eventDate.slice(0,10) }}</td>
-            <td>{{ item.pickupDate.slice(0,10) }}</td>
-            <td *ngIf="item.status=='Archivado'">
+            <td>{{ item.createDate.slice(0, 10) }}</td>
+            <td>{{ item.installDate.slice(0, 10) }}</td>
+            <td>{{ item.eventDate.slice(0, 10) }}</td>
+            <td>{{ item.pickupDate.slice(0, 10) }}</td>
+
+            <td *ngIf="item.status == 'Archivado'">
               {{ item.status }}
             </td>
-            <td *ngIf="item.status!='Archivado'">
-              <select [(ngModel)]="item.status" (change)="onOptionChange(item._id,item.status)" >
-              <option value="Por Pagar">Por Pagar</option>
-              <option value="En Almacen">En Almacen</option>
-              <option value="Pagado">Pagado</option>
-              <option value="Archivado">Archivado</option>
-            </select>
+            <td *ngIf="item.status != 'Archivado'">
+              <select
+                [(ngModel)]="item.status"
+                (change)="onOptionChange(item._id, item.status)"
+                name="statusRow_{{ item._id }}"
+              >
+                <option value="Por Pagar">Por Pagar</option>
+                <option value="En Almacen">En Almacen</option>
+                <option value="Pagado">Pagado</option>
+                <option value="Archivado">Archivado</option>
+              </select>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-    
   </div>
 </ng-template>
+
+<!-- Modal eliminar -->
 <ng-template #mymodal let-modal>
   <div class="modal-header">
     <h4 class="modal-title" id="modal-basic-title">Eliminar Cliente</h4>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+    <button
+      type="button"
+      class="close"
+      aria-label="Close"
+      (click)="modal.dismiss('Cross click')"
+    >
       <span aria-hidden="true">×</span>
     </button>
   </div>
-  <div class="modal-body">
-    Desea anular un Contrato?
-  </div>
+  <div class="modal-body">Desea anular un Contrato?</div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-success-" (click)="deleteContract();modal.close('Save click')">SI</button>
-    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
+    <button
+      type="button"
+      class="btn btn-outline-success-"
+      (click)="deleteContract(); modal.close('Save click')"
+    >
+      SI
+    </button>
+    <button
+      type="button"
+      class="btn btn-outline-dark"
+      (click)="modal.close('Save click')"
+    >
+      NO
+    </button>
   </div>
 </ng-template>
 
+<!-- Modal A cuenta -->
 <ng-template #myAcounnt let-modal>
   <div class="modal-header">
     <h4 class="modal-title" id="modal-basic-title">Agregar a Cuenta</h4>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+    <button
+      type="button"
+      class="close"
+      aria-label="Close"
+      (click)="modal.dismiss('Cross click')"
+    >
       <span aria-hidden="true">×</span>
     </button>
   </div>
   <div class="modal-body">
-   Agregar A cuenta del Contrato
-   <div>
-    <div id="salto"></div>
-    <div class="input-group">
-      <label class="input-group-text" for="A_cuenta_1" id="operacion_1"># Operacion</label>
-      <input type="text" class="form-control" placeholder="a Cuenta" [(ngModel)]="operacion_1">
+    Agregar A cuenta del Contrato
+    <div>
+      <div id="salto"></div>
+      <div class="input-group">
+        <label class="input-group-text" for="operacion_1" id="operacion_1">
+          # Operación
+        </label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="A Cuenta"
+          [(ngModel)]="operacion_1"
+          name="operacion_1"
+        />
+      </div>
+
+      <div id="salto"></div>
+      <div class="input-group">
+        <label class="input-group-text" for="totalPendiente" id="A_cuenta_2">
+          Total Pendiente
+        </label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="A Cuenta"
+          [(ngModel)]="A_cuenta_2"
+          name="totalPendiente"
+          readonly
+        />
+      </div>
+
+      <div id="salto"></div>
+      <div class="input-group">
+        <label class="input-group-text" for="A_cuenta_1" id="a_cuenta_1">
+          A Cuenta
+        </label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="A Cuenta"
+          [(ngModel)]="A_cuenta_1"
+          name="A_cuenta_1"
+        />
+      </div>
+
+      <div id="salto"></div>
+      <div class="input-group">
+        <label
+          class="input-group-text"
+          for="A_cuenta_fecha_1"
+          id="A_cuenta_fecha_1"
+        >
+          Fecha
+        </label>
+        <input
+          type="date"
+          class="form-control"
+          placeholder="A Cuenta"
+          [(ngModel)]="A_cuenta_fecha_1"
+          name="A_cuenta_fecha_1"
+        />
+      </div>
     </div>
-    <div id="salto"></div>
-    <div class="input-group">
-      <label class="input-group-text" for="A_cuenta_2" id="A_cuenta_2" >Total Pendiente</label>
-      <input type="text" class="form-control" placeholder="a Cuenta" [(ngModel)]="A_cuenta_2" readonly>
-    </div>
-    <div id="salto"></div>
-    <div class="input-group">
-      <label class="input-group-text" for="A_cuenta_1" id="a_cuenta_1">A Cuenta</label>
-      <input type="text" class="form-control" placeholder="a Cuenta" [(ngModel)]="A_cuenta_1">
-    </div>
-    <div id="salto"></div>
-    <div class="input-group">
-      <label class="input-group-text" for="A_cuenta_1" id="A_cuenta_fecha_1">Fecha</label>
-      <input type="date" class="form-control" placeholder="a Cuenta" [(ngModel)]="A_cuenta_fecha_1">
-    </div>
-   </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-success-" (click)="addAcount();modal.close('Save click')">SI</button>
-    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
+    <button
+      type="button"
+      class="btn btn-outline-success-"
+      (click)="addAcount(); modal.close('Save click')"
+    >
+      SI
+    </button>
+    <button
+      type="button"
+      class="btn btn-outline-dark"
+      (click)="modal.close('Save click')"
+    >
+      NO
+    </button>
   </div>
 </ng-template>
 
-<!-- Area de Impresion -->
+<!-- ==========================
+     Área de Impresión
+     ========================== -->
 <div class="pagePrint">
   <!-- inicio cabecera -->
   <div class="col-lg-12">
-
     <!-- parte de titulo -->
-   <div class="row">
+    <div class="row">
       <div class="col-4">
-        <div id="mi-div" >
-          <img src="./assets/vintage.png" id="mi-imagen" alt="Mi imagen">
+        <div id="mi-div">
+          <img src="./assets/vintage.png" id="mi-imagen" alt="Mi imagen" />
         </div>
-        <div> 
+        <div>
           <pre>
       Cal. Casuarinas Mz C Lote 32 
             Coop. Uranmarca
    Lima - Lima - San juan de Miraflores
-            </pre>
+          </pre>
         </div>
-      </div>    
+      </div>
       <div class="col-4" rowspan="2">
         <pre>
         ALQUILER Y VENTA DE ACCESORIOS
@@ -391,201 +887,323 @@
          vintageparty2016@gmail.com
               Cel: 936942342    
                   944566160
-                </pre>
+        </pre>
       </div>
-      
+
       <div class="col-4">
         <div class="input-group">
-          <label class="input-group-text" id="aumentar-letra">N - Contrato: </label>
-          <label class="form-control" id="aumentar-letra">{{this.numberContract}}</label>
+          <label class="input-group-text" id="aumentar-letra">
+            N - Contrato:
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ numberContract }}
+          </label>
         </div>
         <div id="salto"></div>
         <div class="input-group">
-          <label class="input-group-text" id="aumentar-letra">Fecha Creacion: </label>
-          <label class="form-control" id="aumentar-letra">{{form.controls['createDate'].value}}</label>
-        </div>
-      
-    </div>
-    </div>
-    <!-- fin de titulo -->
-    <!-- <div id="salto"></div> -->
-    <!-- <div class="row">
-      <div class="col-4"></div>    
-      <div class="col-4"></div>
-      <div class="col-4">
-        <div class="input-group">
-          <label class="input-group-text">Fecha Creacion: </label>
-          <label class="form-control">{{this.fechaCreacion}}</label>
+          <label class="input-group-text" id="aumentar-letra">
+            Fecha Creación:
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ form.controls['createDate'].value }}
+          </label>
         </div>
       </div>
-    </div> -->
+    </div>
+
     <div id="salto"></div>
-    <div class="row">    
+    <div class="row">
       <div class="col-8">
         <div class="input-group" id="aumentar-letra">
-          <label class="input-group-text" id="aumentar-letra">Señor(es): </label>
-          <label class="form-control" id="aumentar-letra">{{this.customerName}}</label>
+          <label class="input-group-text" id="aumentar-letra">
+            Señor(es):
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ customerName }}
+          </label>
         </div>
       </div>
       <div class="col-4">
         <div class="input-group" id="aumentar-letra">
-          <label class="input-group-text" id="aumentar-letra">RUC/DNI: </label>
-          <label class="form-control" id="aumentar-letra">{{this.documentNumber}}</label>
+          <label class="input-group-text" id="aumentar-letra">
+            RUC/DNI:
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ documentNumber }}
+          </label>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- fin cabecera -->
-  <div id="salto"></div>
+   <div id="salto"></div>
   <div class="row">
+    <!-- Dirección + Distrito -->
     <div class="col-8">
-      <div class="input-group">
-        <label class="input-group-text" id="aumentar-letra">Direccion: </label>
-        <label class="form-control" id="aumentar-letra">{{ form.controls['address'].value }}</label>
+      <div class="row">
+        <!-- Dirección -->
+        <div class="col-8">
+          <div class="input-group">
+            <label class="input-group-text" id="aumentar-letra">
+              Dirección:
+            </label>
+            <label class="form-control" id="aumentar-letra">
+              {{ form.controls['address'].value }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Distrito (al costado de Dirección) -->
+        <div class="col-4">
+          <div class="input-group">
+            <label class="input-group-text" id="aumentar-letra">
+              Distrito:
+            </label>
+            <label class="form-control" id="aumentar-letra">
+              {{ form.controls['district'].value || distritoSeleccionado }}
+            </label>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Teléfono -->
     <div class="col-4">
       <div class="input-group">
-        <label class="input-group-text" id="aumentar-letra">Telefono: </label>
-        <label class="form-control" id="aumentar-letra">{{ this.phone }}</label>
+        <label class="input-group-text" id="aumentar-letra">
+          Teléfono:
+        </label>
+        <label class="form-control" id="aumentar-letra">
+          {{ phone }}
+        </label>
       </div>
     </div>
   </div>
+
+  <!-- ==========================
+     FILA DE HORARIOS
+     ========================== -->
+<div id="salto"></div>
+<div class="row">
+  <!-- Hora Instalación Inicio -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Inst. Ini
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourIni'].value }}
+      </label>
+    </div>
+  </div>
+
+  <!-- Hora Instalación Fin -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Inst. Fin
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourFin'].value }}
+      </label>
+    </div>
+  </div>
+
+  <!-- Hora Recojo Inicio -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Recojo Ini
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourIniPickup'].value }}
+      </label>
+    </div>
+  </div>
+
+  <!-- Hora Recojo Fin -->
+  <div class="col-3">
+    <div class="input-group">
+      <label class="input-group-text" id="aumentar-letra">
+        H. Recojo Fin
+      </label>
+      <label class="form-control" id="aumentar-letra">
+        {{ form.controls['hourFinPickup'].value }}
+      </label>
+    </div>
+  </div>
+</div>
+
   <div id="salto"></div>
   <div class="col-lg-12">
-    <table class="table table-striped table-bordered table-hover" >
-      <thead >
+    <table class="table table-striped table-bordered table-hover">
+      <thead>
         <tr>
-          <th width="40%">Descripción</th>          
+          <th width="40%">Descripción</th>
           <th width="10%">Cant.</th>
           <th width="10%" *ngIf="!listarDetalle">P. Unit.</th>
           <th width="20%" *ngIf="!listarDetalle">Importe</th>
         </tr>
       </thead>
-      <tbody class="table-group-divider" id="aumentar-letra">        
-        <tr *ngFor="let item of arrayValuesAccessory;let ind = index">
-          <td>            
-            <!-- <label>{{ item.description }} {{ item.color }} {{ item.design }} Largo= {{ item.large }} Fondo= {{ item.bottom }} Alto= {{ item.high }} Ancho={{ item.width }} </label> -->
+      <tbody class="table-group-divider" id="aumentar-letra">
+        <tr *ngFor="let item of arrayValuesAccessory; let ind = index">
+          <td>
             <label>
-              <ng-container *ngIf="item.description">{{ item.description }} </ng-container>
-              <ng-container *ngIf="item.color">{{ item.color }} </ng-container>
-              <ng-container *ngIf="item.design">{{ item.design }} </ng-container>
-              <ng-container *ngIf="item.high != 0">Alto= {{ item.high }} </ng-container>
-              <ng-container *ngIf="item.width != 0">Ancho= {{ item.width }} </ng-container>
-              <ng-container *ngIf="item.large != 0">Largo= {{ item.large }} </ng-container>
-              <ng-container *ngIf="item.diameter != 0">Diametro= {{ item.diameter }} </ng-container>
-              <ng-container *ngIf="item.bottom != 0">Fondo= {{ item.bottom }} </ng-container>
+              <ng-container *ngIf="item.description">
+                {{ item.description }}
+              </ng-container>
+              <ng-container *ngIf="item.color">
+                {{ item.color }}
+              </ng-container>
+              <ng-container *ngIf="item.design">
+                {{ item.design }}
+              </ng-container>
+              <ng-container *ngIf="item.high != 0">
+                Alto= {{ item.high }}
+              </ng-container>
+              <ng-container *ngIf="item.width != 0">
+                Ancho= {{ item.width }}
+              </ng-container>
+              <ng-container *ngIf="item.large != 0">
+                Largo= {{ item.large }}
+              </ng-container>
+              <ng-container *ngIf="item.diameter != 0">
+                Diámetro= {{ item.diameter }}
+              </ng-container>
+              <ng-container *ngIf="item.bottom != 0">
+                Fondo= {{ item.bottom }}
+              </ng-container>
             </label>
             <ul *ngIf="listarDetalle">
-              <li *ngFor="let ele of item.items">{{ ele.description }} ( {{ ele.amount * item.amount }} )</li>
+              <li *ngFor="let ele of item.items">
+                {{ ele.description }} ({{ ele.amount * item.amount }})
+              </li>
             </ul>
           </td>
           <td>
-            <label>{{ item.amount }}</label>            
-          </td>          
-          <td *ngIf="!listarDetalle">
-            <label>{{ item.price | number:'1.2-2' }}</label>
+            <label>{{ item.amount }}</label>
           </td>
           <td *ngIf="!listarDetalle">
-            <label>{{ item.price * item.amount | number:'1.2-2' }}</label>
+            <label>{{ item.price | number: '1.2-2' }}</label>
+          </td>
+          <td *ngIf="!listarDetalle">
+            <label>{{ item.price * item.amount | number: '1.2-2' }}</label>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
-  <!--COMENTARIOS-->
+
+  <!-- Comentarios -->
   <div class="row">
     <div class="col-lg-12">
       <div class="input-group">
-        <label class="input-group-text" id="aumentar-letra">Comentario</label>
-        <label class="form-control" id="aumentar-letra"><pre>{{ form.controls['comment'].value }}</pre></label>
+        <label class="input-group-text" id="aumentar-letra">
+          Comentario
+        </label>
+        <label class="form-control" id="aumentar-letra">
+          <pre>{{ form.controls['comment'].value }}</pre>
+        </label>
       </div>
     </div>
   </div>
+
   <div id="salto"></div>
   <!-- MONTOS -->
-  <div class="row" *ngIf="!listarDetalle">    
+  <div class="row" *ngIf="!listarDetalle">
     <div class="col-6">
-      <div class="input-group" >
-        <!-- <label class="input-group-text" id="aumentar-letra">A cuenta</label>
-        <label class="form-control label-total" id="aumentar-letra">{{ totalOnAccount | number:'1.2' }}</label> -->
-        <table class="table table-striped table-bordered table-hover" >
-          <thead >
+      <div class="input-group">
+        <table class="table table-striped table-bordered table-hover">
+          <thead>
             <tr>
               <th width="10%">Importe</th>
-              <th width="20%">Comprobante</th>          
-              <th width="20%">F Registro</th>
+              <th width="20%">Comprobante</th>
+              <th width="20%">F. Registro</th>
             </tr>
           </thead>
-          <tbody class="table-group-divider" id="aumentar-letra">        
-            <tr *ngFor="let item of arrayValuesOnAccount;let ind = index">
-              <td>            
-                <!-- <label>{{ item.description }} {{ item.color }} {{ item.design }} Largo= {{ item.large }} Fondo= {{ item.bottom }} Alto= {{ item.high }} Ancho={{ item.width }} </label> -->
-                <label>
-                  <ng-container >{{ item.amount }} </ng-container>
-                  
-                </label>
-              </td> 
-              <td>            
-                <!-- <label>{{ item.description }} {{ item.color }} {{ item.design }} Largo= {{ item.large }} Fondo= {{ item.bottom }} Alto= {{ item.high }} Ancho={{ item.width }} </label> -->
-                <label>
-                      <ng-container>{{ item.number }} </ng-container>
-                    </label>
-                  </td> 
-              <td>            
-                <!-- <label>{{ item.description }} {{ item.color }} {{ item.design }} Largo= {{ item.large }} Fondo= {{ item.bottom }} Alto= {{ item.high }} Ancho={{ item.width }} </label> -->
-                <label>
-              <ng-container >{{ item.createdDate }} </ng-container>
-            </label>
-          </td> 
-          
+          <tbody class="table-group-divider" id="aumentar-letra">
+            <tr *ngFor="let item of arrayValuesOnAccount; let ind = index">
+              <td>
+                <label>{{ item.amount }}</label>
+              </td>
+              <td>
+                <label>{{ item.number }}</label>
+              </td>
+              <td>
+                <label>{{ item.createdDate }}</label>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
     <div class="col-3">
       <div class="input-group">
         <label class="input-group-text" id="aumentar-letra">Saldo</label>
-        <label class="form-control label-total" id="aumentar-letra">{{ totalBalance | number:'1.2' }}</label>        
+        <label class="form-control label-total" id="aumentar-letra">
+          {{ totalBalance | number: '1.2-2' }}
+        </label>
       </div>
     </div>
+
     <div class="col-3">
       <div class="input-group">
         <label class="input-group-text" id="aumentar-letra">Total</label>
-        <label class="form-control label-total" id="aumentar-letra">{{ total | number:'1.2' }}</label>        
+        <label class="form-control label-total" id="aumentar-letra">
+          {{ total | number: '1.2-2' }}
+        </label>
       </div>
-    </div>    
+    </div>
   </div>
-  <!-- FECHAS -->
+
+  <!-- FECHAS / usuario -->
   <div id="salto"></div>
   <div class="row">
     <div class="col-7">
       <div class="col-12">
         <div class="input-group">
-          <label class="input-group-text label-date" id="aumentar-letra">usuario</label>
-          <label class="form-control" id="aumentar-letra">{{ this.codUser }}</label>
+          <label class="input-group-text label-date" id="aumentar-letra">
+            Usuario
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ codUser }}
+          </label>
         </div>
       </div>
     </div>
+
     <div class="col-5">
       <div class="col-12">
         <div class="input-group">
-          <label class="input-group-text label-date" id="aumentar-letra">F. Instalación</label>
-          <label class="form-control" id="aumentar-letra">{{ form.controls['installDate'].value | date:'dd-MM-yyyy' }}</label>
+          <label class="input-group-text label-date" id="aumentar-letra">
+            F. Instalación
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ form.controls['installDate'].value | date: 'dd-MM-yyyy' }}
+          </label>
         </div>
       </div>
+
       <div class="col-12">
         <div class="input-group">
-          <label class="input-group-text label-date" id="aumentar-letra">F. Evento</label>
-          <label class="form-control" id="aumentar-letra">{{ form.controls['eventDate'].value | date:'dd-MM-yyyy' }}</label>        
+          <label class="input-group-text label-date" id="aumentar-letra">
+            F. Evento
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ form.controls['eventDate'].value | date: 'dd-MM-yyyy' }}
+          </label>
         </div>
       </div>
+
       <div class="col-12">
         <div class="input-group">
-          <label class="input-group-text label-date" id="aumentar-letra">F. Recojo</label>
-          <label class="form-control" id="aumentar-letra">{{ form.controls['pickupDate'].value | date:'dd-MM-yyyy' }}</label>        
+          <label class="input-group-text label-date" id="aumentar-letra">
+            F. Recojo
+          </label>
+          <label class="form-control" id="aumentar-letra">
+            {{ form.controls['pickupDate'].value | date: 'dd-MM-yyyy' }}
+          </label>
         </div>
       </div>
     </div>

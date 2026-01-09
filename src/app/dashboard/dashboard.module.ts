@@ -1,17 +1,21 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
-import { FormsModule,ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { DashboardComponent } from './dashboard.component';
 import { ContractComponent } from '../contract/contract.component';
 import { AccessoryComponent } from '../accessory/accessory.component';
 import { CalendarComponent } from '../calendar/calendar.component';
 import { CalendarV2Component } from '../calendar-v2/calendar-v2.component';
+import { QuotationComponent } from '../quotation/quotation.component';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
+
+// 👉 IMPORTAR DRAG & DROP
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   declarations: [
@@ -19,16 +23,20 @@ import { NgSelectModule } from '@ng-select/ng-select';
     ContractComponent,
     AccessoryComponent,
     CalendarComponent,
-    CalendarV2Component
+    CalendarV2Component,
+    QuotationComponent
   ],
   imports: [
-    CommonModule,    
+    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
     DashboardRoutingModule,
     NgbModule,
-    NgSelectModule
+    NgSelectModule,
+
+    // 👉 AGREGAR AQUÍ
+    DragDropModule
   ],
   providers: [],
   bootstrap: []

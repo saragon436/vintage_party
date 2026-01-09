@@ -1,0 +1,288 @@
+/* ===========================
+   CONTENEDOR PRINCIPAL
+   =========================== */
+
+.weekly-container {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ===========================
+   ESTADO VACÍO
+   =========================== */
+
+.empty-state {
+  text-align: center;
+  margin-top: 40px;
+  color: #555;
+}
+
+/* ===========================
+   ENCABEZADO DE SEMANA
+   =========================== */
+
+.week-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  gap: 20px;
+}
+
+/* ===========================
+   NAVEGACIÓN DE SEMANAS
+   =========================== */
+
+.week-nav {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-nav {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: 1px solid #888;
+  background-color: #fafafa;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-nav:hover:not([disabled]) {
+  background-color: #ececec;
+}
+
+.btn-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===========================
+   INFO DE SEMANA
+   =========================== */
+
+.week-info {
+  text-align: center;
+}
+
+.week-title {
+  font-size: 17px;
+  font-weight: bold;
+  color: #333;
+}
+
+.week-range is {
+  font-size: 12px;
+  color: #777;
+}
+
+/* ===========================
+   BOTONES DE ACCIÓN
+   =========================== */
+
+.week-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.btn-action {
+  padding: 7px 14px;
+  font-size: 13px;
+  background-color: #fff;
+  border: 1px solid #555;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-action:hover {
+  background-color: #f0f0f0;
+}
+
+/* ===========================
+   TABS DE ALMACÉN
+   =========================== */
+
+.warehouse-tabs {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-radius: 999px;
+  background: #f5f5f5;
+  padding: 4px;
+}
+
+.warehouse-tab {
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  cursor: pointer;
+  color: #555;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.warehouse-tab:hover {
+  background: #e1e1e1;
+}
+
+.warehouse-tab.active {
+  background: #007bff;
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.4);
+}
+
+/* Si quieres diferenciar visualmente los dos tabs: */
+/*
+.warehouse-tab:first-child.active {
+  background: #007bff;
+}
+.warehouse-tab:last-child.active {
+  background: #28a745;
+}
+*/
+
+/* ===========================
+   BLOQUE DE DÍA
+   =========================== */
+
+.day-block {
+  margin-bottom: 35px;
+}
+
+.day-separator {
+  border-top: 3px solid #222;
+  margin: 25px 0 10px 0;
+}
+
+.day-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: bold;
+  color: #555;
+}
+
+.day-date {
+  margin: 5px 0 15px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+}
+
+/* ===========================
+   TABLA DE MOBILIARIOS
+   =========================== */
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 5px;
+}
+
+.items-table thead tr {
+  background-color: #eaeaea;
+}
+
+.items-table th {
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 2px solid #ccc;
+}
+
+.items-table td {
+  padding: 8px;
+  font-size: 14px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Columnas */
+.col-mob {
+  width: 75%;
+}
+
+.col-cant {
+  width: 25%;
+  text-align: center;
+}
+
+/* Cantidad resaltada */
+.item-quantity {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Mensaje de día vacío */
+.empty-day {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #777;
+}
+
+/* ===========================
+   RESPONSIVE
+   =========================== */
+
+@media (max-width: 768px) {
+  .week-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .week-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .warehouse-tabs {
+    width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .items-table th,
+  .items-table td {
+    font-size: 13px;
+  }
+}
+
+/* ===========================
+   IMPRESIÓN
+   =========================== */
+
+@media print {
+
+  .week-header,
+  .week-actions,
+  .btn-nav,
+  .btn-action,
+  .warehouse-tabs {
+    display: none !important;
+  }
+
+  .weekly-container {
+    padding: 0;
+  }
+
+  .day-separator {
+    border-top: 2px solid #000;
+    margin-top: 20px;
+  }
+
+  .items-table td,
+  .items-table th {
+    font-size: 12px;
+    padding: 6px;
+  }
+
+  .day-date {
+    font-size: 15px;
+  }
+}

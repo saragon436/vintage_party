@@ -21,6 +21,7 @@ interface Accesory {
   width:string;
   diameter:string;
   items:[];
+  warehouse: number; // 👈 NUEVO: 1 o 2
 }
 
 interface Item {
@@ -70,6 +71,7 @@ export class AccessoryComponent {
   mostrarBotones=true;
   idItemDelete='';
   isactive=false;
+  warehouse = 1;   // 👈 NUEVO
 
   get arrayAccessory(): FormArray {
     return this.form.controls['items'] as FormArray
@@ -216,7 +218,8 @@ export class AccessoryComponent {
         price:this.price,
         width:this.width,
         diameter:this.diameter,
-        status: true
+        status: true,
+        warehouse: this.warehouse   // 👈 NUEVO
       };
       console.log('payload '+payload);
       const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
@@ -240,6 +243,7 @@ export class AccessoryComponent {
           this.condicion=false;
           this.mostrarBotones=true;
           this.diameter='';
+          this.warehouse = 1; // 👈 NUEVO
         },
         (error) => {
           
@@ -273,6 +277,7 @@ export class AccessoryComponent {
         this.width=response.width;
         this.price=response.price;
         this.diameter=response.diameter;
+        this.warehouse = response.warehouse ?? 1; // 👈 NUEVO (por si viene undefined)
         response.items.forEach((res:any)=>{
           this.arrayAccessory.push(
             this.formBuilder.group({
@@ -303,7 +308,8 @@ export class AccessoryComponent {
       price:this.price,
       width:this.width,
       diameter:this.diameter,
-      status: true
+      status: true,
+      warehouse: this.warehouse  // 👈 NUEVO
     };
     console.log('payload '+payload);
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
@@ -325,7 +331,7 @@ export class AccessoryComponent {
         this.price=0;
         this.items=[];
         this.diameter='';
-        
+        this.warehouse = 1; // 👈 NUEVO
         this.condicion=false;
         this.mostrarBotones=true;
       },
