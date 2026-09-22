@@ -125,20 +125,39 @@
                 <input class="form-control" type="number" formControlName="amount" value="{{ item.get('amount')?.value }}">
               </td>
               <td style="text-align: center;">
-                <button class='btn btn-md btn-default' title="Eliminar Registro" (click)="onDeleteItem(i)"><i
-                    class='fa-solid fa-trash'>X</i></button>
+                <button class='btn btn-outline-danger btn-sm' title="Eliminar Registro" (click)="onDeleteItem(i)">✕</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <div class="row" id="salto" *ngIf="!mostrarBotones">
+      <div class="col-lg-6">
+        <div class="input-group">
+          <label class="input-group-text" id="nombreA">Imagen</label>
+          <input type="file" class="form-control" accept="image/*" (change)="onImageFileSelected($event)">
+          <button type="button" class="btn btn-outline-primary" [disabled]="!selectedImageFile || isUploadingImage" (click)="uploadImage()">
+            <span *ngIf="isUploadingImage" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            {{ isUploadingImage ? 'Subiendo...' : 'Subir Imagen' }}
+          </button>
+        </div>
+        <img *ngIf="fullImageUrl" [src]="fullImageUrl" alt="Imagen del mobiliario" style="max-height: 120px; margin-top: 8px;">
+      </div>
+    </div>
   </form>
 
   <div class="row" id="salto">
     <div class="col-lg-3">
-      <button type="submit" (click)="onSubmit()" class="btn btn-primary" *ngIf="mostrarBotones">Agregar</button>
-      <button type="submit" (click)="onUpdate()" class="btn btn-primary" *ngIf="!mostrarBotones">Actualizar</button>
+      <button type="submit" (click)="onSubmit()" class="btn btn-primary" [disabled]="isactive" *ngIf="mostrarBotones">
+        <span *ngIf="isactive" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        {{ isactive ? 'Guardando...' : 'Agregar' }}
+      </button>
+      <button type="submit" (click)="onUpdate()" class="btn btn-primary" [disabled]="isactive" *ngIf="!mostrarBotones">
+        <span *ngIf="isactive" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        {{ isactive ? 'Guardando...' : 'Actualizar' }}
+      </button>
       <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
     </div>
   </div>
@@ -151,16 +170,34 @@
         <button type="submit" class="btn btn-primary">Agregar Mobiliario</button>
       </div>
     </form>
-    <button type="submit" (click)="exportToExcel()" class="btn btn-md" >Descargar Mobiliarios</button>
+    <button type="submit" (click)="exportToExcel()" class="btn btn-outline-primary" >Descargar Mobiliarios</button>
   </div>
 
-  <div id="formularioListado"> 
+  <div class="row" id="salto">
+    <div class="col-lg-8">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Buscar por descripción, color o diseño"
+          [(ngModel)]="searchValue"
+          (keyup.enter)="onGlobalSearch()"
+          name="accessorySearch"
+        />
+        <button type="button" class="btn btn-primary" (click)="onGlobalSearch()">Buscar</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="clearGlobalSearch()">Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="formularioListado">
     <div class="row" id="salto" >
       <table>
         <thead sticky>
           <tr>
             <th>Eliminar</th>
             <th>Seleccionar</th>
+            <th>Disponibilidad</th>
             <th>Descripcion</th>
             <th>Color</th>
             <th>Diseño</th>
@@ -179,6 +216,7 @@
           <tr *ngFor="let item of accesorys">
             <td><button type="button" class="btn btn-danger" (click)="open(mymodal,item._id)">Eliminar</button></td>
             <td><button type="button" class="btn btn-primary" (click)="findAccesoryById(item._id)">seleccionar</button></td>
+            <td><button type="button" class="btn btn-outline-primary btn-sm" title="Ver disponibilidad" (click)="openAvailability(item)">Ver disponibilidad</button></td>
             <td>{{ item.description }}</td>
             <td>{{ item.color }}</td>
             <td>{{ item.design }}</td>
@@ -201,15 +239,13 @@
 <ng-template #mymodal let-modal>
   <div class="modal-header">
     <h4 class="modal-title" id="modal-basic-title">Eliminar Mobiliario</h4>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-      <span aria-hidden="true">×</span>
-    </button>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
   </div>
   <div class="modal-body">
     Desea Eliminar un Mobiliario?
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-success-" (click)="deleteAccesosry();modal.close('Save click')">SI</button>
+    <button type="button" class="btn btn-outline-success" (click)="deleteAccesosry();modal.close('Save click')">SI</button>
     <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
   </div>
 </ng-template>

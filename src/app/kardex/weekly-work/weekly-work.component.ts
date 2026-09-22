@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { forkJoin, Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 
 import { ContractService } from '../../Servicios/contract.service';
 import { AuthenticationToken } from '../../Servicios/autentication-token.service';
@@ -21,20 +23,24 @@ const EXCLUDED_ACCESSORY_IDS: string[] = [
   '6474d1e4ce523caa9d300720',
 ];
 
+const SPANISH_DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
 @Component({
   selector: 'app-weekly-work',
   templateUrl: './weekly-work.component.html',
   styleUrls: ['./weekly-work.component.css'],
 })
 export class WeeklyWorkComponent implements OnInit {
-  weeks: WeekSummaryDto[] = [];
   currentWeekView: DayView[] = [];
+  isLoading = false;
 
-  currentWeekNumber!: number;
-  currentYear!: number;
-  currentMonth!: number;
+  // Lunes de la semana que se está mostrando (medianoche UTC, para no
+  // arrastrar el desfase de zona horaria al comparar/formatear fechas).
+  currentWeekStart!: Date;
 
-  selectedWeekIndex = 0;
+  // Cache de meses ya consultados al backend, para no repetir la llamada
+  // cada vez que navegás dentro del mismo mes. Clave: "YYYY-M".
+  private monthCache = new Map<string, WeekSummaryDto[]>();
 
   // 👇 almacén seleccionado
   selectedWarehouse = 1;
@@ -47,90 +53,93 @@ export class WeeklyWorkComponent implements OnInit {
 
   ngOnInit(): void {
     const today = new Date();
-
-    this.currentYear = today.getFullYear();
-    this.currentMonth = today.getMonth() + 1;
-    this.currentWeekNumber = this.getWeekNumber(today);
-
-    this.loadWeeks();
+    const todayUtc = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+    this.currentWeekStart = this.mondayOfWeek(todayUtc);
+    this.loadWeekView(this.currentWeekStart);
   }
 
-  // ================================
-  // Cargar semanas desde backend
-  // ================================
+  // ===============================
+  // Navegación entre semanas (siempre disponible, tenga o no mobiliario)
+  // ===============================
 
-  private loadWeeks(): void {
+  get selectedWeekNumber(): number {
+    return this.getWeekNumber(this.currentWeekStart);
+  }
+
+  get selectedWeekRange(): string {
+    const end = this.addDaysUtc(this.currentWeekStart, 6);
+    return `${this.toDateKey(this.currentWeekStart)} / ${this.toDateKey(end)}`;
+  }
+
+  goToPreviousWeek(): void {
+    if (this.isLoading) return;
+    this.loadWeekView(this.addDaysUtc(this.currentWeekStart, -7));
+  }
+
+  goToNextWeek(): void {
+    if (this.isLoading) return;
+    this.loadWeekView(this.addDaysUtc(this.currentWeekStart, 7));
+  }
+
+  private loadWeekView(weekStart: Date): void {
+    this.currentWeekStart = weekStart;
+    const weekEnd = this.addDaysUtc(weekStart, 6);
+    const months = this.monthsInRange(weekStart, weekEnd);
+
+    this.isLoading = true;
+    forkJoin(months.map((m) => this.fetchMonth(m.year, m.month))).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.currentWeekView = this.buildWeekView(weekStart, weekEnd);
+      },
+      error: (error) => {
+        this.isLoading = false;
+        if (error.status === 401) {
+          this.router.navigate(['/app-login']);
+        }
+      },
+    });
+  }
+
+  private fetchMonth(year: number, month: number): Observable<WeekSummaryDto[]> {
+    const key = `${year}-${month}`;
+    const cached = this.monthCache.get(key);
+    if (cached) {
+      return of(cached);
+    }
+
     const headers = new HttpHeaders().set(
       'Authorization',
       'Bearer ' + this.authenticationToken.myValue
     );
 
-    this.contractService
-      .getWeeklySummary(this.currentYear, this.currentMonth, headers)
-      .subscribe({
-        next: (weeks: WeekSummaryDto[]) => {
-          this.weeks = (weeks || []).sort(
-            (a, b) => a.weekNumber - b.weekNumber
-          );
-
-          if (this.weeks.length === 0) {
-            this.currentWeekView = [];
-            return;
-          }
-
-          let index = this.weeks.findIndex(
-            (w) => w.weekNumber === this.currentWeekNumber
-          );
-
-          if (index === -1) index = this.weeks.length - 1;
-
-          this.selectedWeekIndex = index;
-          this.updateCurrentWeekView();
-        },
-        error: (error) => {
-          if (error.status === 401) {
-            this.router.navigate(['/app-login']);
-          }
-        },
-      });
+    return this.contractService.getWeeklySummary(year, month, headers).pipe(
+      map((weeks) => weeks || []),
+      tap((weeks) => this.monthCache.set(key, weeks))
+    );
   }
 
-  // ===============================
-  // Navegación entre semanas
-  // ===============================
+  private buildWeekView(weekStart: Date, weekEnd: Date): DayView[] {
+    const daysByDate = new Map<string, DaySummaryDto>();
+    this.monthsInRange(weekStart, weekEnd).forEach((m) => {
+      const weeks = this.monthCache.get(`${m.year}-${m.month}`) || [];
+      weeks.forEach((w) => w.days.forEach((d) => daysByDate.set(d.date, d)));
+    });
 
-  get selectedWeekNumber(): number | null {
-    if (!this.weeks.length) return null;
-    return this.weeks[this.selectedWeekIndex]?.weekNumber ?? null;
-  }
-
-  get selectedWeekRange(): string {
-    if (!this.weeks.length) return '';
-    const w = this.weeks[this.selectedWeekIndex];
-    return `${w.from} / ${w.to}`;
-  }
-
-  goToPreviousWeek(): void {
-    if (this.selectedWeekIndex > 0) {
-      this.selectedWeekIndex--;
-      this.updateCurrentWeekView();
+    const days: DaySummaryDto[] = [];
+    for (let i = 0; i < 7; i++) {
+      const date = this.addDaysUtc(weekStart, i);
+      const dateKey = this.toDateKey(date);
+      days.push(
+        daysByDate.get(dateKey) || {
+          date: dateKey,
+          dayName: SPANISH_DAY_NAMES[date.getUTCDay()],
+          items: [],
+        }
+      );
     }
-  }
 
-  goToNextWeek(): void {
-    if (this.selectedWeekIndex < this.weeks.length - 1) {
-      this.selectedWeekIndex++;
-      this.updateCurrentWeekView();
-    }
-  }
-
-  private updateCurrentWeekView(): void {
-    const week = this.weeks[this.selectedWeekIndex];
-    if (!week) {
-      this.currentWeekView = [];
-      return;
-    }
-    this.currentWeekView = this.buildDayView(week.days);
+    return this.buildDayView(days);
   }
 
   // ===============================
@@ -159,8 +168,40 @@ export class WeeklyWorkComponent implements OnInit {
   }
 
   // ===============================
-  // Helpers
+  // Helpers de fechas (todo en UTC, para no arrastrar desfase de huso horario)
   // ===============================
+
+  private toDateKey(d: Date): string {
+    return d.toISOString().substring(0, 10);
+  }
+
+  private addDaysUtc(d: Date, days: number): Date {
+    const copy = new Date(d);
+    copy.setUTCDate(copy.getUTCDate() + days);
+    return copy;
+  }
+
+  private mondayOfWeek(d: Date): Date {
+    const dayNum = d.getUTCDay() || 7; // lunes=1 ... domingo=7
+    return this.addDaysUtc(d, -(dayNum - 1));
+  }
+
+  private monthsInRange(start: Date, end: Date): { year: number; month: number }[] {
+    const months: { year: number; month: number }[] = [];
+    const seen = new Set<string>();
+    let cursor = new Date(start);
+    while (cursor <= end) {
+      const year = cursor.getUTCFullYear();
+      const month = cursor.getUTCMonth() + 1;
+      const key = `${year}-${month}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        months.push({ year, month });
+      }
+      cursor = this.addDaysUtc(cursor, 1);
+    }
+    return months;
+  }
 
   private getWeekNumber(date: Date): number {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

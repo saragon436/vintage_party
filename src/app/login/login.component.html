@@ -17,7 +17,10 @@
       required="required"
     />
    
-    <button type="submit"  class="btn btn-primary">Log in</button>
+    <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+      <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+      {{ isSubmitting ? 'Ingresando...' : 'Log in' }}
+    </button>
   </form>
 </div>
 
@@ -27,7 +30,7 @@
 		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
 	</div>
 	<div class="modal-body">
-		<p>Usuario o contraseña incorrectos. Por favor, inténtelo de nuevo.</p>
+		<p>{{ errorMessage }}</p>
 	</div>
 	<div class="modal-footer">
 		<button type="button" class="btn btn-secondary" (click)="modal.close('Close click')">Cerrar</button>

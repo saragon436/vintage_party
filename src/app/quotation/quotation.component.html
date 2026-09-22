@@ -7,10 +7,26 @@
             <button class="btn btn-primary" (click)="onSubmitAdd()">Nueva Cotización</button>
         </div>
 
+        <div class="col-md-12 mb-3">
+            <div class="input-group">
+                <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Buscar por cliente o código de cotización"
+                    [(ngModel)]="searchValue"
+                    (keyup.enter)="onGlobalSearch()"
+                    name="quotationSearch"
+                />
+                <button type="button" class="btn btn-primary" (click)="onGlobalSearch()">Buscar</button>
+                <button type="button" class="btn btn-outline-secondary" (click)="clearGlobalSearch()">Limpiar</button>
+            </div>
+        </div>
+
         <div class="col-md-12">
             <table class="table table-striped">
                 <thead>
                     <tr>
+                        <th>Código</th>
                         <th>Fecha</th>
                         <th>Cliente</th>
                         <th>Evento</th>
@@ -20,27 +36,51 @@
                 </thead>
                 <tbody>
                     <tr *ngFor="let item of quotations">
-                        <td>{{ item.createDate | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ item.codQuotation }}</td>
+                        <td>{{ item.createDate | date:'dd/MM/yyyy':'UTC' }}</td>
                         <td>{{ item.customer?.name }}</td>
-                        <td>{{ item.eventDate | date:'dd/MM/yyyy' }}</td>
+                        <td>{{ item.eventDate | date:'dd/MM/yyyy':'UTC' }}</td>
                         <td>{{ item.amount | currency:'S/ ' }}</td>
                         <td>
-                            <button class="btn btn-sm btn-info me-2" (click)="onEdit(item)" title="Ver Detalles">
-                                <i class="bi bi-pencil"></i> Detalle
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-sm btn-info" (click)="onEdit(item)" title="Ver Detalles">
+                                    <i class="bi bi-pencil"></i> Detalle
+                                </button>
 
-                            <button class="btn btn-sm"
-                                [ngClass]="item.status === 'CONVERTED' ? 'btn-secondary' : 'btn-success'"
-                                (click)="item.status !== 'CONVERTED' && convertToContract(item)"
-                                [disabled]="item.status === 'CONVERTED'" title="Pasar a Contrato">
-                                <i class="bi"
-                                    [ngClass]="item.status === 'CONVERTED' ? 'bi-check-circle' : 'bi-file-earmark-check'"></i>
-                                {{ item.status === 'CONVERTED' ? 'Contrato Generado' : 'Generar Contrato' }}
-                            </button>
+                                <button class="btn btn-sm"
+                                    [ngClass]="item.status === 'CONVERTED' ? 'btn-secondary' : 'btn-success'"
+                                    (click)="item.status !== 'CONVERTED' && convertToContract(item)"
+                                    [disabled]="item.status === 'CONVERTED' || convertingId === item._id" title="Pasar a Contrato">
+                                    <span *ngIf="convertingId === item._id" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    <i *ngIf="convertingId !== item._id" class="bi"
+                                        [ngClass]="item.status === 'CONVERTED' ? 'bi-check-circle' : 'bi-file-earmark-check'"></i>
+                                    {{ convertingId === item._id ? 'Generando...' : (item.status === 'CONVERTED' ? 'Contrato Generado' : 'Generar Contrato') }}
+                                </button>
+
+                                <button class="btn btn-sm btn-success" (click)="sendToWhatsapp(item, whatsappPhoneModal)" title="Enviar por WhatsApp">
+                                    WhatsApp
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <div class="col-md-12" *ngIf="totalPages > 1">
+            <nav aria-label="Paginación de cotizaciones">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item" [class.disabled]="currentPage === 1">
+                        <button class="page-link" (click)="goToPage(currentPage - 1)">Anterior</button>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Página {{ currentPage }} de {{ totalPages }}</span>
+                    </li>
+                    <li class="page-item" [class.disabled]="currentPage === totalPages">
+                        <button class="page-link" (click)="goToPage(currentPage + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 
@@ -58,9 +98,47 @@
                 <div class="row">
                     <div class="col-md-6">
                         <label>Buscar Cliente</label>
-                        <ng-select [items]="customer$ | async" bindLabel="name" formControlName="customer"
+                        <ng-select
+                            class="customer-select"
+                            [ngClass]="{ 'has-pending-debt': pendingBalance?.hasPending }"
+                            [items]="customer$ | async" bindLabel="name" formControlName="customer"
                             (change)="onAddCustomer($event)" #selectCustomer>
+                            <ng-template ng-option-tmp let-item="item">
+                                {{ item.documentNumber }} {{ item.name }}
+                                <span class="option-debt-flag" *ngIf="hasPendingDebt(item)">● saldo pendiente</span>
+                            </ng-template>
+                            <ng-template ng-notfound-tmp let-searchTerm="searchTerm">
+                                <button
+                                    type="button"
+                                    class="add-customer-option"
+                                    (mousedown)="$event.preventDefault()"
+                                    (click)="openAddCustomerModal(searchTerm); selectCustomer.close()"
+                                >
+                                    + Agregar cliente nuevo
+                                    <small>No encontramos "{{ searchTerm }}"</small>
+                                </button>
+                            </ng-template>
                         </ng-select>
+
+                        <div class="pending-debt-notice" *ngIf="pendingBalance?.hasPending">
+                            <span class="pending-debt-badge">⚠ Saldo pendiente</span>
+                            <button type="button" class="pending-debt-link" (click)="togglePendingDetail()">
+                                {{ showPendingDetail ? 'Ocultar' : 'Ver más' }} ›
+                            </button>
+
+                            <div class="pending-debt-panel" *ngIf="showPendingDetail">
+                                <div class="pending-debt-panel-head">
+                                    <span>Contratos pendientes</span>
+                                    <span class="pending-debt-total">Total: S/ {{ pendingBalance?.total?.toFixed(2) }}</span>
+                                </div>
+                                <div class="pending-debt-item" *ngFor="let item of pendingBalance?.contracts">
+                                    <span class="code">{{ item.codContract }}</span>
+                                    <span class="status-pill">{{ item.status }}</span>
+                                    <span class="meta">Evento {{ item.eventDate | date:'dd/MM/yyyy':'UTC' }}</span>
+                                    <span class="amount">S/ {{ item.saldo.toFixed(2) }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -134,12 +212,13 @@
                             <th>Cantidad</th>
                             <th>Precio</th>
                             <th>Subtotal</th>
+                            <th>Disponibilidad</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody formArrayName="listAccessories">
                         <tr *ngIf="arrayAccessory.controls.length == 0">
-                            <td colspan="7" style="text-align: center">No Existen Registros</td>
+                            <td colspan="8" style="text-align: center">No Existen Registros</td>
                         </tr>
                         <tr *ngFor="let item of arrayAccessory.controls; let i = index" [formGroupName]="i">
                             <td>{{ i + 1 }}</td>
@@ -191,7 +270,10 @@
                                 {{ (item.value.price * item.value.amount) | number:'1.2-2' }}
                             </td>
                             <td>
-                                <button class="btn btn-danger btn-sm" (click)="onDeleteItem(i)">X</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" title="Ver disponibilidad" (click)="openAvailability(item)">Ver disponibilidad</button>
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-danger btn-sm" title="Eliminar Registro" (click)="onDeleteItem(i)">✕</button>
                             </td>
                         </tr>
                     </tbody>
@@ -205,13 +287,31 @@
             </div>
 
             <div class="row mt-3">
-                <div class="col-md-12 text-end">
-                    <button class="btn btn-secondary me-2" (click)="onSubmitExit()">Cancelar</button>
-                    <button class="btn btn-outline-secondary me-2" type="button"
+                <div class="col-md-12 d-flex flex-wrap align-items-center justify-content-end gap-2">
+                    <button class="btn btn-primary" (click)="onSave()"
+                        [disabled]="isDisabled || isSaving || form.invalid || arrayAccessory.length === 0">
+                        <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        {{ isSaving ? 'Guardando...' : 'Guardar Cotización' }}
+                    </button>
+                    <button class="btn" *ngIf="currentQuotation"
+                        [ngClass]="currentQuotation.status === 'CONVERTED' ? 'btn-secondary' : 'btn-success'"
+                        [disabled]="currentQuotation.status === 'CONVERTED' || convertingId === currentQuotation._id"
+                        (click)="convertToContract(currentQuotation)" title="Pasar a Contrato">
+                        <span *ngIf="convertingId === currentQuotation._id" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        {{ convertingId === currentQuotation._id ? 'Generando...' : (currentQuotation.status === 'CONVERTED' ? 'Contrato Generado' : 'Generar Contrato') }}
+                    </button>
+                    <button class="btn btn-success" *ngIf="currentQuotation" type="button"
+                        (click)="sendToWhatsapp(currentQuotation, whatsappPhoneModal)" title="Enviar por WhatsApp">
+                        WhatsApp
+                    </button>
+                    <button class="btn btn-outline-success" *ngIf="currentQuotation" type="button"
+                        [disabled]="isGeneratingPdf" (click)="downloadOrSharePdf(currentQuotation)" title="Descargar o compartir el PDF">
+                        <span *ngIf="isGeneratingPdf" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        {{ isGeneratingPdf ? 'Generando PDF...' : 'Compartir PDF' }}
+                    </button>
+                    <button class="btn btn-outline-secondary" type="button"
                         [disabled]="arrayAccessory.length === 0" (click)="printQuotation(false)">Imprimir</button>
-                    <button class="btn btn-success" (click)="onSave()"
-                        [disabled]="isDisabled || form.invalid || arrayAccessory.length === 0">Guardar
-                        Cotización</button>
+                    <button class="btn btn-secondary" (click)="onSubmitExit()">Cancelar</button>
                 </div>
             </div>
         </form>
@@ -221,7 +321,7 @@
 <!-- ==========================
      Área de Impresión
      ========================== -->
-<div class="pagePrint">
+<div class="pagePrint" [class.capturing]="isCapturingPdf" #pagePrintRef>
     <div class="pagePrint-inner col-lg-12">
         <div class="row">
             <div class="col-4">
@@ -371,6 +471,7 @@
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>Foto</th>
                     <th>Producto</th>
                     <th>Cantidad</th>
                     <th>Precio</th>
@@ -380,6 +481,9 @@
             <tbody>
                 <tr *ngFor="let item of arrayValuesAccessory; let i = index">
                     <td>{{ i + 1 }}</td>
+                    <td>
+                        <img *ngIf="item.imageUrl" [src]="apiUrl + item.imageUrl" alt="" style="max-height: 150px; max-width: 150px;">
+                    </td>
                     <td>
                         {{ item.description }} {{ item.color }} {{ item.design }}
                         Alto={{ item.high }} Ancho={{ item.width }} Largo={{ item.large }}
@@ -406,3 +510,34 @@
         </div>
     </div>
 </div>
+
+<ng-template #whatsappPhoneModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title">Enviar por WhatsApp</h4>
+        <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+    </div>
+    <div class="modal-body">
+        <p *ngIf="whatsappMatchedCustomer?.phone">
+            El cliente tiene el número <strong>{{ whatsappMatchedCustomer.phone }}</strong> guardado.
+            ¿Enviar a ese número o a otro?
+        </p>
+        <p *ngIf="!whatsappMatchedCustomer?.phone">
+            Este cliente no tiene un celular guardado. Escribí el número al que querés enviar la cotización:
+        </p>
+        <input type="tel" class="form-control" placeholder="Ej. 987654321"
+            [(ngModel)]="whatsappPhoneInput" name="whatsappPhoneInput" (keyup.enter)="confirmWhatsappPhone(modal)">
+
+        <div class="form-check mt-3" *ngIf="whatsappMatchedCustomer">
+            <input class="form-check-input" type="checkbox" id="whatsappSaveToCustomer"
+                [(ngModel)]="whatsappSaveToCustomer" name="whatsappSaveToCustomer">
+            <label class="form-check-label" for="whatsappSaveToCustomer">
+                Actualizar el celular guardado de este cliente con este número
+            </label>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-success" [disabled]="!whatsappPhoneInput"
+            (click)="confirmWhatsappPhone(modal)">Enviar</button>
+        <button type="button" class="btn btn-outline-dark" (click)="modal.dismiss('Cross click')">Cancelar</button>
+    </div>
+</ng-template>

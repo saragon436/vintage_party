@@ -58,3 +58,9 @@ baseline.json
 # Husky
 .husky/_
 aio/content/examples/.DS_Store
+
+# Playwright E2E artifacts
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

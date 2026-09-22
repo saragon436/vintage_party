@@ -8,6 +8,7 @@ import { AccessoryService } from './Servicios/accessory.service';
 import { CustomerService } from './Servicios/customer.service';
 import { LoginComponent } from './login/login.component';
 import { CustomerComponent } from './customer/customer.component';
+import { CustomerHistoryComponent } from './customer/customer-history/customer-history.component';
 import { FormsModule,ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module'
@@ -16,12 +17,14 @@ import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { WeeklyWorkComponent } from './kardex/weekly-work/weekly-work.component';
 import { CalendarGroupedComponent } from './calendar-grouped/calendar-grouped.component';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
     CustomerComponent,
+    CustomerHistoryComponent,
     WeeklyWorkComponent,
     CalendarGroupedComponent
   ],
@@ -33,7 +36,8 @@ import { CalendarGroupedComponent } from './calendar-grouped/calendar-grouped.co
     AppRoutingModule,
     DashboardModule,
     CommonModule,
-    NgbModule
+    NgbModule,
+    SharedModule
   ],
   providers: [AuthenticationService,AuthenticationToken,AccessoryService,CustomerService],
   bootstrap: [AppComponent]

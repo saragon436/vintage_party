@@ -1,6 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { CommonModule } from '@angular/common';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { CalendarV2Component } from './calendar-v2.component';
+import { AuthenticationToken } from '../Servicios/autentication-token.service';
 
 describe('CalendarV2Component', () => {
   let component: CalendarV2Component;
@@ -8,7 +13,10 @@ describe('CalendarV2Component', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CalendarV2Component ]
+      imports: [CommonModule, RouterTestingModule, HttpClientTestingModule],
+      declarations: [ CalendarV2Component ],
+      providers: [AuthenticationToken],
+      schemas: [NO_ERRORS_SCHEMA],
     })
     .compileComponents();
 

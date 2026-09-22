@@ -1,0 +1,157 @@
+<div class="home-wrap">
+
+  <div *ngIf="isLoading" class="home-loading">
+    <div class="spinner-border" role="status"></div>
+    <span>Cargando resumen…</span>
+  </div>
+
+  <div *ngIf="!isLoading && loadError" class="home-error">
+    No se pudo cargar el resumen. Intenta recargar la página.
+  </div>
+
+  <ng-container *ngIf="!isLoading && !loadError">
+
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Inicio · {{ todayLabel }}</div>
+        <h1>Resumen de esta semana</h1>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="label">Contratos este mes</div>
+        <div class="value">{{ contractsThisMonth }}</div>
+        <div class="sub">con evento en {{ currentMonthLabel }}</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Eventos esta semana</div>
+        <div class="value">{{ eventsThisWeek }}</div>
+        <div class="sub">{{ weekRangeLabel }}</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Cotizaciones del mes</div>
+        <div class="value">{{ quotationsThisMonth }}</div>
+        <div class="sub">generadas este mes</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Conversión a contrato</div>
+        <div class="value">{{ conversionRate !== null ? (conversionRate + '%') : '—' }}</div>
+        <span class="delta up" *ngIf="conversionDeltaPts !== null && conversionDeltaPts >= 0">▲ {{ conversionDeltaPts }} pts vs mes anterior</span>
+        <span class="delta down" *ngIf="conversionDeltaPts !== null && conversionDeltaPts < 0">▼ {{ conversionDeltaAbs }} pts vs mes anterior</span>
+        <div class="sub" *ngIf="conversionRate === null">sin cotizaciones este mes</div>
+      </div>
+    </div>
+
+    <!-- Contratos por estado + Esta semana -->
+    <div class="row-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Contratos por estado</h2>
+          <span class="meta">{{ currentYear }}</span>
+        </div>
+        <div class="status-list">
+          <div class="status-row" *ngFor="let s of statusCounts">
+            <span class="status-label">{{ s.label }}</span>
+            <div class="status-track"><div class="status-fill" [ngClass]="s.cssClass" [style.width.%]="s.pct"></div></div>
+            <span class="status-count">{{ s.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Esta semana</h2>
+          <span class="meta">{{ weekRangeLabel }}</span>
+        </div>
+
+        <p *ngIf="agenda.length === 0" class="empty-note">No hay movimientos de mobiliario programados esta semana.</p>
+
+        <ul class="agenda-list" *ngIf="agenda.length > 0">
+          <li class="agenda-row" *ngFor="let a of agenda.slice(0, 6)">
+            <div class="agenda-day">{{ a.dayLabel }}<b>{{ a.dayNumber }}</b></div>
+            <div>
+              <div class="agenda-name">{{ a.customerName || a.codContract }}</div>
+              <div class="agenda-sub">{{ a.address }}</div>
+            </div>
+            <span class="wh-chip">Almacén {{ a.warehouse }}</span>
+          </li>
+        </ul>
+        <div class="panel-foot" *ngIf="agenda.length > 6">+{{ agenda.length - 6 }} contratos más esta semana</div>
+
+        <div class="alert-strip" *ngIf="stockAlert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.86 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/></svg>
+          <div>
+            <div class="t">Faltan {{ stockOverage }} de "{{ stockAlert?.description }}"</div>
+            <div class="d">{{ stockAlert?.demand }} reservadas · {{ stockAlert?.stock }} disponibles</div>
+          </div>
+        </div>
+        <div class="ok-strip" *ngIf="!stockAlert && agenda.length > 0">
+          Sin conflictos de stock detectados esta semana.
+        </div>
+      </div>
+    </div>
+
+    <!-- Cotizaciones + contratos por mes -->
+    <div class="row-2b">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Cotizaciones · este mes</h2>
+        </div>
+
+        <p *ngIf="funnelTotal === 0" class="empty-note">Aún no hay cotizaciones generadas este mes.</p>
+
+        <div class="funnel" *ngIf="funnelTotal > 0">
+          <div class="funnel-stage">
+            <span class="funnel-label">Generadas</span>
+            <div class="funnel-track"><div class="funnel-fill" style="width:100%"></div></div>
+            <div><span class="funnel-count">{{ funnelTotal }}</span><div class="funnel-pct">100%</div></div>
+          </div>
+          <div class="funnel-stage">
+            <span class="funnel-label">En seguimiento</span>
+            <div class="funnel-track"><div class="funnel-fill" [style.width.%]="funnelPct(funnelFollowUp)"></div></div>
+            <div><span class="funnel-count">{{ funnelFollowUp }}</span><div class="funnel-pct">{{ funnelPct(funnelFollowUp) }}%</div></div>
+          </div>
+          <div class="funnel-stage">
+            <span class="funnel-label">Convertidas</span>
+            <div class="funnel-track"><div class="funnel-fill" [style.width.%]="funnelPct(funnelConverted)"></div></div>
+            <div><span class="funnel-count">{{ funnelConverted }}</span><div class="funnel-pct">{{ funnelPct(funnelConverted) }}%</div></div>
+          </div>
+        </div>
+        <div class="panel-foot" *ngIf="staleQuotations > 0">
+          {{ staleQuotations }} cotizaciones llevan <strong>+7 días</strong> sin convertirse, de un total de {{ funnelTotal }}
+        </div>
+      </div>
+
+      <div class="panel chart-card">
+        <div class="panel-head">
+          <h2>Contratos por mes</h2>
+          <span class="meta">{{ currentYear }}</span>
+        </div>
+
+        <p *ngIf="monthPoints.length === 0" class="empty-note">Aún no hay meses cerrados este año para comparar.</p>
+
+        <ng-container *ngIf="monthPoints.length > 0">
+          <div class="legend">
+            <span class="legend-item"><span class="swatch"></span>Contratos {{ currentYear }}</span>
+            <span class="legend-item"><span class="swatch ref"></span>Mismo mes {{ previousYear }}</span>
+          </div>
+          <div class="chart-bars">
+            <div class="chart-col" *ngFor="let mp of monthPoints"
+                 [title]="mp.label + ': ' + mp.current + ' contratos (' + mp.previous + ' en ' + previousYear + ')'">
+              <div class="chart-track">
+                <span class="ref-mark" [style.bottom.%]="barHeightPct(mp.previous)"></span>
+                <span class="chart-fill" [style.height.%]="barHeightPct(mp.current)"></span>
+              </div>
+              <span class="chart-label">{{ mp.label }}</span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <app-district-heatmap></app-district-heatmap>
+
+  </ng-container>
+</div>

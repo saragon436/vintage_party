@@ -131,9 +131,9 @@
 }
 
 .warehouse-tab.active {
-  background: #007bff;
+  background: var(--vp-primary, #6E2C7F);
   color: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 0 0 1px var(--vp-focus-ring, rgba(110, 44, 127, 0.4));
 }
 
 /* Si quieres diferenciar visualmente los dos tabs: */

@@ -1,88 +1,78 @@
 <div class="weekly-container">
 
-  <!-- Sin datos -->
-  <div *ngIf="weeks.length === 0" class="empty-state">
-    <h2>Mobiliario semanal</h2>
-    <p>No hay semanas registradas.</p>
+  <!-- HEADER SEMANA: siempre visible, tenga o no mobiliario esta semana -->
+  <div class="week-header">
+    <div class="week-nav">
+      <button class="btn-nav"
+              (click)="goToPreviousWeek()"
+              [disabled]="isLoading">⬅ Semana anterior</button>
+
+      <div class="week-info">
+        <div class="week-title">Mobiliario semanal</div>
+        <small class="week-range">{{ selectedWeekRange }}</small>
+      </div>
+
+      <button class="btn-nav"
+              (click)="goToNextWeek()"
+              [disabled]="isLoading">Semana siguiente ➡</button>
+    </div>
+
+    <div class="week-actions">
+      <button class="btn-action" (click)="printWeek()">🖨 Imprimir</button>
+      <button class="btn-action" (click)="exportToExcel()">⬇ Exportar Excel</button>
+    </div>
   </div>
 
-  <!-- Con datos -->
-  <div *ngIf="weeks.length > 0">
+  <!-- TABS DE ALMACÉN -->
+  <div class="warehouse-tabs">
+    <button class="warehouse-tab"
+            [class.active]="selectedWarehouse === 1"
+            (click)="setWarehouse(1)">Almacén 1</button>
 
-    <!-- HEADER SEMANA -->
-    <div class="week-header">
-      <div class="week-nav">
-        <button class="btn-nav"
-                (click)="goToPreviousWeek()"
-                [disabled]="selectedWeekIndex === 0">⬅ Semana anterior</button>
+    <button class="warehouse-tab"
+            [class.active]="selectedWarehouse === 2"
+            (click)="setWarehouse(2)">Almacén 2</button>
+  </div>
 
-        <div class="week-info">
-          <div class="week-title">Mobiliario semanal</div>
-          <small class="week-range">{{ selectedWeekRange }}</small>
-        </div>
+  <!-- Si NO hay items en toda la semana para ese almacén -->
+  <div *ngIf="!hasAccessoriesForSelectedWarehouse()" class="empty-state">
+    <p>No hay mobiliario registrado esta semana para este almacén.</p>
+  </div>
 
-        <button class="btn-nav"
-                (click)="goToNextWeek()"
-                [disabled]="selectedWeekIndex === weeks.length - 1">Semana siguiente ➡</button>
-      </div>
+  <!-- LISTA POR DÍA -->
+  <div *ngFor="let day of currentWeekView" class="day-block">
 
-      <div class="week-actions">
-        <button class="btn-action" (click)="printWeek()">🖨 Imprimir</button>
-        <button class="btn-action" (click)="exportToExcel()">⬇ Exportar Excel</button>
-      </div>
+    <div class="day-separator"></div>
+
+    <h3 class="day-title">
+      POR REVISAR - {{ selectedWarehouse === 1 ? 'Almacén 1' : 'Almacén 2' }}
+    </h3>
+
+    <h4 class="day-date">{{ day.date }}</h4>
+
+    <!-- TABLA SI HAY ITEMS -->
+    <table class="items-table"
+           *ngIf="getAccessoriesByWarehouse(day, selectedWarehouse).length > 0">
+      <thead>
+        <tr>
+          <th class="col-mob">MOBILIARIO</th>
+          <th class="col-cant">CANT.</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let acc of getAccessoriesByWarehouse(day, selectedWarehouse)">
+          <td class="item-description">{{ acc.description }}</td>
+          <td class="item-quantity">{{ acc.totalAmount }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Cuando ese día NO tiene registros de ese almacén -->
+    <div *ngIf="getAccessoriesByWarehouse(day, selectedWarehouse).length === 0"
+         class="empty-day">
+      <small>Sin mobiliario para este almacén.</small>
     </div>
 
-    <!-- TABS DE ALMACÉN -->
-    <div class="warehouse-tabs">
-      <button class="warehouse-tab"
-              [class.active]="selectedWarehouse === 1"
-              (click)="setWarehouse(1)">Almacén 1</button>
-
-      <button class="warehouse-tab"
-              [class.active]="selectedWarehouse === 2"
-              (click)="setWarehouse(2)">Almacén 2</button>
-    </div>
-
-    <!-- Si NO hay items en toda la semana para ese almacén -->
-    <div *ngIf="!hasAccessoriesForSelectedWarehouse()" class="empty-state">
-      <p>No hay mobiliario registrado esta semana para este almacén.</p>
-    </div>
-
-    <!-- LISTA POR DÍA -->
-    <div *ngFor="let day of currentWeekView" class="day-block">
-
-      <div class="day-separator"></div>
-
-      <h3 class="day-title">
-        POR REVISAR - {{ selectedWarehouse === 1 ? 'Almacén 1' : 'Almacén 2' }}
-      </h3>
-
-      <h4 class="day-date">{{ day.date }}</h4>
-
-      <!-- TABLA SI HAY ITEMS -->
-      <table class="items-table"
-             *ngIf="getAccessoriesByWarehouse(day, selectedWarehouse).length > 0">
-        <thead>
-          <tr>
-            <th class="col-mob">MOBILIARIO</th>
-            <th class="col-cant">CANT.</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr *ngFor="let acc of getAccessoriesByWarehouse(day, selectedWarehouse)">
-            <td class="item-description">{{ acc.description }}</td>
-            <td class="item-quantity">{{ acc.totalAmount }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- Cuando ese día NO tiene registros de ese almacén -->
-      <div *ngIf="getAccessoriesByWarehouse(day, selectedWarehouse).length === 0"
-           class="empty-day">
-        <small>Sin mobiliario para este almacén.</small>
-      </div>
-
-    </div>
   </div>
 </div>

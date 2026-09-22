@@ -6,4 +6,40 @@
     padding:20px;
 }
 
+/* El formulario usa una grilla (col-lg-*) pensada para página completa:
+   esas columnas solo apilan por debajo de 992px de VIEWPORT, sin importar
+   cuán angosto sea el contenedor que las envuelve. Dentro del modal de
+   alta rápida (bastante más angosto que eso) se ven 3 columnas
+   comprimidas, así que aquí se fuerza una sola columna. */
+.quick-add-modal {
+  padding: 4px 20px 20px;
+}
+
+.quick-add-modal #salto {
+  padding: 8px 0;
+}
+
+.quick-add-modal .row {
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-add-modal .row > [class*="col-"] {
+  flex: 1 1 100%;
+  max-width: 100%;
+  margin-bottom: 10px;
+}
+
+.quick-add-modal .row:last-child {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-add-modal .row:last-child > [class*="col-"] {
+  flex: 0 0 auto;
+  max-width: none;
+  margin-bottom: 0;
+}
+
 

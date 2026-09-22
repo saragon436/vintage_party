@@ -16,6 +16,8 @@ export class LoginComponent implements OnInit {
 
   username = '';
   password = '';
+  isSubmitting = false;
+  errorMessage = '';
 
   // 👇 ruta a donde redirigir después del login
   redirectUrl: string = '/dashboard';
@@ -39,8 +41,10 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log('Username: ', this.username);
-    console.log('Password: ', this.password);
+    if (this.isSubmitting) {
+      return;
+    }
+    this.isSubmitting = true;
 
     const payload = {
       userName: this.username,
@@ -51,15 +55,11 @@ export class LoginComponent implements OnInit {
 
     this.authenticationService.sendPostRequest(payload, headers).subscribe(
       (data: any) => {
+        this.isSubmitting = false;
         if (data.status === undefined) {
-          console.log(data.token);
-
           // Guardar token y usuario como ya tenías
           this.authenticationToken.myValue = data.token;
           this.authenticationToken.user = this.username;
-
-          console.log('this.authenticationToken.myValue ', this.authenticationToken.myValue);
-          console.log('informacion de validacion ', data.status);
 
           // 🔥 Antes: this.route.navigate(['dashboard']);
           // Ahora: navegar a la ruta que vino en redirect o a /dashboard por defecto
@@ -67,12 +67,15 @@ export class LoginComponent implements OnInit {
         }
       },
       (error) => {
+        this.isSubmitting = false;
         if (error.status === 401) {
-          console.log('usuario o claves incorrectos');
-          this.openErrorModal();
+          this.errorMessage = 'Usuario o contraseña incorrectos. Por favor, inténtelo de nuevo.';
+        } else if (error.status === 400) {
+          this.errorMessage = 'Verifique que el usuario y la contraseña sean válidos (la contraseña debe tener al menos 8 caracteres).';
         } else {
-          console.log('error desconocido en el login');
+          this.errorMessage = 'No se pudo conectar con el servidor. Intente nuevamente en unos minutos.';
         }
+        this.openErrorModal();
       }
     );
   }

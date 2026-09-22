@@ -1,2 +1,211 @@
 /* You can add global styles to this file, and also import other style files */
 @import "~@ng-select/ng-select/themes/default.theme.css";
+
+/* ==========================================================================
+   Identidad visual Vintage Party
+   Paleta tomada del logo (morado "Vintage" + malva "Party"). Sobrescribe los
+   colores/tipografía por defecto de Bootstrap en un solo lugar: todos los
+   módulos (contrato, cotización, mobiliario, clientes, calendario) heredan
+   el cambio automáticamente sin tocar componente por componente.
+   ========================================================================== */
+
+:root {
+  --vp-primary: #6E2C7F;
+  --vp-primary-dark: #4A1B57;
+  --vp-secondary: #A97AA0;
+  --vp-secondary-dark: #8A5C86;
+  --vp-surface: #FBF7FA;
+  --vp-surface-soft: #F1E9F2;
+  --vp-line: #E4D7E6;
+  --vp-text: #382438;
+  --vp-text-soft: #6E5C6E;
+  --vp-success: #3F8F5F;
+  --vp-warning: #B4791E;
+  --vp-danger: #B23A4B;
+  --vp-focus-ring: rgba(110, 44, 127, 0.28);
+
+  --vp-font-display: "Playfair Display", Georgia, serif;
+  --vp-font-body: "Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --vp-font-mono: "IBM Plex Mono", "Courier New", monospace;
+}
+
+body {
+  font-family: var(--vp-font-body);
+  color: var(--vp-text);
+  background: var(--vp-surface);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--vp-font-display);
+  color: var(--vp-primary-dark);
+}
+
+a {
+  color: var(--vp-primary);
+}
+a:hover {
+  color: var(--vp-primary-dark);
+}
+
+/* ---------- Botones ---------- */
+.btn-primary {
+  background-color: var(--vp-primary);
+  border-color: var(--vp-primary);
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--vp-primary-dark) !important;
+  border-color: var(--vp-primary-dark) !important;
+}
+
+.btn-secondary {
+  background-color: var(--vp-secondary);
+  border-color: var(--vp-secondary);
+}
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+  background-color: var(--vp-secondary-dark) !important;
+  border-color: var(--vp-secondary-dark) !important;
+}
+
+.btn-success {
+  background-color: var(--vp-success);
+  border-color: var(--vp-success);
+}
+
+.btn-danger {
+  background-color: var(--vp-danger);
+  border-color: var(--vp-danger);
+}
+
+.btn-warning {
+  background-color: var(--vp-warning);
+  border-color: var(--vp-warning);
+  color: #fff;
+}
+
+.btn-info {
+  background-color: var(--vp-secondary);
+  border-color: var(--vp-secondary);
+  color: #fff;
+}
+
+.btn-outline-primary {
+  color: var(--vp-primary);
+  border-color: var(--vp-primary);
+}
+.btn-outline-primary:hover {
+  background-color: var(--vp-primary);
+  border-color: var(--vp-primary);
+}
+
+.btn-outline-secondary {
+  color: var(--vp-secondary-dark);
+  border-color: var(--vp-secondary);
+}
+.btn-outline-secondary:hover {
+  background-color: var(--vp-secondary);
+  border-color: var(--vp-secondary);
+}
+
+/* Incluye la clase con el guión de más ya usada en los modales de
+   confirmación (btn-outline-success-) para que no quede sin estilo. */
+.btn-outline-success,
+.btn-outline-success- {
+  color: var(--vp-success);
+  border-color: var(--vp-success);
+}
+.btn-outline-success:hover,
+.btn-outline-success-:hover {
+  background-color: var(--vp-success);
+  border-color: var(--vp-success);
+  color: #fff;
+}
+
+.btn-outline-dark {
+  color: var(--vp-text);
+  border-color: var(--vp-text-soft);
+}
+.btn-outline-dark:hover {
+  background-color: var(--vp-text);
+  border-color: var(--vp-text);
+}
+
+.btn-link {
+  color: var(--vp-primary);
+}
+.btn-link:hover {
+  color: var(--vp-primary-dark);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--vp-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- Formularios ---------- */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--vp-primary);
+  box-shadow: 0 0 0 0.25rem var(--vp-focus-ring);
+}
+
+/* ---------- Tablas ---------- */
+.table thead th {
+  color: var(--vp-primary-dark);
+  border-bottom-color: var(--vp-line);
+}
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: var(--vp-surface-soft);
+}
+.table-hover > tbody > tr:hover > * {
+  background-color: var(--vp-surface-soft);
+}
+
+/* ---------- Navegación / pestañas ---------- */
+.nav-link.active {
+  color: var(--vp-primary) !important;
+  font-weight: 600;
+}
+.nav-tabs .nav-link.active {
+  border-color: var(--vp-line) var(--vp-line) var(--vp-surface);
+  color: var(--vp-primary);
+}
+
+/* ---------- Paginación ---------- */
+.page-link {
+  color: var(--vp-primary);
+}
+.page-item.active .page-link {
+  background-color: var(--vp-primary);
+  border-color: var(--vp-primary);
+}
+
+/* ---------- Spinners de carga ---------- */
+.spinner-border {
+  color: currentColor;
+}
+.btn .spinner-border {
+  color: #fff;
+}
+
+/* ---------- Barra de navegación principal ---------- */
+.navbar {
+  background-color: var(--vp-surface-soft) !important;
+  border-bottom: 1px solid var(--vp-line);
+}
+.navbar-brand {
+  font-family: var(--vp-font-display);
+  font-weight: 700;
+  color: var(--vp-primary-dark) !important;
+  font-size: 1.4rem;
+}
+.navbar .nav-link {
+  color: var(--vp-text-soft);
+}
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+  color: var(--vp-primary) !important;
+}

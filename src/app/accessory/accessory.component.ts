@@ -8,11 +8,15 @@ import { FormArray, FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { environment } from 'src/environments/environment';
+import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
+import { AccessoryAvailabilityComponent } from './accessory-availability/accessory-availability.component';
 interface Accesory {
   _id: string;
   description: string;
   color: string;
   design: string;
+  imageUrl?: string;
   large: string;
   bottom: string;
   high: string;
@@ -44,7 +48,8 @@ export class AccessoryComponent {
     private authenticationToken:AuthenticationToken, 
     private route: Router,
     private formBuilder: FormBuilder,
-    private modalService: NgbModal) 
+    private modalService: NgbModal,
+    private confirmDialog: ConfirmDialogService)
   {
     this.accesorys = [];
     this.form = this.formBuilder.group({
@@ -72,6 +77,10 @@ export class AccessoryComponent {
   idItemDelete='';
   isactive=false;
   warehouse = 1;   // 👈 NUEVO
+  imageUrl = ''; // ruta relativa devuelta por el backend (ej. /uploads/accessories/xyz.jpg)
+  selectedImageFile: File | null = null;
+  isUploadingImage = false;
+  searchValue = '';
 
   get arrayAccessory(): FormArray {
     return this.form.controls['items'] as FormArray
@@ -81,9 +90,53 @@ export class AccessoryComponent {
     return this.arrayAccessory.value as any[]
   }
 
+  get fullImageUrl(): string {
+    return this.imageUrl ? environment.apiUrl + this.imageUrl : '';
+  }
+
+  onImageFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.selectedImageFile = input.files && input.files.length ? input.files[0] : null;
+  }
+
+  uploadImage() {
+    if (!this.selectedImageFile || !this._id) {
+      return;
+    }
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    this.isUploadingImage = true;
+    this.accessoryService.uploadAccessoryImage(this._id, this.selectedImageFile, headers).subscribe(
+      (resp: any) => {
+        this.isUploadingImage = false;
+        this.imageUrl = resp.imageUrl;
+        this.selectedImageFile = null;
+      },
+      async (error) => {
+        this.isUploadingImage = false;
+        if (error.status === 401) {
+          // Esperar a que cierren el aviso ANTES de navegar: si no se
+          // espera, el modal queda huérfano sobre la pantalla de login.
+          await this.confirmDialog.alert('Tu sesión venció. Volvé a iniciar sesión para subir la imagen.');
+          this.route.navigate(['/app-login']);
+        } else {
+          this.confirmDialog.alert('No se pudo subir la imagen. Intente nuevamente.');
+        }
+      }
+    );
+  }
+
+  openAvailability(item: Accesory) {
+    const modalRef = this.modalService.open(AccessoryAvailabilityComponent, { centered: true, size: 'xl' });
+    modalRef.componentInstance.accessory = {
+      _id: item._id,
+      description: item.description,
+      stock: item.stock,
+    };
+  }
+
   open(content:any,valor:string) {
     this.idItemDelete=valor;
-    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title'}).result.then((result) => {
+    this.modalService.open(content, {ariaLabelledBy: 'modal-basic-title', centered: true}).result.then((result) => {
       this.closeResult = `Closed with: ${result}`;
     }, (reason) => {
       this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
@@ -130,11 +183,20 @@ export class AccessoryComponent {
     }
   }
 
+  onGlobalSearch(): void {
+    this.ngOnInit();
+  }
+
+  clearGlobalSearch(): void {
+    this.searchValue = '';
+    this.ngOnInit();
+  }
+
   ngOnInit() {
     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
     //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
     console.log('this.authenticationToken '+this.authenticationToken)
-    this.accessoryService.listAccessory( headers).subscribe(
+    this.accessoryService.listAccessory( headers, this.searchValue).subscribe(
       (accesorys) => {
          this.accesorys=accesorys;
       },
@@ -177,6 +239,8 @@ export class AccessoryComponent {
     this.condicion=true;
     this.mostrarBotones=true;
     this.isactive=false;
+    this.imageUrl='';
+    this.selectedImageFile=null;
   }
 
   onSubmitExit(){
@@ -191,9 +255,11 @@ export class AccessoryComponent {
         this.price=0;
         this.items=[];
         this.diameter='';
+        this.imageUrl='';
+        this.selectedImageFile=null;
         this.onDeleteItemAll();
     this.condicion=false;
-  } 
+  }
 
   onSubmit(){
     if(this.isactive==false){
@@ -227,6 +293,7 @@ export class AccessoryComponent {
       console.log('this.authenticationToken '+this.authenticationToken)
       this.accessoryService.addAccessory(payload, headers).subscribe(
         (data: any) => {
+          this.isactive=false;
           console.log('ejemplo de guardar')
           this.ngOnInit();
           this.description='';
@@ -246,9 +313,9 @@ export class AccessoryComponent {
           this.warehouse = 1; // 👈 NUEVO
         },
         (error) => {
-          
+          this.isactive=false;
           if( error.status === 401){
-          
+
             console.log('usuario o claves incorrectos');
             this.route.navigate(['/app-login']);
           }else{
@@ -278,6 +345,8 @@ export class AccessoryComponent {
         this.price=response.price;
         this.diameter=response.diameter;
         this.warehouse = response.warehouse ?? 1; // 👈 NUEVO (por si viene undefined)
+        this.imageUrl = response.imageUrl || '';
+        this.selectedImageFile = null;
         response.items.forEach((res:any)=>{
           this.arrayAccessory.push(
             this.formBuilder.group({
@@ -294,7 +363,18 @@ export class AccessoryComponent {
     this.mostrarBotones=false;
   }
 
-  onUpdate(){
+  async onUpdate(){
+    if(this.isactive==true){
+      return;
+    }
+    const confirmado = await this.confirmDialog.confirm(
+      '¿Desea actualizar este mobiliario?',
+      'Actualizar Mobiliario'
+    );
+    if(!confirmado){
+      return;
+    }
+    this.isactive=true;
     var payload = {
       _id : this._id,
       description : this.description,
@@ -317,6 +397,7 @@ export class AccessoryComponent {
     console.log('this.authenticationToken '+this.authenticationToken)
     this.accessoryService.updateAccessory(payload, headers).subscribe(
       (data: any) => {
+        this.isactive=false;
         console.log('ejemplo de actualizar')
         this.onDeleteItemAll();
         this.ngOnInit();
@@ -336,9 +417,9 @@ export class AccessoryComponent {
         this.mostrarBotones=true;
       },
       (error) => {
-        
+        this.isactive=false;
         if( error.status === 401){
-        
+
           console.log('usuario o claves incorrectos');
           this.route.navigate(['/app-login']);
         }else{
@@ -371,7 +452,14 @@ export class AccessoryComponent {
     console.log("this.arrayAccessory eliminar", [this.arrayAccessory.value]);
   }
 
-  onDeleteItem(index: number) {
+  async onDeleteItem(index: number) {
+    const confirmado = await this.confirmDialog.confirm(
+      '¿Desea eliminar esta parte del mobiliario?',
+      'Eliminar Parte'
+    );
+    if(!confirmado){
+      return;
+    }
     this.arrayAccessory.removeAt(index);
   }
 

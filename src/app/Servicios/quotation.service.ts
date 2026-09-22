@@ -27,11 +27,25 @@ export class QuotationService {
     // ContractService has updateContract. I'll add updateQuotation assuming similar pattern if needed, but for now
     // user request emphasized creating and listing.
 
-    listQuotation(headers: HttpHeaders): Observable<any> {
-        // curl --location 'http://localhost:3000/quotation'
-        return this.http.get(environment.apiUrl + "/quotation", { headers }).pipe(
+    listQuotation(headers: HttpHeaders, page: number = 1, limit: number = 20, search?: string): Observable<any> {
+        // curl --location 'http://localhost:3000/quotation?page=1&limit=20&search=texto'
+        let params = new HttpParams().set('page', page).set('limit', limit);
+        if (search && search.trim() !== '') {
+            params = params.set('search', search.trim());
+        }
+        return this.http.get(environment.apiUrl + "/quotation", { headers, params }).pipe(
             catchError(e => {
                 console.error('Error listing quotations', e);
+                throw e;
+            }),
+            map(x => x)
+        );
+    }
+
+    getQuotationsByCustomer(customerId: string, headers: HttpHeaders): Observable<any[]> {
+        return this.http.get<any[]>(environment.apiUrl + "/quotation/customer/" + customerId, { headers }).pipe(
+            catchError(e => {
+                console.error('Error getting quotations by customer', e);
                 throw e;
             }),
             map(x => x)
@@ -66,4 +80,18 @@ export class QuotationService {
     // "passarlas a contrato" -> The user provided:
     // curl --location 'http://localhost:3000/contract' ... --data '{ "quotationId": ... }'
     // So this will be done using ContractService.saveContract typically, just sending the quotationId in the body.
+
+    // Genera el PDF al vuelo a partir de una imagen (data URL base64) capturada
+    // en el navegador. El backend no guarda nada, solo arma el PDF y lo devuelve.
+    generatePdf(imageDataUrl: string, headers: HttpHeaders): Observable<Blob> {
+        return this.http.post(environment.apiUrl + "/quotation/pdf", { image: imageDataUrl }, {
+            headers,
+            responseType: 'blob'
+        }).pipe(
+            catchError(e => {
+                console.error('Error generando PDF', e);
+                throw e;
+            })
+        );
+    }
 }

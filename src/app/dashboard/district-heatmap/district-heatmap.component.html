@@ -1,0 +1,151 @@
+<div class="panel heatmap-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Mapa de calor · alquileres por distrito</h2>
+      <span class="meta">Almacén &amp; entrega</span>
+    </div>
+    <div class="range-toggle">
+      <button type="button" [class.active]="rangeDays === 30" (click)="setRange(30)">30 días</button>
+      <button type="button" [class.active]="rangeDays === 90" (click)="setRange(90)">90 días</button>
+      <button type="button" [class.active]="rangeDays === 365" (click)="setRange(365)">1 año</button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="hm-loading">
+    <div class="spinner-border spinner-border-sm" role="status"></div>
+    <span>Cargando mapa…</span>
+  </div>
+
+  <div *ngIf="!isLoading && loadError" class="hm-error">
+    No se pudo cargar el mapa de distritos. Intenta recargar la página.
+  </div>
+
+  <ng-container *ngIf="!isLoading && !loadError">
+
+    <div class="hm-kpis">
+      <div class="hm-kpi">
+        <span class="label">Contratos con entrega</span>
+        <span class="value">{{ totalContracts }}</span>
+      </div>
+      <div class="hm-kpi" *ngIf="topDistrict">
+        <span class="label">Distrito líder</span>
+        <span class="value">{{ topDistrict }}</span>
+        <span class="sub">{{ topDistrictPct }}% del total</span>
+      </div>
+      <div class="hm-kpi">
+        <span class="label">Distritos activos</span>
+        <span class="value">{{ activeDistricts }}</span>
+      </div>
+    </div>
+
+    <div class="hm-body">
+      <div class="hm-map-wrap">
+        <svg
+          class="hm-svg"
+          [attr.viewBox]="'0 0 ' + mapWidth + ' ' + mapHeight"
+          role="img"
+          aria-label="Mapa de calor de contratos por distrito de Lima y Callao"
+        >
+          <path
+            *ngFor="let f of features"
+            [attr.d]="f.d"
+            class="hm-district"
+            [class.empty]="isEmpty(f.name)"
+            [class.selected]="isSelected(f.name)"
+            [class.dimmed]="selectedDistrict && !isSelected(f.name)"
+            [style.fill]="fillFor(f.name)"
+            tabindex="0"
+            [attr.aria-label]="f.name + ', ' + countFor(f.name) + ' contratos'"
+            (click)="selectDistrict(f.name)"
+            (keydown.enter)="selectDistrict(f.name)"
+            (pointerenter)="showTip(f, $event)"
+            (pointerleave)="hideTip()"
+            (focus)="showTip(f, $event)"
+            (blur)="hideTip()"
+          ></path>
+        </svg>
+
+        <div class="hm-tooltip" *ngIf="hoverTip" [style.left.px]="hoverTip.x" [style.top.px]="hoverTip.y">
+          {{ hoverTip.name }} — {{ hoverTip.count }} {{ hoverTip.count === 1 ? 'contrato' : 'contratos' }}
+        </div>
+
+        <div class="hm-legend">
+          <span>Menos</span>
+          <span class="hm-legend-bar"></span>
+          <span>Más</span>
+          <span class="hm-legend-sep"></span>
+          <span class="hm-legend-swatch"></span>
+          <span>Sin alquileres</span>
+        </div>
+      </div>
+
+      <div class="hm-rank">
+        <p *ngIf="ranked.length === 0" class="empty-note">Sin contratos con distrito registrado en este periodo.</p>
+        <ul class="hm-rank-list" *ngIf="ranked.length > 0">
+          <li
+            *ngFor="let r of ranked; let i = index"
+            [class.active]="isSelected(r.name)"
+          >
+            <button
+              type="button"
+              class="hm-rank-row"
+              (click)="selectDistrict(r.name)"
+            >
+              <span class="hm-rank-pos">{{ i + 1 }}</span>
+              <span class="hm-rank-name">{{ r.name }}</span>
+              <span class="hm-rank-bar"><span class="hm-rank-fill" [style.width.%]="(r.count / (ranked[0].count || 1)) * 100"></span></span>
+              <span class="hm-rank-count">{{ r.count }}</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="hm-track" *ngIf="selectedDistrict">
+      <div class="hm-track-head">
+        <h3>Seguimiento · {{ selectedDistrict }}</h3>
+        <button type="button" class="hm-clear" (click)="clearSelection()">Quitar filtro ✕</button>
+      </div>
+
+      <div *ngIf="selectedLoading" class="hm-loading small">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+        <span>Buscando contratos…</span>
+      </div>
+
+      <div *ngIf="!selectedLoading && selectedError" class="hm-error">
+        No se pudo cargar el detalle de este distrito.
+      </div>
+
+      <p *ngIf="!selectedLoading && !selectedError && selectedRows.length === 0" class="empty-note">
+        Sin contratos con entrega en {{ selectedDistrict }} durante este periodo.
+      </p>
+
+      <div class="table-responsive" *ngIf="!selectedLoading && !selectedError && selectedRows.length > 0">
+        <table class="hm-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Cliente</th>
+              <th>Instalación</th>
+              <th>Evento</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of selectedRows">
+              <td class="mono">{{ row.codContract }}</td>
+              <td>{{ row.customerName }}</td>
+              <td class="mono">{{ row.installDate ? (row.installDate | date: 'd MMM':'UTC') : '—' }}</td>
+              <td class="mono">{{ row.eventDate ? (row.eventDate | date: 'd MMM':'UTC') : '—' }}</td>
+              <td><span class="hm-status" [ngClass]="statusClass(row.status)">{{ row.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="hm-truncated" *ngIf="selectedTruncated">
+          Mostrando los primeros {{ selectedRows.length }} de {{ countFor(selectedDistrict!) }} contratos. Acota el rango para ver el resto.
+        </p>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

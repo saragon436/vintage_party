@@ -1,0 +1,166 @@
+<div class="modal-header">
+  <h4 class="modal-title" id="modal-basic-title">Disponibilidad · {{ accessory.description }}</h4>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body aa-body">
+
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" role="status" aria-hidden="true"></div>
+  </div>
+
+  <div *ngIf="!loading && errorMsg" class="alert alert-danger">{{ errorMsg }}</div>
+
+  <ng-container *ngIf="!loading && !errorMsg">
+
+    <div class="aa-subtitle">Stock total: <strong>{{ accessory.stock }} unidades</strong></div>
+
+    <!-- Tarjetas resumen -->
+    <div class="aa-cards">
+      <div class="aa-card" [class.aa-card-danger]="accessory.stock > 0 && (availableToday / accessory.stock) < 0.3">
+        <div class="aa-card-label">Disponibles hoy</div>
+        <div class="aa-card-value">{{ availableToday }}<span class="aa-card-sub"> / {{ accessory.stock }}</span></div>
+      </div>
+      <div class="aa-card">
+        <div class="aa-card-label">Reservadas hoy</div>
+        <div class="aa-card-value">{{ reservedToday }}<span class="aa-card-sub"> / {{ accessory.stock }}</span></div>
+        <div class="aa-card-note">En {{ activeContractsToday }} contrato(s) activo(s)</div>
+      </div>
+      <div class="aa-card" [class.aa-card-danger]="hasAnomaly">
+        <div class="aa-card-label">Disponible al 100% desde</div>
+        <div class="aa-card-value aa-card-value-date" *ngIf="firstFullyAvailableLabel">{{ firstFullyAvailableLabel }}</div>
+        <div class="aa-card-value aa-card-value-date" *ngIf="!firstFullyAvailableLabel">Ahora mismo</div>
+        <div class="aa-card-note" *ngIf="nextFullReleaseLabel">Ocupado hasta el {{ nextFullReleaseLabel }} (el día de recojo el mobiliario todavía está fuera)</div>
+        <div class="aa-card-note" *ngIf="hasAnomaly">Por reserva(s) atípica(s) sin revisar</div>
+      </div>
+    </div>
+
+    <div *ngIf="reservations.length === 0" class="aa-empty">
+      No hay reservas activas ni futuras para este mobiliario: está 100% disponible.
+    </div>
+
+    <ng-container *ngIf="reservations.length > 0">
+
+      <!-- Línea de tiempo -->
+      <div class="aa-section-head">
+        <h6 class="aa-section-title">Línea de tiempo de reservas</h6>
+        <div class="aa-legend">
+          <span class="aa-legend-item"><span class="aa-legend-swatch aa-bar-secondary"></span>Confirmada</span>
+          <span class="aa-legend-item" [title]="'Se marca así una reserva con más de ' + ANOMALY_THRESHOLD_DAYS + ' días entre instalación y recojo'"><span class="aa-legend-swatch aa-bar-anomaly-swatch"></span>Atípica</span>
+          <span class="aa-legend-item"><span class="aa-legend-line"></span>Hoy</span>
+          <span class="aa-legend-item" *ngIf="lastOccupiedLeftPct !== null"><span class="aa-legend-line aa-legend-line-release"></span>Último día ocupado</span>
+        </div>
+      </div>
+      <div class="aa-rule-caption">
+        Se marca como <strong>atípica</strong> una reserva con más de {{ ANOMALY_THRESHOLD_DAYS }} días entre instalación y recojo (lo usual en este mobiliario son pocos días) — suele ser una fecha de recojo mal ingresada.
+      </div>
+
+      <div class="aa-axis">
+        <div class="aa-axis-spacer"></div>
+        <div class="aa-axis-track">
+          <span *ngFor="let t of dateTicks" class="aa-axis-tick" [style.left.%]="t.leftPct">{{ t.label }}</span>
+          <span class="aa-today-pill" [style.left.%]="todayLeftPct">HOY</span>
+          <span
+            *ngIf="lastOccupiedLeftPct !== null"
+            class="aa-release-pill"
+            [style.left.%]="lastOccupiedLeftPct"
+            [title]="'Último día ocupado: ' + nextFullReleaseLabel + ' · Disponible desde: ' + firstFullyAvailableLabel"
+          >{{ nextFullReleaseShortLabel }}{{ lastOccupiedClipped ? ' →' : '' }}</span>
+        </div>
+      </div>
+
+      <div class="aa-rows">
+        <ng-container *ngFor="let r of reservations">
+          <div class="aa-row">
+            <div class="aa-label">
+              <span class="aa-label-code" [class.aa-text-danger]="r.isAnomaly">
+                <svg *ngIf="r.isAnomaly" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="aa-warn-icon"><path d="M12 3l9.5 17H2.5L12 3Z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.7" r="0.9" fill="currentColor" stroke="none"/></svg>
+                {{ r.codContract }} · {{ r.customerName }}
+              </span>
+              <span class="aa-label-sub">{{ r.amount }} uds · {{ r.dateLabel }}</span>
+            </div>
+            <div class="aa-track">
+              <div *ngFor="let t of dateTicks" class="aa-gridline" [style.left.%]="t.leftPct"></div>
+              <div class="aa-today-line" [style.left.%]="todayLeftPct"></div>
+              <div *ngIf="lastOccupiedLeftPct !== null" class="aa-release-line" [style.left.%]="lastOccupiedLeftPct"></div>
+              <div
+                class="aa-bar"
+                [class.aa-bar-anomaly]="r.isAnomaly"
+                [style.left.%]="r.leftPct"
+                [style.width.%]="r.widthPct"
+                [title]="r.codContract + ' · ' + r.customerName + ' — ' + r.amount + ' uds · ' + r.dateLabel"
+              >
+                <span *ngIf="r.clippedLeft" class="aa-clip aa-clip-left">&larr;</span>
+                <span *ngIf="r.clippedRight" class="aa-clip aa-clip-right">&rarr;</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="aa-alert" *ngIf="r.isAnomaly">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="aa-alert-icon"><path d="M12 3l9.5 17H2.5L12 3Z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="16.7" r="0.9" fill="currentColor" stroke="none"/></svg>
+            <div class="aa-alert-text">
+              <strong>Recojo programado a {{ r.durationDays }} días</strong> de la instalación &mdash; muy por encima del promedio de este mobiliario ({{ ANOMALY_THRESHOLD_DAYS }} días o menos es lo usual). ¿La fecha es correcta?
+            </div>
+            <button type="button" class="btn btn-sm aa-alert-btn" (click)="irAContratos()">Ir a Contratos</button>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Gráfico semanal -->
+      <h6 class="aa-section-title aa-section-title-spaced">Unidades disponibles por semana</h6>
+      <div class="aa-chart">
+        <div class="aa-chart-bars">
+          <div
+            *ngFor="let w of weekBuckets"
+            class="aa-chart-bar-wrap"
+            [class.aa-chart-bar-wrap-current]="w.isCurrentWeek"
+            [title]="(w.isCurrentWeek ? 'Semana en curso, ' : '') + w.label + ': ' + w.minAvailable + ' disponibles'"
+          >
+            <div class="aa-chart-bar" [ngClass]="w.colorClass" [style.height.%]="w.pct"></div>
+            <span class="aa-chart-label">{{ w.label }}</span>
+            <span class="aa-chart-current-tag" *ngIf="w.isCurrentWeek">hoy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalle día a día -->
+      <h6 class="aa-section-title aa-section-title-spaced">Detalle día a día</h6>
+      <div class="aa-hint">Tocá un tramo para ver qué contratos lo ocupan.</div>
+      <div class="aa-day-list">
+        <ng-container *ngFor="let d of dayRanges">
+          <div
+            class="aa-day-row"
+            [class.aa-day-row-full]="d.isFull"
+            [class.aa-day-row-free]="d.isFree"
+            [class.aa-day-row-clickable]="d.contracts.length > 0"
+            (click)="d.contracts.length > 0 && toggleDayRange(d)"
+          >
+            <span class="aa-day-range">
+              <svg *ngIf="d.contracts.length > 0" class="aa-day-chevron" [class.aa-day-chevron-open]="d.expanded" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              {{ d.label }}
+            </span>
+            <span class="aa-day-detail">{{ d.reserved }} de {{ accessory.stock }} alquilado</span>
+            <span class="aa-day-avail">
+              <ng-container *ngIf="!d.isFull">puedes alquilar {{ d.available }}</ng-container>
+              <ng-container *ngIf="d.isFull">sin disponibilidad</ng-container>
+            </span>
+          </div>
+
+          <div class="aa-day-contracts" *ngIf="d.expanded">
+            <div class="aa-day-contract-row" *ngFor="let c of d.contracts">
+              <span class="aa-day-contract-code">{{ c.codContract }}</span>
+              <span class="aa-day-contract-customer">{{ c.customerName }}</span>
+              <span class="aa-day-contract-amount">{{ c.amount }} uds</span>
+              <button type="button" class="btn btn-outline-primary btn-sm" (click)="verContrato(c._id)">Ver contrato</button>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+    </ng-container>
+  </ng-container>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">Cerrar</button>
+</div>

@@ -21,10 +21,13 @@
     <div class="row" id="salto">
       <div class="col-lg-4">
         <ng-select
+          class="customer-select"
+          [ngClass]="{ 'has-pending-debt': pendingBalance?.hasPending }"
           [clearable]="false"
           notFoundText="seleccione clientes"
           placeholder="Seleccione Cliente"
           formControlName="customer"
+          (change)="onCustomerChange($event)"
           #ddlcustomer
         >
           <ng-option
@@ -33,7 +36,42 @@
           >
             {{ item.documentNumber }} {{ item.name }}
           </ng-option>
+          <ng-template ng-option-tmp let-item="item">
+            {{ item.documentNumber }} {{ item.name }}
+            <span class="option-debt-flag" *ngIf="hasPendingDebt(item)">● saldo pendiente</span>
+          </ng-template>
+          <ng-template ng-notfound-tmp let-searchTerm="searchTerm">
+            <button
+              type="button"
+              class="add-customer-option"
+              (mousedown)="$event.preventDefault()"
+              (click)="openAddCustomerModal(searchTerm); ddlcustomer.close()"
+            >
+              + Agregar cliente nuevo
+              <small>No encontramos "{{ searchTerm }}"</small>
+            </button>
+          </ng-template>
         </ng-select>
+
+        <div class="pending-debt-notice" *ngIf="pendingBalance?.hasPending">
+          <span class="pending-debt-badge">⚠ Saldo pendiente</span>
+          <button type="button" class="pending-debt-link" (click)="togglePendingDetail()">
+            {{ showPendingDetail ? 'Ocultar' : 'Ver más' }} ›
+          </button>
+
+          <div class="pending-debt-panel" *ngIf="showPendingDetail">
+            <div class="pending-debt-panel-head">
+              <span>Contratos pendientes</span>
+              <span class="pending-debt-total">Total: S/ {{ pendingBalance?.total?.toFixed(2) }}</span>
+            </div>
+            <div class="pending-debt-item" *ngFor="let item of pendingBalance?.contracts">
+              <span class="code">{{ item.codContract }}</span>
+              <span class="status-pill">{{ item.status }}</span>
+              <span class="meta">Evento {{ item.eventDate | date:'dd/MM/yyyy':'UTC' }}</span>
+              <span class="amount">S/ {{ item.saldo.toFixed(2) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="col-lg-4">
@@ -253,6 +291,7 @@
               <th width="20%">Stock</th>
               <th width="10%">Cantidad</th>
               <th width="10%">Precio</th>
+              <th style="text-align: center">Disponibilidad</th>
               <th style="text-align: center">Eliminar</th>
             </tr>
           </thead>
@@ -322,12 +361,19 @@
 
               <td style="text-align: center">
                 <button
-                  class="btn btn-md btn-default"
+                  type="button"
+                  class="btn btn-outline-primary btn-sm"
+                  title="Ver disponibilidad"
+                  (click)="openAvailability(item)"
+                >Ver disponibilidad</button>
+              </td>
+
+              <td style="text-align: center">
+                <button
+                  class="btn btn-outline-danger btn-sm"
                   title="Eliminar Registro"
                   (click)="onDeleteItem(i)"
-                >
-                  <i class="fa-solid fa-trash">X</i>
-                </button>
+                >✕</button>
               </td>
             </tr>
           </tbody>
@@ -411,12 +457,10 @@
                 </td>
                 <td style="text-align: center">
                   <button
-                    class="btn btn-md btn-default"
+                    class="btn btn-outline-danger btn-sm"
                     title="Eliminar Registro"
                     (click)="onDeleteItemOnAccount(i)"
-                  >
-                    <i class="fa-solid fa-trash">X</i>
-                  </button>
+                  >✕</button>
                 </td>
               </tr>
             </tbody>
@@ -480,28 +524,36 @@
     </div>
 
     <div class="row" id="salto">
+  <div class="d-flex flex-wrap align-items-center gap-2">
   <!-- Estos dos siempre visibles (modal o página) -->
   <button
     type="button"
-    class="btn btn-success"
-    [disabled]="form.status !== 'VALID'"
+    class="btn btn-primary"
+    [disabled]="form.status !== 'VALID' || isDisabled || isSaving"
     *ngIf="!mostrarBotones && !activeModal"
-    (click)="onAddCustomer(ddlcustomer); onSave(); deleteContract()"
+    (click)="onUpdate()"
   >
-    Actualizar Contrato
+    <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+    {{ isSaving ? 'Guardando...' : 'Actualizar Contrato' }}
   </button>
 
   <button
     type="button"
-    class="btn btn-success"
-    [disabled]="form.status !== 'VALID'"
+    class="btn btn-primary"
+    [disabled]="form.status !== 'VALID' || isDisabled || isSaving"
     *ngIf="mostrarBotones"
     (click)="onAddCustomer(ddlcustomer); onSave()"
   >
-    Registrar Contrato
+    <span *ngIf="isSaving" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+    {{ isSaving ? 'Guardando...' : 'Registrar Contrato' }}
   </button>
 
   <!-- 👇 Estos TRES se ocultan cuando está en modal (activeModal definido) -->
+  <div class="form-check form-check-inline" *ngIf="!activeModal" style="vertical-align: middle;">
+    <input class="form-check-input" type="checkbox" id="incluirImagenImpresion" [(ngModel)]="incluirImagenImpresion" [ngModelOptions]="{standalone: true}">
+    <label class="form-check-label" for="incluirImagenImpresion">¿Desea incluir imagen del mobiliario?</label>
+  </div>
+
   <button
     type="button"
     class="btn btn-warning"
@@ -542,6 +594,7 @@
   >
     Volver
   </button>
+  </div>
 </div>
 
   </form>
@@ -566,14 +619,14 @@
           <button
             type="submit"
             (click)="exportToExcel()"
-            class="btn btn-md"
+            class="btn btn-outline-primary"
           >
             Descargar Contratos
           </button>
           <button
             type="submit"
             (click)="exportToExcelAccount()"
-            class="btn btn-default"
+            class="btn btn-outline-primary"
           >
             Descargar A Cuentas
           </button>
@@ -664,6 +717,7 @@
             <th>Eliminar</th>
             <th>Visualizar</th>
             <th>Co. Contrato</th>
+            <th>Cotización</th>
             <th>Cliente</th>
             <th>Fe. Creación</th>
             <th>Fe. Instalación</th>
@@ -700,6 +754,7 @@
             </td>
 
             <td>{{ item.codContract }}</td>
+            <td>{{ item.quotationCod || '-' }}</td>
             <td>{{ item.customer.name }}</td>
             <td>{{ item.createDate.slice(0, 10) }}</td>
             <td>{{ item.installDate.slice(0, 10) }}</td>
@@ -731,21 +786,19 @@
 <!-- Modal eliminar -->
 <ng-template #mymodal let-modal>
   <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title">Eliminar Cliente</h4>
+    <h4 class="modal-title" id="modal-basic-title">Anular Contrato</h4>
     <button
       type="button"
-      class="close"
+      class="btn-close"
       aria-label="Close"
       (click)="modal.dismiss('Cross click')"
-    >
-      <span aria-hidden="true">×</span>
-    </button>
+    ></button>
   </div>
   <div class="modal-body">Desea anular un Contrato?</div>
   <div class="modal-footer">
     <button
       type="button"
-      class="btn btn-outline-success-"
+      class="btn btn-outline-success"
       (click)="deleteContract(); modal.close('Save click')"
     >
       SI
@@ -766,12 +819,10 @@
     <h4 class="modal-title" id="modal-basic-title">Agregar a Cuenta</h4>
     <button
       type="button"
-      class="close"
+      class="btn-close"
       aria-label="Close"
       (click)="modal.dismiss('Cross click')"
-    >
-      <span aria-hidden="true">×</span>
-    </button>
+    ></button>
   </div>
   <div class="modal-body">
     Agregar A cuenta del Contrato
@@ -841,7 +892,7 @@
   <div class="modal-footer">
     <button
       type="button"
-      class="btn btn-outline-success-"
+      class="btn btn-outline-success"
       (click)="addAcount(); modal.close('Save click')"
     >
       SI
@@ -1039,7 +1090,8 @@
     <table class="table table-striped table-bordered table-hover">
       <thead>
         <tr>
-          <th width="40%">Descripción</th>
+          <th width="15%" *ngIf="incluirImagenImpresion">Foto</th>
+          <th width="30%">Descripción</th>
           <th width="10%">Cant.</th>
           <th width="10%" *ngIf="!listarDetalle">P. Unit.</th>
           <th width="20%" *ngIf="!listarDetalle">Importe</th>
@@ -1047,6 +1099,9 @@
       </thead>
       <tbody class="table-group-divider" id="aumentar-letra">
         <tr *ngFor="let item of arrayValuesAccessory; let ind = index">
+          <td *ngIf="incluirImagenImpresion">
+            <img *ngIf="item.imageUrl" [src]="apiUrl + item.imageUrl" alt="" style="max-height: 150px; max-width: 150px;">
+          </td>
           <td>
             <label>
               <ng-container *ngIf="item.description">
@@ -1180,7 +1235,7 @@
             F. Instalación
           </label>
           <label class="form-control" id="aumentar-letra">
-            {{ form.controls['installDate'].value | date: 'dd-MM-yyyy' }}
+            {{ form.controls['installDate'].value | date: 'dd-MM-yyyy':'UTC' }}
           </label>
         </div>
       </div>
@@ -1191,7 +1246,7 @@
             F. Evento
           </label>
           <label class="form-control" id="aumentar-letra">
-            {{ form.controls['eventDate'].value | date: 'dd-MM-yyyy' }}
+            {{ form.controls['eventDate'].value | date: 'dd-MM-yyyy':'UTC' }}
           </label>
         </div>
       </div>
@@ -1202,7 +1257,7 @@
             F. Recojo
           </label>
           <label class="form-control" id="aumentar-letra">
-            {{ form.controls['pickupDate'].value | date: 'dd-MM-yyyy' }}
+            {{ form.controls['pickupDate'].value | date: 'dd-MM-yyyy':'UTC' }}
           </label>
         </div>
       </div>

@@ -1,0 +1,553 @@
+.aa-body {
+  padding: 20px 24px 8px;
+}
+
+.aa-subtitle {
+  color: var(--vp-text-soft);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* ---------- Tarjetas resumen ---------- */
+.aa-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.aa-card {
+  background: #fff;
+  border: 1px solid var(--vp-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.aa-card-danger {
+  background: #FCF1EE;
+  border-color: #EBC7C0;
+}
+
+.aa-card-label {
+  color: var(--vp-text-soft);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: 6px;
+}
+
+.aa-card-value {
+  font-family: var(--vp-font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--vp-primary-dark);
+}
+
+.aa-card-value-date {
+  font-size: 18px;
+}
+
+.aa-card-danger .aa-card-value {
+  color: var(--vp-danger);
+}
+
+.aa-card-sub {
+  font-family: var(--vp-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vp-text-soft);
+}
+
+.aa-card-note {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--vp-text-soft);
+}
+
+.aa-card-danger .aa-card-note {
+  color: #8a4038;
+}
+
+.aa-empty {
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--vp-surface-soft);
+  color: var(--vp-text-soft);
+  font-size: 14px;
+}
+
+/* ---------- Sección / leyenda ---------- */
+.aa-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.aa-section-title {
+  font-size: 15px;
+  margin: 0 0 8px;
+}
+
+.aa-section-title-spaced {
+  margin-top: 22px;
+}
+
+.aa-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--vp-text-soft);
+}
+
+.aa-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.aa-legend-swatch {
+  width: 13px;
+  height: 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.aa-legend-line {
+  width: 2px;
+  height: 12px;
+  background: var(--vp-primary-dark);
+  display: inline-block;
+}
+
+.aa-legend-line-release {
+  width: 0;
+  height: 12px;
+  background: none;
+  border-left: 2px dashed var(--vp-success);
+}
+
+.aa-rule-caption {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--vp-text-soft);
+  font-style: italic;
+}
+
+/* ---------- Eje de meses ---------- */
+.aa-axis {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.aa-axis-spacer {
+  width: 190px;
+  flex-shrink: 0;
+}
+
+.aa-axis-track {
+  position: relative;
+  flex-grow: 1;
+  height: 36px;
+  color: var(--vp-text-soft);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.aa-axis-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-2px);
+  text-transform: capitalize;
+}
+
+.aa-today-pill {
+  position: absolute;
+  top: -2px;
+  transform: translateX(-50%);
+  background: var(--vp-primary-dark);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 1px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.aa-release-pill {
+  position: absolute;
+  top: 17px;
+  transform: translateX(-50%);
+  background: var(--vp-success);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  padding: 1px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  cursor: default;
+  z-index: 1;
+}
+
+/* ---------- Filas de reservas ---------- */
+.aa-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.aa-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 42px;
+}
+
+.aa-label {
+  width: 190px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.aa-label-code {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--vp-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.aa-text-danger {
+  color: var(--vp-danger);
+}
+
+.aa-warn-icon {
+  flex-shrink: 0;
+}
+
+.aa-label-sub {
+  font-size: 11px;
+  color: var(--vp-text-soft);
+}
+
+.aa-track {
+  position: relative;
+  flex-grow: 1;
+  height: 42px;
+}
+
+.aa-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--vp-line);
+}
+
+.aa-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--vp-primary-dark);
+  opacity: .6;
+}
+
+.aa-release-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 2px dashed var(--vp-success);
+  opacity: .8;
+}
+
+.aa-bar {
+  position: absolute;
+  top: 13px;
+  height: 16px;
+  min-width: 6px;
+  border-radius: 5px;
+  background: var(--vp-secondary);
+}
+
+.aa-bar-secondary {
+  background: var(--vp-secondary);
+}
+
+.aa-bar-anomaly {
+  background: repeating-linear-gradient(135deg, #C24E5D 0px, #C24E5D 7px, var(--vp-danger) 7px, var(--vp-danger) 14px);
+  border: 1px solid #8f2c39;
+}
+
+.aa-bar-anomaly-swatch {
+  background: var(--vp-danger);
+}
+
+.aa-clip {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.aa-clip-left {
+  left: 2px;
+}
+
+.aa-clip-right {
+  right: 2px;
+}
+
+/* ---------- Alerta de reserva atípica ---------- */
+.aa-alert {
+  margin-left: 206px;
+  background: #FCF1EE;
+  border: 1px solid #EBC7C0;
+  border-radius: 10px;
+  padding: 9px 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.aa-alert-icon {
+  color: var(--vp-danger);
+  flex-shrink: 0;
+}
+
+.aa-alert-text {
+  flex-grow: 1;
+  font-size: 12.5px;
+  color: #7c3630;
+  line-height: 1.4;
+}
+
+.aa-alert-btn {
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid var(--vp-danger);
+  color: var(--vp-danger);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.aa-alert-btn:hover {
+  background: var(--vp-danger);
+  color: #fff;
+}
+
+/* ---------- Gráfico semanal ---------- */
+.aa-chart {
+  margin-left: 206px;
+  background: #fff;
+  border: 1px solid var(--vp-line);
+  border-radius: 12px;
+  padding: 12px 14px 8px;
+}
+
+.aa-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 96px;
+}
+
+.aa-chart-bar-wrap {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 4px;
+  position: relative;
+  border-radius: 4px;
+}
+
+.aa-chart-bar-wrap-current {
+  background: var(--vp-surface-soft);
+}
+
+.aa-chart-current-tag {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: var(--vp-primary-dark);
+}
+
+.aa-chart-bar {
+  width: 100%;
+  min-height: 3px;
+  border-radius: 3px 3px 0 0;
+}
+
+.aa-bar-danger {
+  background: var(--vp-danger);
+}
+
+.aa-bar-warning {
+  background: var(--vp-warning);
+}
+
+.aa-bar-ok {
+  background: var(--vp-secondary);
+}
+
+.aa-bar-success {
+  background: var(--vp-success);
+}
+
+.aa-chart-label {
+  font-size: 9.5px;
+  color: var(--vp-text-soft);
+  white-space: nowrap;
+}
+
+/* ---------- Detalle día a día ---------- */
+.aa-hint {
+  margin-left: 206px;
+  font-size: 11.5px;
+  color: var(--vp-text-soft);
+  margin-bottom: 6px;
+  margin-top: -2px;
+}
+
+.aa-day-list {
+  margin-left: 206px;
+  background: #fff;
+  border: 1px solid var(--vp-line);
+  border-radius: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.aa-day-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--vp-surface-soft);
+  font-size: 12.5px;
+}
+
+.aa-day-row:last-child {
+  border-bottom: none;
+}
+
+.aa-day-row-clickable {
+  cursor: pointer;
+}
+
+.aa-day-row-clickable:hover {
+  background: var(--vp-surface-soft);
+}
+
+.aa-day-range {
+  width: 110px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: var(--vp-text);
+  text-transform: capitalize;
+}
+
+.aa-day-chevron {
+  flex-shrink: 0;
+  color: var(--vp-text-soft);
+  transition: transform .15s ease;
+}
+
+.aa-day-chevron-open {
+  transform: rotate(90deg);
+}
+
+.aa-day-detail {
+  flex-grow: 1;
+  color: var(--vp-text-soft);
+}
+
+.aa-day-avail {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--vp-success);
+}
+
+.aa-day-row-full .aa-day-avail {
+  color: var(--vp-danger);
+}
+
+.aa-day-row-full {
+  background: #FCF1EE;
+}
+
+.aa-day-row-free .aa-day-detail {
+  color: var(--vp-text-soft);
+  opacity: .75;
+}
+
+.aa-day-contracts {
+  background: var(--vp-surface-soft);
+  border-bottom: 1px solid var(--vp-surface-soft);
+  padding: 4px 14px 4px 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aa-day-contract-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.aa-day-contract-code {
+  font-weight: 600;
+  color: var(--vp-text);
+  flex-shrink: 0;
+}
+
+.aa-day-contract-customer {
+  flex-grow: 1;
+  color: var(--vp-text-soft);
+}
+
+.aa-day-contract-amount {
+  flex-shrink: 0;
+  color: var(--vp-text-soft);
+}
+
+@media (max-width: 680px) {
+  .aa-cards {
+    grid-template-columns: 1fr;
+  }
+  .aa-axis-spacer,
+  .aa-label {
+    width: 120px;
+  }
+  .aa-alert,
+  .aa-chart,
+  .aa-hint,
+  .aa-day-list {
+    margin-left: 0;
+  }
+}

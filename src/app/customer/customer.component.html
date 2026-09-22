@@ -1,5 +1,14 @@
-<div id="formulario" *ngIf="condicion ; else otraPlantilla"> 
-  <div class="row" id="salto" >
+<div id="formulario" [ngClass]="{ 'quick-add-modal': activeModal }" *ngIf="condicion ; else otraPlantilla">
+  <div class="modal-header border-0 pb-0" *ngIf="activeModal">
+    <h5 class="modal-title">Agregar Cliente</h5>
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="closeQuickAdd()">
+    </button>
+  </div>
+  <div class="row" id="salto" *ngIf="!activeModal">
     <a>Agregar Clientes</a>
   </div>
   <div class="row" id="salto" >
@@ -32,9 +41,15 @@
   </div>
   <div class="row" id="salto">
     <div class="col-lg-3">
-      <button type="submit" (click)="onSubmit()" class="btn btn-primary" *ngIf="mostrarBotones">Agregar</button>
-      <button type="submit" (click)="updateCustomer()" class="btn btn-primary" *ngIf="!mostrarBotones">Actualizar</button>
-      <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">Volver</button>
+      <button type="submit" (click)="onSubmit()" class="btn btn-primary" [disabled]="isSubmitting" *ngIf="mostrarBotones">
+        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        {{ isSubmitting ? 'Guardando...' : 'Agregar' }}
+      </button>
+      <button type="submit" (click)="updateCustomer()" class="btn btn-primary" [disabled]="isSubmitting" *ngIf="!mostrarBotones">
+        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        {{ isSubmitting ? 'Guardando...' : 'Actualizar' }}
+      </button>
+      <button type="submit" (click)="onSubmitExit()" class="btn btn-danger">{{ activeModal ? 'Cancelar' : 'Volver' }}</button>
   </div>
   </div>
 </div>
@@ -48,6 +63,22 @@
         </div>
       </form>
     </div>
+    <div class="row" id="salto">
+      <div class="col-lg-8">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por nombre, documento o dirección"
+            [(ngModel)]="searchValue"
+            (keyup.enter)="onGlobalSearch()"
+            name="customerSearch"
+          />
+          <button type="button" class="btn btn-primary" (click)="onGlobalSearch()">Buscar</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="clearGlobalSearch()">Limpiar</button>
+        </div>
+      </div>
+    </div>
     <div class="row" id="salto" >
       <table>
         <thead>
@@ -58,6 +89,7 @@
             <th>DNI</th>
             <th>Direccion</th>
             <th>Telefono</th>
+            <th>Seguimiento</th>
           </tr>
         </thead>
         <tbody>
@@ -68,6 +100,7 @@
             <td>{{ item.documentNumber }}</td>
             <td>{{ item.address }}</td>
             <td>{{ item.phone }}</td>
+            <td><button type="button" class="btn btn-outline-secondary btn-sm" (click)="verSeguimiento(item)">Dar seguimiento</button></td>
           </tr>
         </tbody>
       </table>
@@ -78,15 +111,13 @@
 <ng-template #mymodal let-modal>
   <div class="modal-header">
     <h4 class="modal-title" id="modal-basic-title">Eliminar Cliente</h4>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-      <span aria-hidden="true">×</span>
-    </button>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
   </div>
   <div class="modal-body">
     Desea Eliminar un Cliente?
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-outline-success-" (click)="deleteAccesosry();modal.close('Save click')">SI</button>
+    <button type="button" class="btn btn-outline-success" (click)="deleteAccesosry();modal.close('Save click')">SI</button>
     <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">NO</button>
   </div>
 </ng-template>

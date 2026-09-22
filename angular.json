@@ -59,6 +59,20 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
+            },
+            "e2e": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.e2e.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -71,6 +85,9 @@
             },
             "development": {
               "browserTarget": "vintage_party:build:development"
+            },
+            "e2e": {
+              "browserTarget": "vintage_party:build:e2e"
             }
           },
           "defaultConfiguration": "development"

@@ -1,0 +1,209 @@
+<div class="modal-header">
+  <h4 class="modal-title" id="modal-basic-title">Seguimiento · {{ customer.name }}</h4>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body ch-body">
+
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" role="status" aria-hidden="true"></div>
+  </div>
+
+  <div *ngIf="!loading && errorMsg" class="alert alert-danger">{{ errorMsg }}</div>
+
+  <ng-container *ngIf="!loading && !errorMsg">
+
+    <div class="ch-identity">
+      <div class="ch-meta">
+        <span *ngIf="customer.documentNumber">DNI/RUC <strong>{{ customer.documentNumber }}</strong></span>
+        <span *ngIf="customer.phone">📞 <strong>{{ customer.phone }}</strong></span>
+        <span *ngIf="customer.address">📍 {{ customer.address }}</span>
+        <span *ngIf="clienteDesdeLabel">Cliente desde <strong>{{ clienteDesdeLabel }}</strong></span>
+      </div>
+      <div class="ch-alert-balance" *ngIf="saldoPendiente > 0">
+        <span>Saldo pendiente · contrato {{ contratoConSaldo }}</span>
+        <span class="ch-amount">S/ {{ saldoPendiente.toFixed(2) }}</span>
+      </div>
+    </div>
+
+    <div class="ch-stats">
+      <div class="ch-stat">
+        <span class="ch-label">Contratos</span>
+        <span class="ch-value">{{ totalContratos }}</span>
+      </div>
+      <div class="ch-stat">
+        <span class="ch-label">Cotizaciones</span>
+        <span class="ch-value">{{ totalCotizaciones }}</span>
+      </div>
+      <div class="ch-stat">
+        <span class="ch-label">Facturado histórico</span>
+        <span class="ch-value">S/ {{ facturado.toFixed(2) }}</span>
+      </div>
+      <div class="ch-stat" [class.ch-stat-warn]="saldoPendiente > 0">
+        <span class="ch-label">Saldo pendiente</span>
+        <span class="ch-value">S/ {{ saldoPendiente.toFixed(2) }}</span>
+      </div>
+      <div class="ch-stat">
+        <span class="ch-label">Última actividad</span>
+        <span class="ch-value ch-value-sm">{{ ultimaActividadLabel }}</span>
+        <span class="ch-sub">{{ ultimaActividadSub }}</span>
+      </div>
+    </div>
+
+    <div class="ch-empty" *ngIf="totalContratos === 0 && totalCotizaciones === 0">
+      Este cliente todavía no tiene contratos ni cotizaciones registradas.
+    </div>
+
+    <div class="ch-tabs" *ngIf="totalContratos > 0 || totalCotizaciones > 0">
+      <div class="ch-tab-list" role="tablist">
+        <button type="button" class="ch-tab-btn" [class.ch-tab-active]="activeTab === 'contratos'" (click)="setTab('contratos')">
+          Contratos <span class="ch-count">{{ totalContratos }}</span>
+        </button>
+        <button type="button" class="ch-tab-btn" [class.ch-tab-active]="activeTab === 'cotizaciones'" (click)="setTab('cotizaciones')">
+          Cotizaciones <span class="ch-count">{{ totalCotizaciones }}</span>
+        </button>
+        <button type="button" class="ch-tab-btn" [class.ch-tab-active]="activeTab === 'mobiliario'" (click)="setTab('mobiliario')">
+          Mobiliario alquilado <span class="ch-count">{{ rankRows.length }}</span>
+        </button>
+      </div>
+
+      <!-- Contratos -->
+      <div class="ch-panel" *ngIf="activeTab === 'contratos'">
+        <div class="ch-table-wrap" *ngIf="contracts.length > 0">
+          <table class="ch-table">
+            <thead>
+              <tr>
+                <th>Código</th><th>Evento</th><th>Zona</th><th>Estado</th>
+                <th class="ch-num">Monto</th><th class="ch-num">Abonado</th><th class="ch-num">Saldo</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of contracts">
+                <td class="ch-code">{{ c.codContract }}</td>
+                <td>{{ c.eventDateLabel }}</td>
+                <td>{{ c.district }}</td>
+                <td><span class="ch-pill" [ngClass]="c.pillClass">{{ c.status }}</span></td>
+                <td class="ch-num">{{ c.amount.toFixed(2) }}</td>
+                <td class="ch-num">{{ c.abonado.toFixed(2) }}</td>
+                <td class="ch-num" [class.ch-saldo-pos]="c.saldo > 0">{{ c.saldo.toFixed(2) }}</td>
+                <td><button type="button" class="ch-row-link" (click)="verContrato(c._id)">Ver</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ch-empty" *ngIf="contracts.length === 0">Sin contratos registrados.</div>
+      </div>
+
+      <!-- Cotizaciones -->
+      <div class="ch-panel" *ngIf="activeTab === 'cotizaciones'">
+        <div class="ch-table-wrap" *ngIf="quotations.length > 0">
+          <table class="ch-table">
+            <thead>
+              <tr>
+                <th>Código</th><th>Emitida</th><th>Evento</th><th>Estado</th><th class="ch-num">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let q of quotations">
+                <td class="ch-code">{{ q.codQuotation }}</td>
+                <td>{{ q.createDateLabel }}</td>
+                <td>{{ q.eventDateLabel }}</td>
+                <td>
+                  <span class="ch-pill" [ngClass]="q.pillClass">{{ q.statusLabel }}</span>
+                  <div class="ch-from-quote" *ngIf="q.associatedContractCod">→ contrato {{ q.associatedContractCod }}</div>
+                </td>
+                <td class="ch-num">{{ q.amount.toFixed(2) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ch-empty" *ngIf="quotations.length === 0">Sin cotizaciones registradas.</div>
+      </div>
+
+      <!-- Mobiliario -->
+      <div class="ch-panel" *ngIf="activeTab === 'mobiliario'">
+        <ng-container *ngIf="rankRows.length > 0; else sinMobiliario">
+          <p class="ch-panel-note">Calculado a partir de los ítems incluidos en sus {{ totalContratos }} contratos — sin necesidad de guardar datos nuevos.</p>
+
+          <div class="ch-chart-section">
+            <div class="ch-chart-head">
+              <h6 class="ch-chart-title">Top mobiliario</h6>
+              <button type="button" class="ch-table-toggle" (click)="showTopTable = !showTopTable">
+                {{ showTopTable ? 'Ocultar tabla' : 'Ver como tabla' }}
+              </button>
+            </div>
+            <p class="ch-chart-subtitle">Ordenado por frecuencia: en cuántos de sus eventos apareció cada ítem — no por cantidad, para no dejar afuera a los que se alquilan de a uno (arcos, photobooth).</p>
+
+            <div class="ch-rank-list">
+              <div class="ch-rank-row" *ngFor="let r of rankRows; let i = index" [class.ch-rank-top]="r.isTop"
+                   [title]="r.description + ' — ' + r.unidades + ' unidades en total · última vez ' + r.lastDateLabel">
+                <span class="ch-rank-badge">{{ i + 1 }}</span>
+                <div class="ch-rank-info">
+                  <div class="ch-rank-name">{{ r.description }}</div>
+                  <div class="ch-rank-meta">{{ r.unidades }} unidades en total · última vez {{ r.lastDateLabel }}</div>
+                </div>
+                <div class="ch-rank-track-wrap">
+                  <div class="ch-rank-track"><div class="ch-rank-fill" [style.width.%]="r.barPct"></div></div>
+                  <span class="ch-rank-value">{{ r.eventos }} evento{{ r.eventos === 1 ? '' : 's' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="ch-table-wrap ch-twin-table" *ngIf="showTopTable">
+              <table class="ch-table">
+                <thead><tr><th>Mobiliario</th><th class="ch-num">Eventos</th><th class="ch-num">Unidades</th><th>Última vez</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let r of rankRows">
+                    <td>{{ r.description }}</td><td class="ch-num">{{ r.eventos }}</td><td class="ch-num">{{ r.unidades }}</td><td>{{ r.lastDateLabel }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="ch-chart-section" *ngIf="peakMonthLabel">
+            <div class="ch-chart-head">
+              <h6 class="ch-chart-title">Tendencia por mes</h6>
+              <button type="button" class="ch-table-toggle" (click)="showTrendTable = !showTrendTable">
+                {{ showTrendTable ? 'Ocultar tabla' : 'Ver como tabla' }}
+              </button>
+            </div>
+            <p class="ch-chart-subtitle">Eventos por mes, sumando todo su historial (no solo este año).</p>
+
+            <div class="ch-month-chart">
+              <div class="ch-month-bars">
+                <div class="ch-month-bar" *ngFor="let m of monthBars" [class.ch-month-peak]="m.isPeak"
+                     [style.height.%]="m.heightPct" [title]="m.fullLabel + ': ' + m.count + (m.count === 1 ? ' evento' : ' eventos')">
+                  <span class="ch-bar-cap" *ngIf="m.isPeak">{{ m.count }}</span>
+                </div>
+              </div>
+              <div class="ch-month-axis">
+                <span *ngFor="let m of monthBars">{{ m.label }}</span>
+              </div>
+            </div>
+            <p class="ch-chart-caption">
+              Su mes más frecuente es <strong>{{ peakMonthLabel }}</strong> — {{ peakMonthCount }} de sus {{ totalContratos }} eventos fueron ahí.
+            </p>
+
+            <div class="ch-table-wrap ch-twin-table" *ngIf="showTrendTable">
+              <table class="ch-table">
+                <thead><tr><th>Mes</th><th class="ch-num">Eventos</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let m of monthBars"><td>{{ m.fullLabel }}</td><td class="ch-num">{{ m.count }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #sinMobiliario>
+          <div class="ch-empty">Todavía no hay mobiliario alquilado en el historial de este cliente.</div>
+        </ng-template>
+      </div>
+
+    </div>
+  </ng-container>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()">Cerrar</button>
+</div>

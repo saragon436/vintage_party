@@ -4,6 +4,12 @@ import { catchError, map, Observable, of, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { WeekSummaryDto } from '../kardex/models/weekly-summary.model';
 import { HttpParams } from '@angular/common/http';
+
+export interface DistrictSummary {
+  district: string;
+  count: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -63,6 +69,18 @@ export class ContractService {
     return this.http.get<any[]>(`${environment.apiUrl}/contract/year/${year}`, { headers });
   }
 
+  getPendingBalanceByCustomer(customerId: string, headers: HttpHeaders): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/contract/customer/${customerId}/pending`, { headers });
+  }
+
+  getContractsByCustomer(customerId: string, headers: HttpHeaders): Observable<any[]> {
+    return this.http.get<any[]>(`${environment.apiUrl}/contract/customer/${customerId}`, { headers });
+  }
+
+  getCustomerIdsWithPendingBalance(headers: HttpHeaders): Observable<{ customerIds: string[] }> {
+    return this.http.get<{ customerIds: string[] }>(`${environment.apiUrl}/contract/pending-customers`, { headers });
+  }
+
   listContractById(id: string, headers: HttpHeaders): Observable<any> {
     var response: any;
     return this.http.get(environment.apiUrl + "/contract/" + id, { headers, observe: response }).pipe(
@@ -72,6 +90,15 @@ export class ContractService {
         throw (e)
       }),
       map(x => x),
+    )
+  }
+
+  getAccessoryReservations(accessoryId: string, headers: HttpHeaders): Observable<any[]> {
+    return this.http.get<any[]>(environment.apiUrl + "/contract/accessory/" + accessoryId + "/reservations", { headers }).pipe(
+      catchError(e => {
+        console.error('Error al obtener reservas del mobiliario', e)
+        throw (e)
+      }),
     )
   }
 
@@ -133,5 +160,21 @@ export class ContractService {
     return this.http.get<any>(`${environment.apiUrl}/contract/${id}`, { headers });
   }
 
+  // 🔥 NUEVO: mapa de calor de alquileres por distrito (módulo de almacén y entrega)
+  getDistrictSummary(headers: HttpHeaders, fromDate?: string, toDate?: string): Observable<DistrictSummary[]> {
+    let params = new HttpParams();
+    if (fromDate) params = params.set('fromDate', fromDate);
+    if (toDate) params = params.set('toDate', toDate);
+
+    return this.http.get<DistrictSummary[]>(`${environment.apiUrl}/contract/summary/by-district`, { headers, params });
+  }
+
+  getContractsByDistrict(district: string, headers: HttpHeaders, fromDate?: string, toDate?: string): Observable<any[]> {
+    let params = new HttpParams();
+    if (fromDate) params = params.set('fromDate', fromDate);
+    if (toDate) params = params.set('toDate', toDate);
+
+    return this.http.get<any[]>(`${environment.apiUrl}/contract/by-district/${encodeURIComponent(district)}`, { headers, params });
+  }
 
 }

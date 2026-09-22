@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient,HttpHeaders } from '@angular/common/http';
+import { HttpClient,HttpHeaders,HttpParams } from '@angular/common/http';
 import { catchError, map, Observable,of, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -22,10 +22,14 @@ export class CustomerService {
     )
   }
 
-  listCustomer(headers: HttpHeaders): Observable<any>{
+  listCustomer(headers: HttpHeaders, search?: string): Observable<any>{
     var response:any;
-    return this.http.get(environment.apiUrl+"/customer", { headers, observe: response }).pipe(
-      catchError( e => {     
+    let params = new HttpParams();
+    if (search && search.trim() !== '') {
+      params = params.set('search', search.trim());
+    }
+    return this.http.get(environment.apiUrl+"/customer", { headers, params, observe: response }).pipe(
+      catchError( e => {
         console.error('Error de agregar', e)
         throw (e)
       }),

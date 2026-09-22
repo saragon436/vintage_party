@@ -5,11 +5,12 @@ import {
   distinctUntilChanged,
   map,
   Observable,
+  of,
   Subject,
   takeUntil,
 } from 'rxjs';
 import { CustomerService } from '../Servicios/customer.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { NgbModal, ModalDismissReasons, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { CustomerComponent } from '../customer/customer.component';
@@ -26,12 +27,30 @@ import { NgSelectComponent } from '@ng-select/ng-select/public-api';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import { distritosLima } from '../utils/distritos-lima';
+import { environment } from 'src/environments/environment';
+import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
+import { AccessoryAvailabilityComponent } from '../accessory/accessory-availability/accessory-availability.component';
 
 interface Customer {
+  _id?: string;
   name: string;
   documentNumber: string;
   address: string;
   phone: string;
+}
+
+interface PendingContractSummary {
+  _id: string;
+  codContract: string;
+  eventDate: string;
+  status: string;
+  saldo: number;
+}
+
+interface PendingBalance {
+  hasPending: boolean;
+  total: number;
+  contracts: PendingContractSummary[];
 }
 
 interface Accessory {
@@ -48,6 +67,7 @@ interface Accessory {
   price: number;
   items?: any[];
   status: boolean;
+  imageUrl?: string;
 }
 
 interface onAccount {
@@ -77,6 +97,7 @@ interface Contract {
   onAccount: any[];
   customer: { name: string; documentNumber: string; phone: string };
   userCreate: { userName: string };
+  quotationCod?: string;
 }
 
 @Component({
@@ -110,9 +131,28 @@ export class ContractComponent {
   numberContract = '';
   cliente: any;
   idItemDelete = '';
+  apiUrl = environment.apiUrl;
+  // Cantidad que este contrato ya tenía de cada mobiliario al abrirlo para
+  // editar (id de accesorio -> cantidad), junto con las fechas de esa reserva.
+  // Sirve para calcular el techo real al reagregar/aumentar un ítem que este
+  // mismo contrato ya tenía asignado, sin permitir pasarse del total
+  // disponible de verdad. Solo aplica si las fechas NO cambiaron: esa
+  // cantidad estaba reservada para esas fechas puntuales, no para otras.
+  originalAccessoryAmounts: Map<string, number> = new Map();
+  originalInstallDate = '';
+  originalPickupDate = '';
   closeResult: string = '';
   searchValue: string = '';
   selectedCustomer = {};
+
+  // 👇 Aviso de saldo pendiente al seleccionar cliente (solo informativo,
+  // no bloquea guardar/actualizar el contrato).
+  pendingBalance: PendingBalance | null = null;
+  loadingPendingBalance = false;
+  showPendingDetail = false;
+  // ids de clientes con saldo pendiente, para marcarlos en el propio
+  // desplegable (antes de elegir uno) — ver loadPendingCustomerIds().
+  pendingCustomerIds = new Set<string>();
   phone = '';
   documentNumber = '';
   operacion_1 = '';
@@ -134,12 +174,14 @@ export class ContractComponent {
 
   condicion = false;
   mostrarBotones = false;
+  incluirImagenImpresion = false; // check "¿Desea incluir imagen?" antes de imprimir el contrato
   codUser = '';
   _idContrat = '';
   A_cuenta_fecha_1 = '';
   selectStatus = '';
   A_cuenta_2 = 0;
   isDisabled = false;
+  isSaving = false;
   listarDetalle = false;
 
   constructor(
@@ -149,15 +191,18 @@ export class ContractComponent {
     private contractService: ContractService,
     private authenticationToken: AuthenticationToken,
     private route: Router,
+    private activatedRoute: ActivatedRoute,
     //ublic activeModal: NgbActiveModal,  // 👈 aquí
     @Optional() public activeModal: NgbActiveModal,   // 👈 OPCIONAL
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private confirmDialog: ConfirmDialogService
   ) {
     this.unsubscribe = new Subject();
     this.customer$ = new Observable<Customer[]>();
     this.accessory$ = new Observable<Accessory[]>();
 
     this.form = this.formBuilder.group({
+      _id: new FormControl(''),
       search: new FormControl(''),
       searchAccessory: new FormControl(''),
       customer: new FormControl('', Validators.required),
@@ -174,7 +219,10 @@ export class ContractComponent {
       hourIniPickup: new FormControl('', Validators.required),
       hourFinPickup: new FormControl('', Validators.required),
       amount: new FormControl(0, Validators.required),
-      comment: new FormControl('', Validators.required),
+      // No obligatorio: un contrato creado desde una cotización hereda su
+      // comentario (a menudo vacío), y no hay razón de negocio para bloquear
+      // guardar/actualizar solo por no tener un comentario.
+      comment: new FormControl(''),
       price: new FormControl(0, Validators.required),
       listAccessories: this.formBuilder.array([]),
       onAccount: this.formBuilder.array([]),
@@ -212,12 +260,25 @@ export class ContractComponent {
     this.selectedStatus = 'Por Pagar';
 
     this.findClient();
+    this.loadPendingCustomerIds();
     this.searchStock();
 
     // 👇 AQUÍ DECIDIMOS el modo:
+    // - Si viene un ?open=<id> en la URL (ej. tras generar el contrato desde
+    //   una cotización) -> abrir ese contrato directamente en edición
     // - Si viene desde calendar (modal) -> cargamos ese contrato directamente
     // - Si NO, se comporta como siempre: lista de recientes
-    if (this.initialContract) {
+    const openId = this.activatedRoute.snapshot.queryParamMap.get('open');
+    if (openId) {
+      const headers = new HttpHeaders().set(
+        'Authorization',
+        'Bearer ' + this.authenticationToken.myValue
+      );
+      this.contractService.listContractById(openId, headers).subscribe(
+        (response) => this.cargarContratoDesdeObjeto(response),
+        () => this.loadRecentContracts()
+      );
+    } else if (this.initialContract) {
       this.cargarContratoDesdeObjeto(this.initialContract);
     } else {
       this.loadRecentContracts(); // por defecto, contratos de últimos 90 días
@@ -266,6 +327,7 @@ export class ContractComponent {
     this.customer$ = new Observable<Customer[]>();
     this.accessory$ = new Observable<Accessory[]>();
     this.form = this.formBuilder.group({
+      _id: new FormControl(''),
       search: new FormControl(''),
       searchAccessory: new FormControl(''),
       customer: new FormControl('', Validators.required),
@@ -276,7 +338,10 @@ export class ContractComponent {
       createDate: new FormControl('', Validators.required),
       pickupDate: new FormControl('', Validators.required),
       amount: new FormControl(0, Validators.required),
-      comment: new FormControl('', Validators.required),
+      // No obligatorio: un contrato creado desde una cotización hereda su
+      // comentario (a menudo vacío), y no hay razón de negocio para bloquear
+      // guardar/actualizar solo por no tener un comentario.
+      comment: new FormControl(''),
       address: new FormControl('', Validators.required),
       district: new FormControl('', Validators.required),
       hourIni: new FormControl('', Validators.required),
@@ -295,6 +360,11 @@ export class ContractComponent {
     this.phone = '';
     this.documentNumber = '';
     this.selectStatus = '';
+    this.originalAccessoryAmounts.clear();
+    this.originalInstallDate = '';
+    this.originalPickupDate = '';
+    this.pendingBalance = null;
+    this.showPendingDetail = false;
   }
 
   // ==========================
@@ -307,6 +377,99 @@ export class ContractComponent {
       'Bearer ' + this.authenticationToken.myValue
     );
     this.customer$ = this.customerService.listCustomer(headers);
+  }
+
+  // 👇 Trae de una sola vez qué clientes tienen saldo pendiente, para
+  // marcarlos en el propio desplegable antes de elegir uno.
+  loadPendingCustomerIds() {
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      'Bearer ' + this.authenticationToken.myValue
+    );
+    this.contractService.getCustomerIdsWithPendingBalance(headers).subscribe({
+      next: (result) => {
+        this.pendingCustomerIds = new Set(result?.customerIds || []);
+      },
+      error: () => {
+        this.pendingCustomerIds = new Set();
+      },
+    });
+  }
+
+  hasPendingDebt(item: any): boolean {
+    return !!item?._id && this.pendingCustomerIds.has(item._id);
+  }
+
+  // 👇 Se dispara al elegir un cliente en el ng-select (o al cargar un
+  // contrato existente para editar). Solo informa: nunca bloquea guardar.
+  onCustomerChange(item: any) {
+    this.pendingBalance = null;
+    this.showPendingDetail = false;
+
+    const customerId = item?._id || item?.id;
+    if (!customerId) {
+      return;
+    }
+
+    this.loadingPendingBalance = true;
+    const headers = new HttpHeaders().set(
+      'Authorization',
+      'Bearer ' + this.authenticationToken.myValue
+    );
+    this.contractService.getPendingBalanceByCustomer(customerId, headers).subscribe({
+      next: (result) => this.applyPendingBalance(result),
+      error: () => {
+        this.loadingPendingBalance = false;
+        this.pendingBalance = null;
+      },
+    });
+  }
+
+  // Si estamos editando un contrato, ese mismo contrato puede venir en la
+  // respuesta (es el que tiene el saldo pendiente) — lo excluimos para no
+  // avisar sobre el contrato que ya se está editando.
+  private applyPendingBalance(result: PendingBalance) {
+    this.loadingPendingBalance = false;
+    const contracts = (result?.contracts || []).filter(
+      (c) => c._id !== this._idContrat
+    );
+    const total = contracts.reduce((sum, c) => sum + (c.saldo || 0), 0);
+    this.pendingBalance = { hasPending: contracts.length > 0, total, contracts };
+  }
+
+  togglePendingDetail() {
+    this.showPendingDetail = !this.showPendingDetail;
+  }
+
+  // 👇 Buscador de cliente sin resultados -> abrir CustomerComponent en
+  // modo alta rápida (ver customer.component.ts: quickAddName/activeModal).
+  openAddCustomerModal(searchTerm: string) {
+    const modalRef = this.modalService.open(CustomerComponent, { centered: true });
+    modalRef.componentInstance.quickAddName = searchTerm || '';
+
+    modalRef.result.then(
+      (createdCustomer) => {
+        if (!createdCustomer) {
+          return;
+        }
+        const headers = new HttpHeaders().set(
+          'Authorization',
+          'Bearer ' + this.authenticationToken.myValue
+        );
+        this.customerService.listCustomer(headers).subscribe((list) => {
+          const customers = list || [];
+          this.customer$ = of(customers);
+          const match =
+            customers.find((c: Customer) => c._id === createdCustomer._id) ||
+            createdCustomer;
+          this.form.get('customer')?.setValue(match);
+          this.onCustomerChange(match);
+        });
+      },
+      () => {
+        // modal cerrado sin guardar: no hacer nada
+      }
+    );
   }
 
   // 🔹 contratos recientes (últimos 90 días)
@@ -582,6 +745,21 @@ export class ContractComponent {
         return;
       }
 
+      // Si este contrato ya tenía asignado este mismo mobiliario (antes de
+      // borrarlo de la lista) Y las fechas siguen siendo las mismas con las
+      // que se cargó, su techo real no es solo el stock libre global: es ese
+      // stock libre MÁS lo que ya tenía, porque esa cantidad sigue siendo
+      // suya para esas fechas puntuales. Si la fecha cambió, esa reserva
+      // vieja no aplica a la fecha nueva, así que no se suma (evita mostrar
+      // disponibilidad inflada, como 34 en vez de 30 al mover a un día libre).
+      const mismasFechas =
+        this.form.controls['installDate'].value === this.originalInstallDate &&
+        this.form.controls['pickupDate'].value === this.originalPickupDate;
+      const yaTenia = mismasFechas
+        ? this.originalAccessoryAmounts.get(itemSelected?._id) || 0
+        : 0;
+      const techoReal = (itemSelected?.stock || 0) + yaTenia;
+
       this.arrayAccessory.push(
         this.formBuilder.group({
           id: new FormControl(itemSelected?._id),
@@ -595,12 +773,13 @@ export class ContractComponent {
           bottom: itemSelected?.bottom,
           amount: new FormControl(1, [
             Validators.required,
-            Validators.max(itemSelected?.stock || 0),
+            Validators.max(techoReal),
             Validators.min(1),
           ]),
-          stock: new FormControl(itemSelected?.stock),
+          stock: new FormControl(techoReal),
           price: new FormControl(itemSelected?.price),
           items: [itemSelected?.items],
+          imageUrl: itemSelected?.imageUrl || '',
         })
       );
     }
@@ -648,12 +827,46 @@ export class ContractComponent {
     this.totalBalance = this.total - this.totalOnAccount;
   }
 
-  onDeleteItem(index: number) {
+  openAvailability(item: any) {
+    // El control "stock" de esta fila es el TECHO disponible para las
+    // fechas de ESTE contrato (ver comentario de originalAccessoryAmounts
+    // más arriba), no el stock total del mobiliario — para eso hay que
+    // pedirlo aparte antes de abrir el modal, si no las tarjetas del
+    // resumen (disponible/reservado) salen mal calculadas.
+    const accessoryId = item.get('id')?.value;
+    const description = item.get('description')?.value;
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    this.accessoryService.listAccessory(headers).subscribe((list: any[]) => {
+      const found = (list || []).find((a) => a._id === accessoryId);
+      const modalRef = this.modalService.open(AccessoryAvailabilityComponent, { centered: true, size: 'xl' });
+      modalRef.componentInstance.accessory = {
+        _id: accessoryId,
+        description: found?.description || description,
+        stock: found?.stock ?? 0,
+      };
+    });
+  }
+
+  async onDeleteItem(index: number) {
+    const confirmado = await this.confirmDialog.confirm(
+      '¿Desea eliminar este mobiliario del contrato?',
+      'Eliminar Mobiliario'
+    );
+    if(!confirmado){
+      return;
+    }
     this.arrayAccessory.removeAt(index);
     this.sumarValores();
   }
 
-  onDeleteItemOnAccount(index: number) {
+  async onDeleteItemOnAccount(index: number) {
+    const confirmado = await this.confirmDialog.confirm(
+      '¿Desea eliminar este pago a cuenta?',
+      'Eliminar Pago'
+    );
+    if(!confirmado){
+      return;
+    }
     this.arrayOnAccount.removeAt(index);
     this.sumarValoresOnAccount();
   }
@@ -677,7 +890,7 @@ export class ContractComponent {
 
   openAcount(content: any) {
     this.modalService
-      .open(content, { ariaLabelledBy: 'modal-basic-title' })
+      .open(content, { ariaLabelledBy: 'modal-basic-title', centered: true })
       .result.then(
         (result) => {
           this.closeResult = `Closed with: ${result}`;
@@ -691,7 +904,7 @@ export class ContractComponent {
   open(content: any, valor: string) {
     this.idItemDelete = valor;
     this.modalService
-      .open(content, { ariaLabelledBy: 'modal-basic-title' })
+      .open(content, { ariaLabelledBy: 'modal-basic-title', centered: true })
       .result.then(
         (result) => {
           this.closeResult = `Closed with: ${result}`;
@@ -765,7 +978,7 @@ export class ContractComponent {
   }
 
   onSave() {
-    if (this.form.valid && this.isDisabled == false) {
+    if (this.form.valid && this.isDisabled == false && this.isSaving == false) {
       if (!this.mostrarBotones) {
         const customerValue = this.form.controls['customer'].value;
         if (!(typeof customerValue === 'object' && customerValue !== null)) {
@@ -776,35 +989,74 @@ export class ContractComponent {
         'Authorization',
         'Bearer ' + this.authenticationToken.myValue
       );
-      const values = { ...this.form.value };
-      this.contractService.saveContract(values, headers).subscribe((resp) => {
-        this.isDisabled = true;
-        this.numberContract = resp.codContract;
-        this.codUser = this.authenticationToken.user;
-        this.customerName = resp.customer.name;
-        this.phone = resp.customer.phone;
-        this.documentNumber = resp.customer.documentNumber;
-        this.startTimer();
-      });
+      // onSave() solo crea contratos nuevos: _id nunca debe mandarse aquí
+      // (el formulario lo trae vacío desde limpiar()/reset, y un string vacío
+      // rompe el cast a ObjectId del backend).
+      const { _id, ...values } = this.form.value;
+      this.isSaving = true;
+      this.contractService.saveContract(values, headers).subscribe(
+        (resp) => {
+          this.isSaving = false;
+          this.isDisabled = true;
+          this.numberContract = resp.codContract;
+          this.codUser = this.authenticationToken.user;
+          this.customerName = resp.customer.name;
+          this.phone = resp.customer.phone;
+          this.documentNumber = resp.customer.documentNumber;
+          this.startTimer();
+        },
+        () => {
+          this.isSaving = false;
+        }
+      );
     }
   }
 
-  onUpdate() {
-    if (this.form.valid && this.isDisabled == false) {
+  async onUpdate() {
+    if (this.form.valid && this.isDisabled == false && this.isSaving == false) {
+      const confirmado = await this.confirmDialog.confirm(
+        '¿Desea actualizar este contrato?',
+        'Actualizar Contrato'
+      );
+      if (!confirmado) {
+        return;
+      }
       const headers = new HttpHeaders().set(
         'Authorization',
         'Bearer ' + this.authenticationToken.myValue
       );
-      const values = { ...this.form.value };
-      this.contractService.saveContract(values, headers).subscribe((resp) => {
-        this.isDisabled = true;
-        this.numberContract = resp.codContract;
-        this.codUser = this.authenticationToken.user;
-        this.customerName = resp.customer.name;
-        this.phone = resp.customer.phone;
-        this.documentNumber = resp.customer.documentNumber;
-        this.startTimer();
-      });
+      // Solo los campos que este formulario realmente edita. _id identifica
+      // el contrato existente: por eso esto llama a PUT /contract (actualizar)
+      // en vez de a POST /contract (crear), que es lo que generaba un
+      // contrato duplicado con código nuevo cada vez que se "actualizaba".
+      // installDate/pickupDate/listAccessories siempre se mandan para que el
+      // backend revalide disponibilidad contra las fechas y mobiliario
+      // vigentes (excluyendo este mismo contrato del cálculo).
+      const payload = {
+        _id: this.form.controls['_id'].value,
+        comment: this.form.controls['comment'].value,
+        hourIni: this.form.controls['hourIni'].value,
+        hourFin: this.form.controls['hourFin'].value,
+        hourIniPickup: this.form.controls['hourIniPickup'].value,
+        hourFinPickup: this.form.controls['hourFinPickup'].value,
+        installDate: this.form.controls['installDate'].value,
+        pickupDate: this.form.controls['pickupDate'].value,
+        listAccessories: this.arrayValuesAccessory,
+      };
+      this.isSaving = true;
+      this.contractService.updateContract(payload, headers).subscribe(
+        () => {
+          this.isSaving = false;
+          this.isDisabled = true;
+          this.startTimer();
+        },
+        (error) => {
+          this.isSaving = false;
+          if (error?.status === 424) {
+            this.confirmDialog.alert('No se pudo actualizar el contrato: el mobiliario seleccionado no tiene disponibilidad suficiente para las fechas indicadas.');
+          }
+        }
+      );
     }
   }
 
@@ -869,10 +1121,12 @@ export class ContractComponent {
 
     this._idContrat = response._id;
     this.idItemDelete = response._id;
+    this.form.controls['_id'].setValue(response._id);
     this.selectedCustomer = response.customer;
     this.form.controls['customer'].setValue(
       response.customer.documentNumber + ' ' + response.customer.name
     );
+    this.onCustomerChange(response.customer);
     this.numberContract = response.codContract;
     this.form.controls['hourIni'].setValue(response.hourIni);
     this.form.controls['hourFin'].setValue(response.hourFin);
@@ -881,13 +1135,11 @@ export class ContractComponent {
     this.form.controls['address'].setValue(response.address);
     this.form.controls['district'].setValue(response.district);
     this.form.controls['comment'].setValue(response.comment);
-    this.form.controls['installDate'].setValue(
-      response.installDate.slice(0, 10)
-    );
+    this.originalInstallDate = response.installDate.slice(0, 10);
+    this.originalPickupDate = response.pickupDate.slice(0, 10);
+    this.form.controls['installDate'].setValue(this.originalInstallDate);
     this.form.controls['eventDate'].setValue(response.eventDate.slice(0, 10));
-    this.form.controls['pickupDate'].setValue(
-      response.pickupDate.slice(0, 10)
-    );
+    this.form.controls['pickupDate'].setValue(this.originalPickupDate);
     this.form.controls['createDate']?.setValue(
       response.createDate.slice(0, 10)
     );
@@ -898,7 +1150,9 @@ export class ContractComponent {
     this.codUser = response?.userCreate?.userName;
     this.selectStatus = response.status;
 
+    this.originalAccessoryAmounts.clear();
     response.listAccessories.forEach((res: any) => {
+      this.originalAccessoryAmounts.set(res.id, res.amount);
       this.arrayAccessory.push(
         this.formBuilder.group({
           id: res.id,
@@ -914,6 +1168,7 @@ export class ContractComponent {
           price: res.price,
           items: [res.items],
           diameter: res.diameter ?? 0,
+          imageUrl: res.imageUrl || '',
         })
       );
     });
@@ -955,6 +1210,12 @@ export class ContractComponent {
             'Authorization',
             'Bearer ' + this.authenticationToken.myValue
           );
+          // Muestra el stock real/global (igual que en cotización), sin
+          // excluir este contrato: así el número que ve el usuario para
+          // decidir si puede aumentar la cantidad es siempre el honesto.
+          // La validación al GUARDAR (ContractService.updateContract en el
+          // backend) sí excluye este contrato, para no bloquear a alguien
+          // que solo quiere recuperar su propia reserva ya asignada.
           this.accessory$ = this.accessoryService.listStockAccessory(headers, {
             installDate: value.installDate,
             pickupDate: value.pickupDate,

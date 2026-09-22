@@ -1,5 +1,6 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import html2canvas from 'html2canvas';
 import {
     FormArray,
     FormBuilder,
@@ -9,7 +10,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
-import { Observable, Subject, map, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Observable, Subject, map, of, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { NgSelectComponent } from '@ng-select/ng-select/public-api';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
@@ -21,6 +22,9 @@ import { QuotationService } from '../Servicios/quotation.service';
 import { ContractService } from '../Servicios/contract.service'; // To create contract from quotation
 import { CustomerComponent } from '../customer/customer.component';
 import { distritosLima } from '../utils/distritos-lima';
+import { environment } from 'src/environments/environment';
+import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
+import { AccessoryAvailabilityComponent } from '../accessory/accessory-availability/accessory-availability.component';
 
 interface Customer {
     id?: string; // Sometimes _id or id depending on backend
@@ -45,6 +49,21 @@ interface Accessory {
     price: number;
     items?: any[];
     status: boolean;
+    imageUrl?: string;
+}
+
+interface PendingContractSummary {
+    _id: string;
+    codContract: string;
+    eventDate: string;
+    status: string;
+    saldo: number;
+}
+
+interface PendingBalance {
+    hasPending: boolean;
+    total: number;
+    contracts: PendingContractSummary[];
 }
 
 interface Quotation {
@@ -85,17 +104,49 @@ export class QuotationComponent implements OnInit {
     condicion = false; // "condicion" seems to mean "is editing/creating" in contract component
     mostrarBotones = false; // show save buttons
     isDisabled = false; // disable form after save
+    isSaving = false; // true only while the save request is in flight
+    convertingId: string | null = null; // id of the quotation currently being converted to contract
 
     customerName = '';
     documentNumber = '';
     phone = '';
     selectedCustomer: any = {};
 
+    // 👇 Aviso de saldo pendiente al seleccionar cliente (solo informativo,
+    // no bloquea guardar la cotización).
+    pendingBalance: PendingBalance | null = null;
+    loadingPendingBalance = false;
+    showPendingDetail = false;
+    // ids de clientes con saldo pendiente, para marcarlos en el propio
+    // desplegable (antes de elegir uno) — ver loadPendingCustomerIds().
+    pendingCustomerIds = new Set<string>();
+
     listaDistritos = distritosLima;
 
     total = 0;
     quotationNumber = '';
+    apiUrl = environment.apiUrl;
+    currentQuotation: Quotation | null = null; // cotización cargada en la vista de detalle
+
+    isCapturingPdf = false;
+    isGeneratingPdf = false;
+    @ViewChild('pagePrintRef') pagePrintRef?: ElementRef<HTMLElement>;
+
+    // Envío por WhatsApp
+    whatsappTargetQuotation: Quotation | null = null;
+    whatsappMatchedCustomer: any = null; // ficha completa del cliente, si se encontró
+    whatsappPhoneInput = '';
+    whatsappSaveToCustomer = true;
     public unsubscribe: Subject<void> = new Subject();
+
+    // Paginación del listado
+    currentPage = 1;
+    pageSize = 20;
+    totalQuotations = 0;
+
+    get totalPages(): number {
+        return Math.max(1, Math.ceil(this.totalQuotations / this.pageSize));
+    }
 
     constructor(
         private modalService: NgbModal,
@@ -105,7 +156,8 @@ export class QuotationComponent implements OnInit {
         private contractService: ContractService,
         private authenticationToken: AuthenticationToken,
         private route: Router,
-        private formBuilder: FormBuilder
+        private formBuilder: FormBuilder,
+        private confirmDialog: ConfirmDialogService
     ) {
         this.customer$ = new Observable<Customer[]>();
         this.accessory$ = new Observable<Accessory[]>();
@@ -128,6 +180,7 @@ export class QuotationComponent implements OnInit {
 
     ngOnInit() {
         this.findClient();
+        this.loadPendingCustomerIds();
         this.loadQuotations();
         // this.searchStock(); // If we want to allow searching accessories immediately or on type
     }
@@ -155,16 +208,20 @@ export class QuotationComponent implements OnInit {
         this.customer$ = this.customerService.listCustomer(headers);
     }
 
-    loadQuotations() {
+    loadQuotations(page: number = this.currentPage) {
         const headers = new HttpHeaders().set(
             'Authorization',
             'Bearer ' + this.authenticationToken.myValue
         );
 
-        this.quotationService.listQuotation(headers).subscribe(
-            (quotationsData) => {
-                this.quotations = quotationsData.reverse();
-                this.listTitle = `Listado de Cotizaciones (${this.quotations.length})`;
+        this.quotationService.listQuotation(headers, page, this.pageSize, this.searchValue).subscribe(
+            (response) => {
+                // El backend ya ordena por fecha descendente (más reciente primero);
+                // no reordenar acá para no invertirlo.
+                this.quotations = response.items;
+                this.totalQuotations = response.total;
+                this.currentPage = response.page;
+                this.listTitle = `Listado de Cotizaciones (${this.totalQuotations})`;
             },
             (error) => {
                 console.error('Error loading quotations', error);
@@ -173,6 +230,24 @@ export class QuotationComponent implements OnInit {
                 }
             }
         );
+    }
+
+    goToPage(page: number) {
+        if (page < 1 || page > this.totalPages || page === this.currentPage) {
+            return;
+        }
+        this.loadQuotations(page);
+    }
+
+    // Busca por cliente o código de cotización en TODO el listado (no solo
+    // la página actual), reiniciando a la primera página de resultados.
+    onGlobalSearch(): void {
+        this.loadQuotations(1);
+    }
+
+    clearGlobalSearch(): void {
+        this.searchValue = '';
+        this.loadQuotations(1);
     }
 
     // Re-use logic from Contract for searching accessories
@@ -220,6 +295,7 @@ export class QuotationComponent implements OnInit {
         this.limpiarForm();
         this.finDate();
         this.quotationNumber = '';
+        this.currentQuotation = null;
         this.condicion = true;
         this.mostrarBotones = true;
         this.isDisabled = false;
@@ -232,11 +308,19 @@ export class QuotationComponent implements OnInit {
         this.condicion = false;
         this.mostrarBotones = false;
         this.isDisabled = false;
+        this.currentQuotation = null;
         this.loadQuotations();
     }
 
-    onSave() {
-        if (this.form.valid) {
+    async onSave() {
+        if (this.form.valid && !this.isDisabled && !this.isSaving) {
+            const confirmado = await this.confirmDialog.confirm(
+                '¿Desea guardar esta cotización?',
+                'Guardar Cotización'
+            );
+            if (!confirmado) {
+                return;
+            }
             const headers = new HttpHeaders().set(
                 'Authorization',
                 'Bearer ' + this.authenticationToken.myValue
@@ -248,21 +332,39 @@ export class QuotationComponent implements OnInit {
                 customer: result.customer
             };
 
+            this.isSaving = true;
+
             if (result._id) {
                 // Update
                 this.quotationService.updateQuotation(payload, headers).subscribe(
                     (resp) => {
+                        this.isSaving = false;
                         console.log('Quotation updated', resp);
                         this.quotationNumber = resp?.codQuotation || this.quotationNumber || resp?._id || '';
                         this.isDisabled = true;
                         this.onSubmitExit();
                     },
-                    (error: any) => console.error(error)
+                    async (error: any) => {
+                        this.isSaving = false;
+                        console.error(error);
+                        if (error?.status === 424) {
+                            // El backend revalida disponibilidad real (contra
+                            // contratos) al editar fechas/mobiliario, para no
+                            // dejar guardar algo que ya no hay y tener
+                            // problemas con el cliente después.
+                            await this.confirmDialog.alert('No se pudo actualizar la cotización: el mobiliario seleccionado no tiene disponibilidad suficiente para las fechas indicadas.');
+                            this.updateFormStock({
+                                installDate: this.form.value.installDate,
+                                pickupDate: this.form.value.pickupDate,
+                            } as Quotation);
+                        }
+                    }
                 );
             } else {
                 // Create
                 this.quotationService.saveQuotation(payload, headers).subscribe(
                     (resp) => {
+                        this.isSaving = false;
                         console.log('Quotation saved', resp);
                         if (resp?._id) {
                             this.form.patchValue({ _id: resp._id });
@@ -271,10 +373,13 @@ export class QuotationComponent implements OnInit {
                         this.isDisabled = true;
                         this.printQuotation(true);
                     },
-                    (error: any) => console.error(error)
+                    (error: any) => {
+                        this.isSaving = false;
+                        console.error(error);
+                    }
                 );
             }
-        } else {
+        } else if (!this.form.valid) {
             console.log('Form invalid', this.form);
             Object.keys(this.form.controls).forEach(key => {
                 const controlErrors = this.form.get(key)?.errors;
@@ -290,6 +395,7 @@ export class QuotationComponent implements OnInit {
         this.searchStock(); // Initialize listener for dates
         this.condicion = true;
         this.mostrarBotones = true;
+        this.currentQuotation = item;
         // If converted, disable editing
         this.isDisabled = (item.status === 'CONVERTED');
         this.quotationNumber = item.codQuotation || item._id || '';
@@ -313,6 +419,7 @@ export class QuotationComponent implements OnInit {
             this.customerName = item.customer.name;
             this.documentNumber = item.customer.documentNumber;
         }
+        this.onCustomerChange(item.customer);
 
         // Fill Accessories
         this.arrayAccessory.clear();
@@ -335,7 +442,8 @@ export class QuotationComponent implements OnInit {
                             Validators.required,
                             Validators.min(1),
                             Validators.max(acc.stock)
-                        ])
+                        ]),
+                        imageUrl: acc.imageUrl || '',
                     })
                 );
             });
@@ -344,46 +452,42 @@ export class QuotationComponent implements OnInit {
         this.sumarValores();
     }
 
+    // El input datetime-local manda su valor tal cual se escribió (sin
+    // offset de huso horario) y el payload de guardado lo envía literal
+    // (ver onSubmitAdd: `payload = { ...form.value }`), así que el backend
+    // termina guardando esos mismos dígitos con un sufijo "Z" pegado, no
+    // una conversión real a UTC. Por eso, para reabrir sin correr la
+    // fecha/hora, hay que leer esos dígitos tal cual — CUALQUIER conversión
+    // de huso horario acá (como hacía la versión anterior, restando el
+    // offset del NAVEGADOR) desalinea el dato porque el navegador y el
+    // servidor pueden estar en husos distintos.
     private formatDateForInput(dateStr: string): string {
         if (!dateStr) return '';
-        const date = new Date(dateStr);
-        // Adjust for timezone offset to keep the local time as represented in the UTC string
-        // The user sees "next day" meaning UTC 2023-01-02T01:00 -> Local 2023-01-01T20:00.
-        // If we want to DISPLAY what was saved (2023-01-02T01:00 UTC), in local time inputs...
-        // Actually, if backend saves pure UTC and frontend sends local...
-        // If I send "2023-01-01T10:00", backend (Node/Mongo) might save "2023-01-01T15:00Z" (Peru +5? No, -5).
-        // 10:00 Local -> 15:00 UTC.
-        // When reading back 15:00 UTC... new Date("...15:00Z") in browser gives 10:00 Local.
-        // So standard new Date() SHOULD work.
-        // However, if the user says "next day", maybe they mean the backend SAVED it as "2023-01-01" (midnight) but Timezone shift makes it "2023-01-01T00:00Z" -> "2022-12-31T19:00" Local?
-        // Or if they saved "2023-01-01" and it comes back as "2023-01-01T00:00:00Z", in Peru (-5) that is ... PREVIOUS day?
-        // User says "sale la fecha del dia SIGUIENTE".
-        // This means 2023-01-01 became 2023-01-02.
-        // This implies the date stored is 00:00:00 NEXT day?
-        // Or maybe they stored 2023-01-01T19:00 (Local) -> 2023-01-02T00:00Z.
-        // And when I display it with simple substring of UTC string... I see 2023-01-02.
-        // Correct fix: Convert to LOCAL ISO string.
-        const tzOffset = date.getTimezoneOffset() * 60000; // in ms
-        const localISOTime = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 16);
-        return localISOTime;
+        return dateStr.slice(0, 16);
     }
 
     // Convert to Contract
-    convertToContract(quotation: Quotation) {
-        if (!confirm('¿Desea crear un contrato a partir de esta cotización?')) return;
+    async convertToContract(quotation: Quotation) {
+        if (this.convertingId === quotation._id) return;
+        const confirmado = await this.confirmDialog.confirm(
+            '¿Desea crear un contrato a partir de esta cotización?',
+            'Generar Contrato'
+        );
+        if (!confirmado) return;
+
+        this.convertingId = quotation._id;
 
         // 1. Pre-validate stock
-        this.verifyStockAvailability(quotation).subscribe((isValid) => {
+        this.verifyStockAvailability(quotation).subscribe({
+            next: async (isValid) => {
             if (!isValid) {
-                alert('No se pudo generar el contrato porque el stock de algunos productos es insuficiente.');
+                this.convertingId = null;
+                // Esperar a que cierren el aviso ANTES de tocar el form: si
+                // no se espera, el modal queda abierto tapando la pantalla
+                // mientras el form ya cambió debajo (un alert() nativo del
+                // navegador sí bloqueaba hasta cerrarlo; este modal no).
+                await this.confirmDialog.alert('No se pudo generar el contrato porque el stock de algunos productos es insuficiente.');
                 this.onEdit(quotation);
-                // We call the OLD logic (or similar) to update the FORM which is now loaded
-                // We need to re-implement the form updating logic since I replaced validateStockAvailability.
-                // Actually, verifyStockAvailability operates on checking pure data.
-                // I need a way to UPDATE the form.
-
-                // I'll call a new method restoreStockOnForm(quotation) which does what validateStockAvailability used to do.
-                // Or I can copy the logic into a method 'updateFormStock'.
                 this.updateFormStock(quotation);
                 return;
             }
@@ -398,8 +502,13 @@ export class QuotationComponent implements OnInit {
             };
 
             this.contractService.savecontractbyquotation(payload, headers).subscribe(
-                (resp: any) => {
-                    alert('Contrato creado exitosamente: ' + resp.codContract);
+                async (resp: any) => {
+                    this.convertingId = null;
+                    // Esperar a que cierren el aviso ANTES de navegar: si no
+                    // se espera, el modal queda huérfano sobre la pantalla
+                    // del contrato (la ruta ya cambió, pero el modal sigue
+                    // abierto) y bloquea cualquier clic ahí.
+                    await this.confirmDialog.alert('Contrato creado exitosamente: ' + resp.codContract);
 
                     // Force status update to 'Por Pagar' to ensure stock is deducted
                     if (resp._id) {
@@ -414,31 +523,53 @@ export class QuotationComponent implements OnInit {
                         );
                     }
 
-                    // Manually update quotation status to persist
+                    // Manually update quotation status to persist.
+                    // OJO: no mandar el objeto completo de "quotation" (incluye
+                    // codQuotation/numberQuotation/userCreate): el backend los
+                    // rechaza con 400 porque QuotationDto los marca @IsEmpty()
+                    // en el PUT. Antes esto hacía que el 400 se tragara en
+                    // silencio y la cotización NUNCA quedara CONVERTED de verdad.
                     const updatePayload = {
-                        ...quotation,
+                        _id: quotation._id,
+                        createDate: quotation.createDate,
+                        installDate: quotation.installDate,
+                        eventDate: quotation.eventDate,
+                        pickupDate: quotation.pickupDate,
+                        amount: quotation.amount,
+                        address: quotation.address,
+                        district: quotation.district,
+                        comment: quotation.comment,
+                        customer: quotation.customer,
+                        listAccessories: quotation.listAccessories,
                         status: 'CONVERTED'
                     };
 
+                    // Al terminar, redirigir al contrato recién creado en su
+                    // propio módulo (en vez de quedarse en la cotización).
                     this.quotationService.updateQuotation(updatePayload, headers).subscribe(
                         () => {
                             quotation.status = 'CONVERTED';
-                            this.loadQuotations();
+                            this.route.navigate(['/dashboard/contract'], { queryParams: { open: resp._id } });
                         },
                         (err) => {
                             console.error('Error updating quotation status', err);
-                            // Even if update fails, we might want to refresh.
-                            this.loadQuotations();
+                            // Aunque falle marcar la cotización, el contrato ya existe: igual redirigimos.
+                            this.route.navigate(['/dashboard/contract'], { queryParams: { open: resp._id } });
                         }
                     );
                 },
-                (error) => {
+                async (error) => {
+                    this.convertingId = null;
                     console.error('Error converting to contract', error);
-                    alert('No se pudo generar el contrato. Verifique el stock disponible.');
+                    await this.confirmDialog.alert('No se pudo generar el contrato. Verifique el stock disponible.');
                     this.onEdit(quotation);
                     this.updateFormStock(quotation);
                 }
             );
+            },
+            error: () => {
+                this.convertingId = null;
+            }
         });
     }
 
@@ -479,7 +610,7 @@ export class QuotationComponent implements OnInit {
                 }
             });
             this.form.updateValueAndValidity();
-            alert('El stock ha sido actualizado. Por favor verifique los productos marcados en rojo.');
+            this.confirmDialog.alert('El stock ha sido actualizado. Por favor verifique los productos marcados en rojo.');
         });
     }
 
@@ -584,6 +715,7 @@ export class QuotationComponent implements OnInit {
                         Validators.min(1),
                         Validators.max(itemSelected.stock)
                     ]),
+                    imageUrl: itemSelected.imageUrl || '',
                 })
             );
         }
@@ -591,7 +723,33 @@ export class QuotationComponent implements OnInit {
         this.sumarValores();
     }
 
-    onDeleteItem(index: number) {
+    openAvailability(item: any) {
+        // El "stock" de esta fila es el techo disponible para las fechas de
+        // ESTA cotización, no el stock total del mobiliario (mismo caso que
+        // en Contrato) — hay que pedirlo aparte para que el resumen del
+        // modal (disponible/reservado) salga bien calculado.
+        const accessoryId = item.get('id')?.value;
+        const description = item.get('description')?.value;
+        const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+        this.accessoryService.listAccessory(headers).subscribe((list: any[]) => {
+            const found = (list || []).find((a) => a._id === accessoryId);
+            const modalRef = this.modalService.open(AccessoryAvailabilityComponent, { centered: true, size: 'xl' });
+            modalRef.componentInstance.accessory = {
+                _id: accessoryId,
+                description: found?.description || description,
+                stock: found?.stock ?? 0,
+            };
+        });
+    }
+
+    async onDeleteItem(index: number) {
+        const confirmado = await this.confirmDialog.confirm(
+            '¿Desea eliminar este mobiliario de la cotización?',
+            'Eliminar Mobiliario'
+        );
+        if (!confirmado) {
+            return;
+        }
         this.arrayAccessory.removeAt(index);
         this.sumarValores();
     }
@@ -604,17 +762,99 @@ export class QuotationComponent implements OnInit {
     // ==========================
     // Customers
     // ==========================
+
+    // 👇 Trae de una sola vez qué clientes tienen saldo pendiente, para
+    // marcarlos en el propio desplegable antes de elegir uno.
+    loadPendingCustomerIds() {
+        const headers = new HttpHeaders().set(
+            'Authorization',
+            'Bearer ' + this.authenticationToken.myValue
+        );
+        this.contractService.getCustomerIdsWithPendingBalance(headers).subscribe({
+            next: (result) => {
+                this.pendingCustomerIds = new Set(result?.customerIds || []);
+            },
+            error: () => {
+                this.pendingCustomerIds = new Set();
+            },
+        });
+    }
+
+    hasPendingDebt(item: any): boolean {
+        const id = item?._id || item?.id;
+        return !!id && this.pendingCustomerIds.has(id);
+    }
+
     onAddCustomer(item: any) {
         if (item) {
             this.customerName = item.name;
             this.documentNumber = item.documentNumber;
             this.phone = item.phone;
         }
+        this.onCustomerChange(item);
     }
 
-    openModalCustomer() {
-        this.modalService.open(CustomerComponent, { centered: true });
-        // Logic to refresh customer list?
+    // 👇 Se dispara al elegir cliente (o al cargar una cotización existente
+    // para editar). Solo informa: nunca bloquea guardar.
+    onCustomerChange(item: any) {
+        this.pendingBalance = null;
+        this.showPendingDetail = false;
+
+        const customerId = item?._id || item?.id;
+        if (!customerId) {
+            return;
+        }
+
+        this.loadingPendingBalance = true;
+        const headers = new HttpHeaders().set(
+            'Authorization',
+            'Bearer ' + this.authenticationToken.myValue
+        );
+        this.contractService.getPendingBalanceByCustomer(customerId, headers).subscribe({
+            next: (result) => {
+                this.loadingPendingBalance = false;
+                this.pendingBalance = result;
+            },
+            error: () => {
+                this.loadingPendingBalance = false;
+                this.pendingBalance = null;
+            },
+        });
+    }
+
+    togglePendingDetail() {
+        this.showPendingDetail = !this.showPendingDetail;
+    }
+
+    // 👇 Buscador de cliente sin resultados -> abrir CustomerComponent en
+    // modo alta rápida (ver customer.component.ts: quickAddName/activeModal).
+    openAddCustomerModal(searchTerm: string) {
+        const modalRef = this.modalService.open(CustomerComponent, { centered: true });
+        modalRef.componentInstance.quickAddName = searchTerm || '';
+
+        modalRef.result.then(
+            (createdCustomer) => {
+                if (!createdCustomer) {
+                    return;
+                }
+                const headers = new HttpHeaders().set(
+                    'Authorization',
+                    'Bearer ' + this.authenticationToken.myValue
+                );
+                this.customerService.listCustomer(headers).subscribe((list) => {
+                    const customers = list || [];
+                    this.customer$ = of(customers);
+                    const match =
+                        customers.find((c: Customer) => c._id === createdCustomer._id) ||
+                        createdCustomer;
+                    this.form.get('customer')?.setValue(match);
+                    this.onAddCustomer(match);
+                });
+            },
+            () => {
+                // modal cerrado sin guardar: no hacer nada
+            }
+        );
     }
 
     // ==========================
@@ -636,6 +876,8 @@ export class QuotationComponent implements OnInit {
         this.documentNumber = '';
         this.phone = '';
         this.quotationNumber = '';
+        this.pendingBalance = null;
+        this.showPendingDetail = false;
     }
 
     printQuotation(exitAfter: boolean) {
@@ -645,6 +887,170 @@ export class QuotationComponent implements OnInit {
                 this.onSubmitExit();
             }
         }, 100);
+    }
+
+    // ==========================
+    // Envío por WhatsApp
+    // ==========================
+
+    // Siempre pregunta antes de enviar: muestra el celular guardado (si hay)
+    // para confirmarlo o cambiarlo, porque suele quedar desactualizado.
+    sendToWhatsapp(quotation: Quotation, promptModal: any) {
+        if (!quotation) return;
+        this.whatsappTargetQuotation = quotation;
+        this.whatsappMatchedCustomer = null;
+        this.whatsappPhoneInput = '';
+        this.whatsappSaveToCustomer = true;
+
+        const headers = new HttpHeaders().set(
+            'Authorization',
+            'Bearer ' + this.authenticationToken.myValue
+        );
+        this.customerService.listCustomer(headers).subscribe({
+            next: (customers: any[]) => {
+                const match = (customers || []).find(
+                    (c) => c.documentNumber === quotation.customer?.documentNumber
+                );
+                this.whatsappMatchedCustomer = match || null;
+                this.whatsappPhoneInput = (match?.phone || '').toString();
+                this.modalService.open(promptModal, { centered: true });
+            },
+            error: () => {
+                // Si falla la consulta del cliente, igual dejamos escribir el número a mano.
+                this.modalService.open(promptModal, { centered: true });
+            }
+        });
+    }
+
+    confirmWhatsappPhone(modal: any) {
+        const digits = this.whatsappPhoneInput.replace(/\D/g, '');
+        if (!digits || !this.whatsappTargetQuotation) {
+            return;
+        }
+
+        const existingDigits = (this.whatsappMatchedCustomer?.phone || '').toString().replace(/\D/g, '');
+        const numeroNuevo = digits !== existingDigits;
+
+        if (this.whatsappSaveToCustomer && this.whatsappMatchedCustomer && numeroNuevo) {
+            const headers = new HttpHeaders().set(
+                'Authorization',
+                'Bearer ' + this.authenticationToken.myValue
+            );
+            const payload = {
+                _id: this.whatsappMatchedCustomer._id,
+                name: this.whatsappMatchedCustomer.name,
+                documentNumber: this.whatsappMatchedCustomer.documentNumber,
+                address: this.whatsappMatchedCustomer.address,
+                phone: digits,
+                status: true
+            };
+            this.customerService.updateCustomer(payload, headers).subscribe({
+                next: () => {},
+                error: (err) => console.error('No se pudo actualizar el celular del cliente', err)
+            });
+        }
+
+        this.openWhatsapp(digits, this.whatsappTargetQuotation);
+        modal.close();
+    }
+
+    private openWhatsapp(rawDigits: string, quotation: Quotation) {
+        // Números guardados en Perú son locales (9 dígitos); wa.me necesita
+        // el código de país. Si ya viene con código, se respeta tal cual.
+        let digits = rawDigits;
+        if (digits.length === 9) {
+            digits = '51' + digits;
+        }
+        const message = this.buildWhatsappMessage(quotation);
+        const url = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    }
+
+    private buildWhatsappMessage(quotation: Quotation): string {
+        const cliente = quotation.customer?.name || '';
+        const codigo = quotation.codQuotation || '';
+        const fechaEvento = this.formatDateSafe(quotation.eventDate);
+        const monto = quotation.amount != null ? `S/ ${quotation.amount}` : '';
+
+        return `Hola ${cliente}, te compartimos tu cotización ${codigo} de Vintage Party.\n`
+            + `Fecha del evento: ${fechaEvento}\n`
+            + `Monto: ${monto}\n`
+            + `¡Gracias por tu preferencia!`;
+    }
+
+    // Evita el bug de zona horaria (no usa Date/toLocaleDateString sobre un
+    // string de solo-fecha, que en Perú corre el día para atrás).
+    private formatDateSafe(dateStr?: string): string {
+        if (!dateStr) return '';
+        const [y, m, d] = dateStr.substring(0, 10).split('-');
+        return `${d}/${m}/${y}`;
+    }
+
+    // ==========================
+    // PDF real (para compartir o descargar)
+    // ==========================
+
+    // Captura la vista de impresión como imagen, la manda al backend para
+    // armar el PDF (nada se guarda ahí), y en el celular lo pasa directo al
+    // "Compartir" nativo (donde WhatsApp aparece como opción con el archivo
+    // real adjunto). En computadora, lo descarga.
+    async downloadOrSharePdf(quotation: Quotation) {
+        if (!quotation || this.isGeneratingPdf) return;
+
+        this.isGeneratingPdf = true;
+        this.isCapturingPdf = true;
+        // Espera un tick para que Angular aplique la clase que hace visible
+        // la vista de impresión antes de capturarla.
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        let imageDataUrl: string;
+        try {
+            const element = this.pagePrintRef?.nativeElement;
+            if (!element) {
+                return;
+            }
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true, width: 1000, windowWidth: 1000 });
+            imageDataUrl = canvas.toDataURL('image/png');
+        } finally {
+            this.isCapturingPdf = false;
+        }
+
+        const headers = new HttpHeaders().set(
+            'Authorization',
+            'Bearer ' + this.authenticationToken.myValue
+        );
+
+        this.quotationService.generatePdf(imageDataUrl, headers).subscribe({
+            next: async (pdfBlob: Blob) => {
+                this.isGeneratingPdf = false;
+                const fileName = `Cotizacion-${quotation.codQuotation || quotation._id}.pdf`;
+                const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+                const nav = navigator as any;
+                if (nav.canShare && nav.canShare({ files: [file] })) {
+                    try {
+                        await nav.share({
+                            files: [file],
+                            title: 'Cotización Vintage Party',
+                            text: this.buildWhatsappMessage(quotation),
+                        });
+                    } catch (err) {
+                        // Usuario canceló el "Compartir"; no es un error real.
+                    }
+                } else {
+                    const url = URL.createObjectURL(pdfBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            },
+            error: () => {
+                this.isGeneratingPdf = false;
+                this.confirmDialog.alert('No se pudo generar el PDF. Intente nuevamente.');
+            }
+        });
     }
 
 }
