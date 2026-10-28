@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
+import { AuthenticationToken } from '../Servicios/autentication-token.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,7 +11,11 @@ import { Router } from '@angular/router';
 export class DashboardComponent {
   //@Input() message: string;
   @Output() customEvent = new EventEmitter<any>();
-  constructor(private router: Router) { }
+  constructor(private router: Router, private authenticationToken: AuthenticationToken) { }
+
+  isSuperAdmin(): boolean {
+    return this.authenticationToken.isSuperAdmin();
+  }
   
   ngOnInit() {
     this.customEvent.emit('Hello from child');

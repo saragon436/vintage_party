@@ -9,6 +9,9 @@ import { DashboardComponent } from './dashboard.component';
 import { WeeklyWorkComponent } from '../kardex/weekly-work/weekly-work.component';
 import { CalendarGroupedComponent } from '../calendar-grouped/calendar-grouped.component';
 import { QuotationComponent } from '../quotation/quotation.component';
+import { UsersComponent } from '../admin/users/users.component';
+import { AuditLogComponent } from '../admin/audit-log/audit-log.component';
+import { SuperAdminGuard } from '../guards/super-admin.guard';
 
 
 const routes: Routes = [
@@ -21,7 +24,9 @@ const routes: Routes = [
       { path: 'calendar-v2', component: CalendarV2Component },
       { path: 'weekly-work', component: WeeklyWorkComponent },  // 👈 NUEVO
       { path: 'calendar-grouped', component: CalendarGroupedComponent },
-      { path: 'quotation', component: QuotationComponent }  // 👈 NUEVO
+      { path: 'quotation', component: QuotationComponent },  // 👈 NUEVO
+      { path: 'admin/usuarios', component: UsersComponent, canActivate: [SuperAdminGuard] },
+      { path: 'admin/auditoria', component: AuditLogComponent, canActivate: [SuperAdminGuard] }
     ]
   },
 ];

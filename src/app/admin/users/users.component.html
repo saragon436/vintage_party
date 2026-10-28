@@ -1,0 +1,167 @@
+<div class="admin-page">
+  <div class="row align-items-start" id="salto">
+    <div class="col-lg-8">
+      <h2>Usuarios administrativos</h2>
+      <p class="up-subtitle">Gestiona quién tiene acceso al panel y qué secciones puede ver cada persona.</p>
+    </div>
+    <div class="col-lg-4 text-end">
+      <button type="button" class="btn btn-primary" (click)="openCreateForm()" *ngIf="!showCreateForm">+ Nuevo usuario</button>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="up-drawer-backdrop" *ngIf="showCreateForm" (click)="cancelCreate()"></div>
+  <div class="up-drawer" *ngIf="showCreateForm">
+    <div class="up-drawer-header">
+      <h5>Nuevo usuario administrativo</h5>
+      <button type="button" class="btn-close" aria-label="Cerrar" (click)="cancelCreate()"></button>
+    </div>
+    <div class="up-drawer-body">
+      <form>
+        <div class="mb-3">
+          <label class="form-label" for="firstName">Nombre</label>
+          <input type="text" class="form-control" id="firstName" name="firstName" [(ngModel)]="firstName">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="lastName">Apellido</label>
+          <input type="text" class="form-control" id="lastName" name="lastName" [(ngModel)]="lastName">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="userName">Nombre de usuario</label>
+          <input type="text" class="form-control" id="userName" name="userName" [(ngModel)]="userName">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">Contraseña temporal</label>
+          <input type="password" class="form-control" id="password" name="password" [(ngModel)]="password">
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="rol">Rol</label>
+          <select class="form-select" id="rol" name="rol" [(ngModel)]="rol">
+            <option value="ADMIN">Admin</option>
+            <option value="SUPER_ADMIN">Super Admin</option>
+          </select>
+        </div>
+
+        <div class="up-drawer-section-title">Permisos de acceso</div>
+        <p class="up-subtitle mb-2">Selecciona qué módulos podrá ver y usar este usuario.</p>
+        <div class="row g-2 mb-2">
+          <div class="col-6" *ngFor="let option of permissionOptions">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="{{ 'create_' + option.value }}"
+                [name]="'create_' + option.value" [(ngModel)]="createPermissions[option.value]">
+              <label class="form-check-label" for="{{ 'create_' + option.value }}">{{ option.label }}</label>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="up-drawer-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancelCreate()">Cancelar</button>
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting" (click)="submitCreate()">
+        <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        {{ isSubmitting ? 'Guardando...' : 'Crear usuario' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="row" id="salto">
+    <div class="up-card p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Permisos</th>
+            <th>Estado</th>
+            <th>Creado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let user of users">
+            <tr *ngIf="editingId !== user._id">
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="up-avatar" [class.is-super]="isSuperAdminUser(user)">{{ initials(user) }}</div>
+                  <div>
+                    <div>{{ user.firstName }} {{ user.lastName }}</div>
+                    <div class="up-username">&#64;{{ user.userName }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="up-badge-role" [class.is-super]="isSuperAdminUser(user)">
+                  {{ isSuperAdminUser(user) ? 'Super Admin' : (user.rol || 'Sin rol') }}
+                </span>
+              </td>
+              <td>
+                <ng-container *ngIf="isSuperAdminUser(user); else permChips">
+                  <span class="up-chip">Todos los módulos</span>
+                </ng-container>
+                <ng-template #permChips>
+                  <ng-container *ngIf="user.permissions && user.permissions.length; else noPerms">
+                    <span class="up-chip" *ngFor="let p of user.permissions">{{ permissionLabel(p) }}</span>
+                  </ng-container>
+                  <ng-template #noPerms>—</ng-template>
+                </ng-template>
+              </td>
+              <td>
+                <span class="up-status" [class.is-active]="user.status">
+                  <span class="up-status-dot"></span>{{ user.status ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>{{ user.createdAt ? (user.createdAt | date:'dd/MM/yyyy') : '—' }}</td>
+              <td>
+                <ng-container *ngIf="!isSuperAdminUser(user); else protectedRow">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" (click)="startEdit(user)">Editar</button>
+                  <button type="button" class="btn btn-danger btn-sm" (click)="deleteUser(user)">Eliminar</button>
+                </ng-container>
+                <ng-template #protectedRow>
+                  <span class="up-protected">Protegido</span>
+                </ng-template>
+              </td>
+            </tr>
+            <tr *ngIf="editingId === user._id">
+              <td colspan="6">
+                <div class="row" id="salto">
+                  <div class="col-lg-3">
+                    <label class="input-group-text" for="editRol">Rol</label>
+                    <select class="form-select" id="editRol" name="editRol" [(ngModel)]="editRol">
+                      <option value="ADMIN">Admin</option>
+                      <option value="SUPER_ADMIN">Super Admin</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="editStatus" name="editStatus" [(ngModel)]="editStatus">
+                      <label class="form-check-label" for="editStatus">Activo</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row" id="salto">
+                  <div class="col-lg-3" *ngFor="let option of permissionOptions">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="{{ 'edit_' + option.value }}"
+                        [name]="'edit_' + option.value" [(ngModel)]="editPermissions[option.value]">
+                      <label class="form-check-label" for="{{ 'edit_' + option.value }}">{{ option.label }}</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="row" id="salto">
+                  <div class="col-lg-4">
+                    <button type="button" class="btn btn-primary" (click)="submitEdit(user)">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary" (click)="cancelEdit()">Cancelar</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="!isLoading && users.length === 0">
+            <td colspan="6">No hay usuarios registrados.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

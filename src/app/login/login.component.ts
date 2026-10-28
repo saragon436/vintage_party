@@ -60,6 +60,7 @@ export class LoginComponent implements OnInit {
           // Guardar token y usuario como ya tenías
           this.authenticationToken.myValue = data.token;
           this.authenticationToken.user = this.username;
+          this.authenticationToken.rol = data.user?.rol;
 
           // 🔥 Antes: this.route.navigate(['dashboard']);
           // Ahora: navegar a la ruta que vino en redirect o a /dashboard por defecto

@@ -38,6 +38,12 @@
             <a routerLink='/dashboard/weekly-work' routerLinkActive="active" class="nav-link">Ver mobiliario semanal</a>
 
           </li>
+          <li class="nav-item" *ngIf="isSuperAdmin()">
+            <a routerLink='/dashboard/admin/usuarios' routerLinkActive="active" class="nav-link">Usuarios</a>
+          </li>
+          <li class="nav-item" *ngIf="isSuperAdmin()">
+            <a routerLink='/dashboard/admin/auditoria' routerLinkActive="active" class="nav-link">Auditoría</a>
+          </li>
         </ul>
       </div>
     </div>

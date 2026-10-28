@@ -1,0 +1,88 @@
+<div class="admin-page">
+  <h2>Auditoría</h2>
+  <p class="up-subtitle">Registro de acciones realizadas por los usuarios administrativos.</p>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="row" id="salto">
+    <div class="up-card d-flex flex-wrap align-items-end gap-2">
+      <div class="col-lg-2">
+        <label class="form-label small mb-1">Usuario</label>
+        <input type="text" class="form-control" placeholder="Usuario" name="filterUserName" [(ngModel)]="filterUserName">
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label small mb-1">Módulo</label>
+        <select class="form-select" name="filterModule" [(ngModel)]="filterModule">
+          <option value="">Todos los módulos</option>
+          <option value="customers">Cliente</option>
+          <option value="inventory">Mobiliario</option>
+          <option value="quotations">Cotizaciones</option>
+          <option value="contracts">Contrato</option>
+          <option value="users">Usuarios</option>
+          <option value="auth">Auth</option>
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label small mb-1">Acción</label>
+        <select class="form-select" name="filterAction" [(ngModel)]="filterAction">
+          <option value="">Todas las acciones</option>
+          <option value="create">Crear</option>
+          <option value="update">Editar</option>
+          <option value="delete">Eliminar</option>
+          <option value="login">Inicio de sesión</option>
+          <option value="login_failed">Inicio de sesión fallido</option>
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label small mb-1">Desde</label>
+        <input type="date" class="form-control" name="filterFromDate" [(ngModel)]="filterFromDate">
+      </div>
+      <div class="col-lg-2">
+        <label class="form-label small mb-1">Hasta</label>
+        <input type="date" class="form-control" name="filterToDate" [(ngModel)]="filterToDate">
+      </div>
+      <div class="col-lg-2">
+        <button type="button" class="btn btn-primary" (click)="applyFilters()">Filtrar</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" id="salto">
+    <div class="up-card p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Fecha y hora</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Módulo</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs">
+            <td>{{ log.createdAt ? (log.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+            <td>{{ log.userFullName || log.userName }}</td>
+            <td><span class="up-action-badge" [ngClass]="actionClass(log.action)">{{ actionLabel(log.action) }}</span></td>
+            <td>{{ log.module || '—' }}</td>
+            <td>{{ log.detail || '—' }}</td>
+          </tr>
+          <tr *ngIf="!isLoading && logs.length === 0">
+            <td colspan="5">No hay registros para los filtros seleccionados.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row" id="salto">
+    <div class="col-lg-6">
+      <span class="up-subtitle">Mostrando {{ logs.length }} de {{ total }} registros</span>
+    </div>
+    <div class="col-lg-6 text-end">
+      <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="page <= 1" (click)="prevPage()">Anterior</button>
+      <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="page * limit >= total" (click)="nextPage()">Siguiente</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,49 @@
+<section class="ranking-panel" aria-labelledby="furniture-ranking-title" [attr.aria-busy]="loading">
+  <div class="ranking-head">
+    <div>
+      <h2 id="furniture-ranking-title">Top 10 de mobiliarios más alquilados</h2>
+      <p>Unidades alquiladas · comparación mensual y anual</p>
+    </div>
+    <div class="ranking-filters">
+      <label>Mes<select [(ngModel)]="month" (ngModelChange)="refresh()"><option *ngFor="let name of months; let i = index" [ngValue]="i + 1">{{ name }}</option></select></label>
+      <label>Año<select [(ngModel)]="year" (ngModelChange)="refresh()"><option *ngFor="let value of years" [ngValue]="value">{{ value }}</option></select></label>
+    </div>
+  </div>
+  <p class="ranking-message" *ngIf="loading" role="status">Cargando mobiliarios…</p>
+  <div class="ranking-message" *ngIf="!loading && error" role="alert">No se pudo cargar la comparación. <button type="button" (click)="refresh()">Reintentar</button></div>
+  <ng-container *ngIf="!loading && !error">
+    <p class="ranking-message" *ngIf="!rows.length">No hay unidades alquiladas en contratos no anulados para {{ selectedLabel }}.</p>
+    <ng-container *ngIf="rows.length">
+      <div class="ranking-legend">
+        <span><i class="legend-current"></i>{{ selectedLabel }}</span>
+        <span><i class="legend-year"></i>{{ previousYearLabel }}</span>
+        <span><i class="legend-month"></i>{{ previousMonthLabel }}</span>
+      </div>
+      <div class="ranking-scroll" tabindex="0" role="region" aria-label="Ranking de mobiliarios, desplazar horizontalmente para ver las comparaciones">
+        <table>
+          <caption class="visually-hidden">Top 10 de {{ selectedLabel }}. Cantidades y variaciones frente a {{ previousYearLabel }} y {{ previousMonthLabel }}.</caption>
+          <colgroup><col class="name-col"><col class="bar-col"><col class="current-col"><col class="compare-col"><col class="compare-col"></colgroup>
+          <thead><tr><th scope="col">Mobiliario</th><th scope="col">Cantidad alquilada</th><th scope="col">{{ selectedLabel }}</th><th scope="col">{{ previousYearLabel }}<small>Cantidad / variación</small></th><th scope="col">{{ previousMonthLabel }}<small>Cantidad / variación</small></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let row of rows; let i = index; trackBy: trackRow">
+              <th scope="row" [title]="row.description"><span class="rank">{{ i + 1 | number:'2.0-0' }}</span>{{ row.description }}</th>
+              <td><div class="rental-track" aria-hidden="true"><span class="rental-fill" [style.width.%]="width(row.current)"></span><span class="rental-year" [style.left.%]="width(row.previousYear)"></span><span class="rental-month" [style.left.%]="width(row.previousMonth)"></span></div></td>
+              <td class="current-count">{{ row.current | number:'1.0-2' }}</td>
+              <td><ng-container *ngTemplateOutlet="comparison; context: { current: row.current, previous: row.previousYear }"></ng-container></td>
+              <td><ng-container *ngTemplateOutlet="comparison; context: { current: row.current, previous: row.previousMonth }"></ng-container></td>
+            </tr>
+          </tbody>
+          <tfoot><tr><td></td><td><div class="rental-axis"><span>0</span><span>{{ max / 2 | number:'1.0-1' }}</span><span>{{ max | number:'1.0-2' }}</span></div></td><td colspan="3"></td></tr></tfoot>
+        </table>
+      </div>
+    </ng-container>
+  </ng-container>
+  <div class="ranking-foot"><span>Todos los estados excepto Anulado · unidades según fecha del evento.</span><span *ngIf="partialMonth">Mes en curso · datos parciales</span></div>
+</section>
+<ng-template #comparison let-current="current" let-previous="previous">
+  <div class="rental-comparison">
+    <span>{{ previous | number:'1.0-2' }}</span>
+    <small *ngIf="variation(current, previous) !== null; else noBase" [class.positive]="current > previous" [class.negative]="current < previous">{{ current > previous ? '↑ +' : current < previous ? '↓ ' : '' }}{{ variation(current, previous) | number:'1.1-1' }}%</small>
+    <ng-template #noBase><small title="No hubo unidades en el período de comparación">Sin base</small></ng-template>
+  </div>
+</ng-template>

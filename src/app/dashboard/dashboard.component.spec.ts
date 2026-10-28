@@ -3,6 +3,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { DashboardComponent } from './dashboard.component';
+import { AuthenticationToken } from '../Servicios/autentication-token.service';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
@@ -12,6 +13,7 @@ describe('DashboardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [RouterTestingModule],
       declarations: [ DashboardComponent ],
+      providers: [ AuthenticationToken ],
       schemas: [NO_ERRORS_SCHEMA],
     })
     .compileComponents();

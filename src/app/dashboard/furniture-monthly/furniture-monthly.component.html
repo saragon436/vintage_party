@@ -1,0 +1,44 @@
+<section class="monthly-panel" aria-labelledby="monthly-title" [attr.aria-busy]="loading">
+  <div class="monthly-head"><div><h2 id="monthly-title">Top 10 de mobiliarios, mes a mes</h2><p>Cada columna es un mes. Cada fila indica un puesto, del 1 al 10.</p></div><span class="year">{{ year }}</span></div>
+  <p *ngIf="loading" role="status" class="message">Cargando ranking mensual…</p>
+  <div *ngIf="error" role="alert" class="message">No se pudo cargar el ranking mensual. <button type="button" (click)="load()">Reintentar</button></div>
+  <p *ngIf="!closedMonths" class="message">Aún no hay meses cerrados este año. El ranking aparecerá al cerrar enero.</p>
+  <p *ngIf="!loading && !error && closedMonths && !hasRows" class="message">No hay unidades alquiladas en contratos no anulados durante los meses cerrados de {{ year }}.</p>
+  <ng-container *ngIf="!loading && !error && hasRows">
+    <ol class="guide"><li>Lee cada mes de arriba hacia abajo.</li><li>Selecciona un mobiliario: se resalta en morado.</li><li>Si no aparece, ese mes quedó fuera del top 10.</li></ol>
+    <div class="selected-description" aria-live="polite"><strong>{{ selectedDescription }}</strong><span>Morado = mobiliario seleccionado</span></div>
+    <div class="monthly-layout">
+      <div class="matrix-scroll" tabindex="0" role="region" aria-label="Top 10 por mes; desplazar horizontalmente para ver todos los meses">
+        <table class="matrix" [style.min-width.px]="50 + months.length * 90">
+          <caption class="visually-hidden">Ranking mensual de {{ year }}. Selecciona un mobiliario para consultar su descripción completa y recorrido.</caption>
+          <thead><tr><th scope="col" class="rank-heading">Puesto</th><th *ngFor="let month of months; trackBy: trackMonth" scope="col"><abbr [title]="month.name">{{ month.name.slice(0, 3) }}</abbr></th></tr></thead>
+          <tbody><tr *ngFor="let rank of ranks">
+            <th scope="row" class="rank-heading">{{ rank + 1 | number:'2.0-0' }}</th>
+            <td *ngFor="let month of months; let m = index; trackBy: trackMonth">
+              <ng-container *ngIf="month.rows[rank] as row; else vacant">
+                <button type="button" class="rental-cell" [class.active]="row.id === selectedId" [class.focused]="row.id === selectedId && selectedMonth === m" [attr.aria-pressed]="row.id === selectedId" [attr.aria-label]="row.description + ', ' + month.name + ', puesto ' + (rank + 1) + ', ' + row.current + ' unidades'" [title]="row.description + ' · ' + row.current + ' unidades'" (click)="select(row, m)">
+                  <span class="cell-name">{{ shortName(row) }}</span><small *ngIf="isEntry(row, m)">Entra al top 10</small>
+                </button>
+              </ng-container>
+              <ng-template #vacant><span class="vacant" [attr.aria-label]="month.name + ': sin mobiliario en el puesto ' + (rank + 1)">—</span></ng-template>
+            </td>
+          </tr></tbody>
+        </table>
+        <p class="monthly-foot">Desplaza la tabla horizontalmente si no ves todos los meses.</p>
+      </div>
+      <aside class="monthly-detail" *ngIf="activeMonth as month" aria-live="polite">
+        <span class="eyebrow">Detalle de la selección</span><h3>{{ month.name }} {{ year }}</h3>
+        <p class="detail-name">{{ selectedDescription }}</p>
+        <div class="metrics"><div><strong>{{ position(month) ? '#' + position(month) : '—' }}</strong><span>Puesto del mes</span></div><div><strong>{{ selectedRow(month)?.current | number:'1.0-2' }}</strong><span>Unidades</span></div></div>
+        <p class="movement">{{ movement }}</p>
+        <p class="explanation">Si pasa del puesto 1 al 5, bajó cuatro puestos. Los demás mobiliarios se reordenan según sus cantidades.</p>
+      </aside>
+    </div>
+    <div class="journey"><h3>Recorrido del mobiliario seleccionado</h3><div class="journey-list">
+      <button type="button" *ngFor="let month of months; let m = index; trackBy: trackMonth" [class.out]="!position(month)" [class.chosen]="selectedMonth === m" [attr.aria-pressed]="selectedMonth === m" (click)="selectedMonth = m">
+        <span>{{ month.name }}</span><strong>{{ position(month) ? '#' + position(month) : month.rows.length ? 'Fuera' : 'Sin datos' }}</strong><small>{{ position(month) ? (selectedRow(month)?.current | number:'1.0-2') + ' unidades' : month.rows.length ? 'del top 10' : 'sin alquileres' }}</small>
+      </button>
+    </div></div>
+  </ng-container>
+  <p class="monthly-foot">Solo meses cerrados · todos los estados excepto Anulado · unidades según fecha del evento.<br>Los meses se incorporan al cierre. Los empates se ordenan por nombre.</p>
+</section>

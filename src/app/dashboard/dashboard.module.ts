@@ -12,6 +12,10 @@ import { CalendarComponent } from '../calendar/calendar.component';
 import { CalendarV2Component } from '../calendar-v2/calendar-v2.component';
 import { QuotationComponent } from '../quotation/quotation.component';
 import { DistrictHeatmapComponent } from './district-heatmap/district-heatmap.component';
+import { FurnitureRankingComponent } from './furniture-ranking/furniture-ranking.component';
+import { FurnitureMonthlyComponent } from './furniture-monthly/furniture-monthly.component';
+import { UsersComponent } from '../admin/users/users.component';
+import { AuditLogComponent } from '../admin/audit-log/audit-log.component';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -31,9 +35,13 @@ import { SharedModule } from '../shared/shared.module';
     CalendarComponent,
     CalendarV2Component,
     QuotationComponent,
-    DistrictHeatmapComponent
+    DistrictHeatmapComponent,
+    UsersComponent,
+    AuditLogComponent
   ],
   imports: [
+    FurnitureMonthlyComponent,
+    FurnitureRankingComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

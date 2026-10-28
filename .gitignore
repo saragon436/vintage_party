@@ -1,4 +1,8 @@
 .DS_STORE
+.DS_Store
+
+# Documentos y capturas de entrega generados localmente
+/entregables/
 
 /dist/
 /bazel-out

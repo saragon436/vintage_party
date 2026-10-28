@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Propuesta · Top 10 anual de mobiliarios</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f8f5f8;font:14px Arial,sans-serif;color:#382438;padding:30px}main{max-width:1280px;margin:auto}.context{display:flex;justify-content:space-between;font-size:11px;color:#806b83;letter-spacing:1.4px;margin:0 3px 18px}.context span:last-child{letter-spacing:0}.panel{padding:30px;background:white;border:1px solid #e4d7e6;border-radius:22px;box-shadow:0 3px 7px #38243808}.heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}h1{font:bold 30px Georgia,serif;margin:0 0 10px}.intro{margin:0;color:#6e5c6e;line-height:1.6;font-size:13px}.year{font:bold 20px Georgia,serif;color:#6e2c7f;padding:11px 18px;background:#f4edf6;border-radius:12px}.legend{display:flex;align-items:center;flex-wrap:wrap;gap:24px;font-size:12px;color:#6e5c6e;padding:24px 0 18px}.legend span{display:flex;align-items:center;gap:8px}.legend .info{margin-left:auto;font-size:11px}.swatch{width:11px;height:11px;border-radius:3px;background:#6e2c7f}.mark{width:19px;border-top:3px solid #956098}.pending{height:12px;width:12px;border:1px dashed #c6b9c9;border-radius:3px}.summary{padding:12px 16px;background:#faf8fb;border:1px solid #eee6ef;border-radius:9px;display:flex;justify-content:space-between;font-size:12px;color:#6e5c6e;margin-bottom:20px}.summary strong{color:#6e2c7f}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{padding:19px 20px 15px;border:1px solid #e4d7e6;border-radius:14px;min-width:0}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.name{display:flex;gap:11px;min-height:48px}.rank{color:#6e2c7f;background:#f4edf6;border-radius:7px;min-width:28px;height:28px;display:grid;place-items:center;font:600 12px monospace}.name h2{font:600 14px Arial;margin:1px 0 6px}.name p{font-size:10px;color:#806b83;line-height:1.5;margin:0}.value{text-align:right;flex:none}.value strong{display:block;font:600 22px monospace;letter-spacing:-1px;color:#4a1b57}.value span{color:#806b83;font-size:10px}.bars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px;margin:19px 3px 10px;align-items:end;height:104px}.col{height:100%;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}.track{position:relative;width:100%;max-width:22px;flex:1;background:#f2eaf4;border-radius:5px}.fill{position:absolute;bottom:0;left:0;width:100%;background:#6e2c7f;border-radius:5px}.ref{position:absolute;left:-3px;right:-3px;border-top:2px solid #956098;z-index:2}.month{font-size:9px;color:#6e5c6e}.col.waiting .track{background:repeating-linear-gradient(135deg,#fcfafc,#fcfafc 4px,#f5f1f6 4px,#f5f1f6 5px);border:1px dashed #dfd4e1}.col.waiting .month{color:#b5a8b8}.card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #f0eaf1;padding-top:10px;font-size:10px;color:#806b83}.delta{color:#387454;background:#edf6ef;padding:4px 7px;border-radius:5px}.delta.down{color:#b24c60;background:#fcf0f2}.foot{font-size:11px;color:#806b83;line-height:1.7;margin-top:20px}.note{font-size:11px;color:#806b83;line-height:1.7;margin:15px 4px}.tip{display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);padding:9px 11px;background:#382438;color:white;border-radius:7px;font-size:11px;white-space:nowrap;z-index:5;line-height:1.5;pointer-events:none}.col:hover .tip,.col:focus .tip{display:block}.col:focus-visible{outline:2px solid #6e2c7f;outline-offset:3px;border-radius:3px}@media(max-width:800px){body{padding:14px}.panel{padding:20px}.grid{grid-template-columns:1fr}h1{font-size:25px}.legend{gap:14px}.legend .info{margin-left:0}.summary{gap:10px;flex-direction:column}.bars{gap:8px}.context{font-size:9px;gap:15px}.heading{gap:10px}.year{font-size:17px;padding:9px 12px}}
+</style>
+<main>
+<div class="context"><span>VINTAGE PARTY · INICIO</span><span>Propuesta de vista anual · Datos ilustrativos</span></div>
+<section class="panel">
+<div class="heading"><div><h1>Los 10 mobiliarios más alquilados del año</h1><p class="intro">Evolución de enero a diciembre · ranking por unidades acumuladas en los meses cerrados.<br>El año y el ranking se actualizan automáticamente, sin filtros.</p></div><span class="year">2026</span></div>
+<div class="legend"><span><i class="swatch"></i>Unidades 2026</span><span><i class="mark"></i>Mismo mes 2025</span><span><i class="pending"></i>Mes sin cerrar</span><span class="info">Cada mobiliario utiliza su propia escala</span></div>
+<div class="summary"><span>Período contabilizado: <strong>enero – septiembre 2026</strong></span><span>Comparación: enero – septiembre 2025</span></div>
+<div class="grid" id="cards"></div>
+<p class="foot">Se muestran los mismos diez mobiliarios durante todo el recorrido mensual. El puesto depende del acumulado del año, no del top de cada mes.<br>Todos los estados excepto Anulado · cantidades según fecha del evento · octubre, noviembre y diciembre se completan al cerrar cada mes.</p>
+</section>
+<p class="note">Ubicación propuesta: en Inicio, debajo de «Contratos por mes». En escritorio: dos columnas; en celular: una columna.<br>Maqueta de diseño. Los nombres, cantidades, medidas y variaciones son de ejemplo.</p>
+</main>
+<script>
+const names=[
+['Silla Tiffany dorada','Clásica · Alto: 0.92 · Ancho: 0.40 · Fondo: 0.42'],
+['Silla crossback natural','Madera · Alto: 0.89 · Ancho: 0.45 · Fondo: 0.47'],
+['Plato de sitio dorado','Borde perla · Diámetro: 0.33'],
+['Copa de cristal transparente','Tallada · Alto: 0.20 · Diámetro: 0.08'],
+['Mesa redonda blanca','Clásica · Alto: 0.75 · Diámetro: 1.80'],
+['Silla Tiffany blanca','Clásica · Alto: 0.92 · Ancho: 0.40 · Fondo: 0.42'],
+['Mesa rectangular natural','Rústica · Alto: 0.75 · Ancho: 0.90 · Largo: 2.40'],
+['Sillón vintage beige','Capitoné · Alto: 0.95 · Ancho: 1.60 · Fondo: 0.80'],
+['Mesa de centro nogal','Vintage · Alto: 0.45 · Ancho: 0.60 · Largo: 1.10'],
+['Barra de madera natural','Rústica · Alto: 1.10 · Ancho: 0.60 · Largo: 2.00']];
+const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const season=[.65,.59,.82,.85,.94,.88,.72,.91,1];
+const number=n=>n.toLocaleString('es-PE');
+document.getElementById('cards').innerHTML=names.map(([name,details],i)=>{
+const base=[480,400,340,300,260,220,170,120,95,70][i];
+const current=season.map((s,m)=>Math.round(base*s*(1+Math.sin(i*2+m)*.08)));
+const previous=current.map((v,m)=>Math.round(v*(i===5?1.11:.8+.06*Math.sin(i+m))));
+const total=current.reduce((a,b)=>a+b,0),old=previous.reduce((a,b)=>a+b,0);
+const delta=(total-old)/old*100;
+const max=Math.max(...current,...previous)*1.08;
+const peak=current.indexOf(Math.max(...current));
+const bars=months.map((month,m)=>`<div class="col ${m>=9?'waiting':''}" tabindex="0" aria-label="${month}: ${m<9?current[m]+' unidades; año anterior: '+previous[m]:'mes sin cerrar'}"><div class="track">${m<9?`<span class="fill" style="height:${current[m]/max*100}%"></span><span class="ref" style="bottom:${previous[m]/max*100}%"></span>`:''}</div><span class="month">${month}</span><span class="tip">${m<9?`${month} 2026: ${number(current[m])} unidades<br>${month} 2025: ${number(previous[m])} unidades`:'Mes sin cerrar'}</span></div>`).join('');
+return `<article class="card"><div class="card-head"><div class="name"><span class="rank">${String(i+1).padStart(2,'0')}</span><div><h2>${name}</h2><p>${details}</p></div></div><div class="value"><strong>${number(total)}</strong><span>unidades · ene–sep</span></div></div><div class="bars">${bars}</div><div class="card-foot"><span class="delta ${delta<0?'down':''}">${delta>=0?'↑ +':'↓ '}${delta.toFixed(1).replace('.',',')}% vs ene–sep 2025</span><span>Mayor alquiler: ${months[peak]} · ${number(current[peak])} u.</span></div></article>`;
+}).join('');
+</script>
+</html>
