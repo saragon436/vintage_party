@@ -1,256 +1,129 @@
 import { HttpHeaders } from '@angular/common/http';
-import { Component, OnInit,ElementRef,ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { addMonths, isSameDay } from 'date-fns';
+import { merge, Subject } from 'rxjs';
+import { take, takeUntil } from 'rxjs/operators';
 import { AuthenticationToken } from '../Servicios/autentication-token.service';
 import { ContractService } from '../Servicios/contract.service';
-import * as dateFns from 'date-fns';
-
-interface Contract {
-  _id: string;
-  codContract: string;
-  createDate: string;
-  installDate: string;
-  eventDate: string;
-  pickupDate: string;
-  high: string;
-  stock: number;
-  status: string;
-  address: string;
-  district: string;
-  hourIni: string;
-  hourFin: string;
-  comment: string;
-  order: number;
-  orderPickup: number;
-  listAccessories:[];
-  onAccount:[];
-  customer:{name:string,documentNumber:string,phone:string};
-  userCreate:{userName:string};
-}
+import { ContractComponent } from '../contract/contract.component';
+import { buildCalendarRanges, CalendarContract, ContractRange, RangeWeek } from './calendar-ranges';
 
 @Component({
   selector: 'app-calendar-v2',
   templateUrl: './calendar-v2.component.html',
-  styleUrls: ['./calendar-v2.component.css']
+  styleUrls: ['./calendar-v2.component.css'],
 })
-export class CalendarV2Component {
+export class CalendarV2Component implements OnInit, AfterViewChecked, OnDestroy {
+  @ViewChild('table') table?: ElementRef<HTMLElement>;
+  today = new Date();
+  selectedDate = new Date();
+  contract: CalendarContract[] = [];
+  weeks: RangeWeek[] = [];
+  ranges: ContractRange[] = [];
+  selectedId = '';
+  loading = true;
+  loadError = false;
+  unplaced = 0;
+  private focusTodayPending = true;
+  private focusFrame?: number;
+  private readonly destroy = new Subject<void>();
 
-  selectedDate: Date = new Date(); // Inicializa con la fecha actual por defecto
-  @ViewChild('table') table!: ElementRef; // Obtén una referencia a la tabla HTML
-  week: Date[] = [];
-  weeks: Date[][] = [];
-  contract: Contract[];
-  contratosDuplicados: Contract[];
+  readonly nombresDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  readonly nombresMeses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-   constructor(private route: Router,
-     private authenticationToken: AuthenticationToken,
-     private contractService: ContractService){
-       this.contract = [];
-       this.contratosDuplicados = [];
-   }
-
-   public nombresDias: string[] = [
-    "Domingo",
-    "Lunes",
-    "Martes",
-    "Miércoles",
-    "Jueves",
-    "Viernes",
-    "Sábado",
-  ];
-
-  public nombresMeses: string[] = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre"
-  ];
-
-
+  constructor(
+    private route: Router,
+    private authenticationToken: AuthenticationToken,
+    private contractService: ContractService,
+    private modalService: NgbModal,
+  ) {}
 
   ngOnInit(): void {
-    const currentDate = new Date();
-    this.week = this.calculateWeek(currentDate);
-    console.log("semansa : " , this.week)
-    this.findContract();
     this.updateCalendar();
-    this.filtrarYOrdenarContratos();
+    this.findContract();
   }
 
-  calculateWeek(currentDate: Date): Date[] {
-    const startOfWeek = dateFns.startOfWeek(currentDate);
-    const week = [startOfWeek];
-
-    for (let i = 1; i < 7; i++) {
-      const nextDay = dateFns.addDays(startOfWeek, i);
-      week.push(nextDay);
-    }
-
-    return week;
+  ngAfterViewChecked(): void {
+    if (!this.focusTodayPending || this.loading) return;
+    const cell = this.table?.nativeElement.querySelector<HTMLElement>('.today');
+    if (!cell) return;
+    this.focusTodayPending = false;
+    this.focusFrame = requestAnimationFrame(() => {
+      cell.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center', inline: 'center' });
+      cell.focus({ preventScroll: true });
+      this.focusFrame = undefined;
+    });
   }
 
-   findContract(){
-     const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
-     //const headers = new HttpHeaders().set('Access-Control-Allow-Origin', '*');
-     console.log('this.authenticationToken '+this.authenticationToken)
-     this.contractService
-     .listContract(headers)
-     .subscribe(
-       (contract) => {
-           this.contract=contract;
-           console.log("contract ",this.contract)
-       },
-       (error) => {
-
-         if( error.status === 401){
-
-          console.log('usuario o claves incorrectos');
-           this.route.navigate(['/app-login']);
-         }else{
-           console.log('error desconocido en el login');
-         }
-       });
-     }
-
-     getContractsForDay(day: Date): Contract[] {
-      const dayFormatted = day.toISOString().slice(0, 10);
-       const contractsForDay = this.contract.filter((contract) => {
-        const installDate = contract.installDate.slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' de la fecha de instalación
-        return installDate === dayFormatted;
-      });
-
-      //const dayFormatted = day.toISOString().slice(0, 10); // Obtiene la cadena 'yyyy-mm-dd' del día
-      return contractsForDay;
-     
-    }
-  
-    filterContracts(): void {
-      // Filtra los contratos para el mes y año seleccionados
-      const filteredContracts = this.contract.filter((contract) => {
-        const installDate = new Date(contract.installDate);
-        return (
-          installDate.getMonth() === this.selectedDate.getMonth() &&
-          installDate.getFullYear() === this.selectedDate.getFullYear()
-        );
-      });
-    
-      // Haz algo con los contratos filtrados (por ejemplo, asignarlos a una propiedad del componente)
-      //this.filteredContracts = filteredContracts;
-    }
-
-    previousMonth() {
-      this.selectedDate = dateFns.subMonths(this.selectedDate, 1);
-      this.updateCalendar();
-    }
-    
-    nextMonth() {
-      this.selectedDate = dateFns.addMonths(this.selectedDate, 1);
-      this.updateCalendar();
-    }
-    
-    updateCalendar() {
-      this.weeks = this.calculateMonth(this.selectedDate);
-    }
-
-    // calculateMonth(selectedDate: Date): Date[][] {
-    //   const startOfMonth = dateFns.startOfMonth(selectedDate);
-    //   const endOfMonth = dateFns.endOfMonth(selectedDate);
-    
-    //   const weeks: Date[][] = [];
-    //   let currentWeek: Date[] = [];
-    //   let currentDate = startOfMonth;
-    
-    //   while (currentDate <= endOfMonth) {
-    //     if (currentWeek.length === 7) {
-    //       weeks.push(currentWeek);
-    //       currentWeek = [];
-    //     }
-    //     currentWeek.push(currentDate);
-    //     currentDate = dateFns.addDays(currentDate, 1);
-    //   }
-    
-    //   if (currentWeek.length > 0) {
-    //     weeks.push(currentWeek);
-    //   }
-    
-    //   return weeks;
-    // }
-
-    calculateMonth(selectedDate: Date): Date[][] {
-      const startOfMonth = dateFns.startOfMonth(selectedDate);
-      const endOfMonth = dateFns.endOfMonth(selectedDate);
-    
-      const firstDayOfMonth = dateFns.getDay(startOfMonth); // Obtén el día de la semana del primer día del mes (0: domingo, 1: lunes, ..., 6: sábado)
-    
-      const weeks: Date[][] = [];
-      let currentWeek: Date[] = [];
-      let currentDate = dateFns.subDays(startOfMonth, firstDayOfMonth); // Resta días para alinear con el domingo
-    
-      while (currentDate <= endOfMonth) {
-        if (currentWeek.length === 7) {
-          weeks.push(currentWeek);
-          currentWeek = [];
-        }
-        currentWeek.push(currentDate);
-        currentDate = dateFns.addDays(currentDate, 1);
-      }
-    
-      if (currentWeek.length > 0) {
-        weeks.push(currentWeek);
-      }
-    
-      return weeks;
-    }
-
-    filtrarYOrdenarContratos() {
-      
-      // Obtén la fecha actual en el formato adecuado
-    const fechaActual = new Date().toISOString().slice(0, 10);
-
-    // Filtra los contratos que cumplen con la primera condición (fecha actual vs. installDate)
-    const contratosFiltradosPrimeraCondicion = this.contract.filter((contrato) => {
-      return contrato.installDate.slice(0, 10) <= fechaActual;
+  findContract(): void {
+    const headers = new HttpHeaders().set('Authorization', 'Bearer ' + this.authenticationToken.myValue);
+    this.loadError = false;
+    this.contractService.listContract(headers).pipe(takeUntil(this.destroy)).subscribe({
+      next: contracts => {
+        this.contract = contracts || [];
+        this.updateCalendar();
+        this.loading = false;
+      },
+      error: error => {
+        this.loadError = true;
+        this.loading = false;
+        if (error.status === 401) this.route.navigate(['/login']);
+      },
     });
+  }
 
-    // Filtra nuevamente los contratos que cumplen con la segunda condición (pickupDate vs. fecha actual)
-    const contratosFiltrados = contratosFiltradosPrimeraCondicion.filter((contrato) => {
-      return contrato.pickupDate.slice(0, 10) >= fechaActual;
-    });
+  updateCalendar(): void {
+    const layout = buildCalendarRanges(this.contract, this.selectedDate);
+    this.weeks = layout.weeks;
+    this.ranges = layout.ranges;
+    this.unplaced = layout.unplaced;
+    if (!this.ranges.some(range => range.contract._id === this.selectedId)) this.selectedId = this.ranges[0]?.contract._id || '';
+  }
 
-    // Duplica los contratos si tienen la misma fecha de instalación y recojo
-    const contratosDuplicados = [];
-    contratosFiltrados.forEach((contrato) => {
-      const fechaInstalacion = contrato.installDate.slice(0, 10);
-      const fechaRecojo = contrato.pickupDate.slice(0, 10);
-      if (fechaInstalacion === fechaRecojo) {
-        // Duplica el contrato
-        const contratoDuplicado = { ...contrato };
-        contratoDuplicado.installDate = fechaInstalacion;
-        contratoDuplicado.pickupDate = fechaRecojo;
-        contratosDuplicados.push(contratoDuplicado);
-      }
-      contratosDuplicados.push(contrato);
-    });
+  get selectedRange(): ContractRange | undefined { return this.ranges.find(range => range.contract._id === this.selectedId); }
+  selectRange(range: ContractRange): void { this.selectedId = range.contract._id; }
+  isToday(day: Date): boolean { return isSameDay(day, this.today); }
 
-    // Ordena los contratos por "order" y "orderPickup"
-    this.contratosDuplicados.sort((a, b) => {
-      if (a.order === b.order) {
-        return a.orderPickup - b.orderPickup;
-      }
-      return a.order - b.order;
-    });
+  previousMonth(): void { this.changeMonth(-1); }
+  nextMonth(): void { this.changeMonth(1); }
+  private changeMonth(amount: number): void {
+    this.cancelTodayFocus();
+    this.selectedDate = addMonths(this.selectedDate, amount);
+    this.updateCalendar();
+  }
 
-  
-      // Puedes almacenar los resultados en una propiedad de tu componente
-      console.log("Listado de contratos ",this.contratosDuplicados);
-    }
-    
+  goToToday(): void {
+    this.cancelTodayFocus();
+    this.today = new Date();
+    this.selectedDate = new Date(this.today);
+    this.updateCalendar();
+    this.focusTodayPending = true;
+  }
+
+  openContractModal(contractId: string): void {
+    const contrato = this.contract.find(contract => contract._id === contractId);
+    if (!contrato) return;
+    this.selectedId = contractId;
+    const modalRef = this.modalService.open(ContractComponent, { size: 'xl', scrollable: true, centered: true });
+    modalRef.componentInstance.initialContract = contrato;
+    merge(modalRef.closed, modalRef.dismissed).pipe(take(1), takeUntil(this.destroy)).subscribe(() => this.findContract());
+  }
+
+  trackRange(_index: number, range: ContractRange): string { return range.contract._id; }
+  trackWeek(_index: number, week: RangeWeek): string { return week.key; }
+  trackDay(_index: number, day: RangeWeek['days'][number]): string { return day.key; }
+
+  private cancelTodayFocus(): void {
+    this.focusTodayPending = false;
+    if (this.focusFrame !== undefined) cancelAnimationFrame(this.focusFrame);
+    this.focusFrame = undefined;
+  }
+
+  ngOnDestroy(): void {
+    this.cancelTodayFocus();
+    this.destroy.next();
+    this.destroy.complete();
+  }
 }

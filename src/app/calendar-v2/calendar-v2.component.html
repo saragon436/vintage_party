@@ -1,32 +1,51 @@
-<div id="formulario" class="calendar">
-    <div class="calendar-header">
-      <button class="btn btn-primary" (click)="previousMonth()">Anterior</button>
-      <h2>{{ nombresMeses[selectedDate.getMonth()] }} {{ selectedDate.getFullYear() }}</h2>
-      <button class="btn btn-primary" (click)="nextMonth()">Siguiente</button>
+<div id="formulario" class="calendar p-3 p-md-4" [attr.aria-busy]="loading">
+  <div class="calendar-header d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+    <div><h2>{{ nombresMeses[selectedDate.getMonth()] }} {{ selectedDate.getFullYear() }}</h2><p class="small text-muted mb-0">Cada franja muestra un contrato desde su instalación hasta su recojo.</p></div>
+    <div class="calendar-actions d-flex gap-2 flex-wrap">
+      <button type="button" class="btn btn-outline-primary" (click)="previousMonth()">Anterior</button>
+      <button type="button" class="btn btn-primary" (click)="goToToday()">Ir a hoy</button>
+      <button type="button" class="btn btn-outline-primary" (click)="nextMonth()">Siguiente</button>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th *ngFor="let day of nombresDias">{{ day }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let week of weeks">
-          <td *ngFor="let day of week">
-            <div class="day">
-              <p>{{ day.getDate() }}</p>
-              <ul>
-                <li *ngFor="let contract of getContractsForDay(day)">
-                    <div class="recuadro">
-                        <div class="contract">{{ contract.codContract }}</div>
-                        <div class="contract">{{ contract.customer.name }}</div>
-                    </div>
-                </li>
-              </ul>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
-  
+  <p *ngIf="loading" role="status">Cargando contratos…</p>
+  <div *ngIf="loadError" class="alert alert-danger" role="alert">No se pudieron actualizar los contratos. <button type="button" class="btn btn-outline-primary btn-sm" (click)="findContract()">Reintentar</button></div>
+  <p *ngIf="unplaced" class="alert alert-warning">{{ unplaced }} contrato(s) sin fecha de instalación válida. Revisa sus fechas en <a routerLink="/dashboard/contract">Contrato</a>.</p>
+
+  <div class="contract-cards" *ngIf="ranges.length" aria-label="Contratos del mes">
+    <article *ngFor="let range of ranges; trackBy: trackRange" class="contract-card" [class.selected]="selectedId === range.contract._id" [style.--range-color]="range.color" [style.--range-bg]="range.background">
+      <div class="d-flex justify-content-between align-items-center gap-2"><button type="button" class="btn btn-link p-0 code-link" (click)="openContractModal(range.contract._id)" [attr.aria-label]="'Ver contrato ' + range.contract.codContract">{{ range.contract.codContract }}</button><small>{{ range.days === null ? 'Revisar recojo' : range.days + (range.days === 1 ? ' día' : ' días') }}</small></div>
+      <button type="button" class="card-select" [attr.aria-pressed]="selectedId === range.contract._id" (click)="selectRange(range)">
+        <span>{{ range.contract.customer?.name || 'Sin cliente' }}</span><span>{{ range.startLabel }} → {{ range.dateIssue ? 'recojo por revisar' : range.endLabel }}</span>
+      </button>
+    </article>
+  </div>
+  <p class="calendar-hint d-flex justify-content-between gap-3 flex-wrap small text-muted">Hoy · {{ today | date:'dd/MM/yyyy' }} <span>Selecciona una franja para resaltarla. Pulsa su código para abrir el contrato.</span></p>
+  <p *ngIf="!loading && !loadError && !ranges.length" class="empty-month">No hay contratos para este mes.</p>
+
+  <div class="calendar-scroll" tabindex="0" role="region" aria-label="Calendario mensual; desplazar horizontalmente para ver todos los días">
+    <div #table class="range-calendar">
+      <div class="weekdays"><div *ngFor="let name of nombresDias">{{ name }}</div></div>
+      <ng-container *ngFor="let week of weeks; trackBy: trackWeek">
+        <div class="continuation-label" *ngIf="week.continuation">Continuación · {{ nombresMeses[week.days[0].date.getMonth()] }} {{ week.days[0].date.getFullYear() }}</div>
+        <div class="calendar-week">
+          <div class="week-background"><div *ngFor="let day of week.days; trackBy: trackDay" [class.outside]="!day.inMonth" [class.today]="isToday(day.date)" [attr.aria-current]="isToday(day.date) ? 'date' : null" [attr.tabindex]="isToday(day.date) ? 0 : null" [attr.aria-label]="day.date | date:'dd/MM/yyyy'"><span *ngIf="isToday(day.date) && day.inMonth && !day.occupied" class="empty-day">Sin contratos programados</span></div></div>
+          <div class="week-dates"><div *ngFor="let day of week.days; trackBy: trackDay" [class.today-number]="isToday(day.date)"><span>{{ day.date.getDate() }} <small *ngIf="!day.inMonth">{{ nombresMeses[day.date.getMonth()].slice(0, 3) }}</small></span><span class="today-badge" *ngIf="isToday(day.date)">HOY</span></div></div>
+          <div class="range-lanes" *ngIf="week.segments.length" [style.grid-template-rows]="'repeat(' + week.laneCount + ', minmax(38px, auto))'">
+            <div *ngFor="let segment of week.segments" class="contract-ribbon d-flex align-items-center gap-1" [class.selected]="selectedId === segment.range.contract._id" [class.comes-before]="segment.before" [class.continues-after]="segment.after" [style.--range-color]="segment.range.color" [style.--range-bg]="segment.range.background" [style.grid-column]="segment.column + ' / span ' + segment.span" [style.grid-row]="segment.range.lane + 1" [title]="segment.range.contract.codContract + ' · ' + segment.range.startLabel + ' → ' + (segment.range.dateIssue ? 'recojo por revisar' : segment.range.endLabel)">
+              <span *ngIf="segment.before" class="range-arrow" aria-label="Viene de la semana anterior">←</span>
+              <button type="button" class="btn btn-link p-0 code-link" (click)="openContractModal(segment.range.contract._id)" [attr.aria-label]="'Ver contrato ' + segment.range.contract.codContract">{{ segment.range.contract.codContract }}</button>
+              <button type="button" class="ribbon-select" [attr.aria-pressed]="selectedId === segment.range.contract._id" [attr.aria-label]="'Resaltar ' + segment.range.contract.codContract + ', ' + segment.range.startLabel + ', ' + segment.label" (click)="selectRange(segment.range)">{{ segment.range.contract.customer?.name || 'Sin cliente' }} · {{ segment.label }}</button>
+              <span *ngIf="segment.after" class="range-arrow" aria-label="Continúa la siguiente semana">→</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <div *ngIf="selectedRange as range" class="range-detail d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3" [style.--range-color]="range.color" [style.--range-bg]="range.background" aria-live="polite">
+    <div><button type="button" class="btn btn-link p-0 code-link" (click)="openContractModal(range.contract._id)">{{ range.contract.codContract }}</button><strong> · {{ range.contract.customer?.name || 'Sin cliente' }}</strong><p>Instalación: {{ range.start | date:'dd/MM/yyyy' }} · Evento: {{ range.event ? (range.event | date:'dd/MM/yyyy') : 'Sin fecha' }} · Recojo: {{ range.dateIssue ? 'Por revisar' : (range.end | date:'dd/MM/yyyy') }}</p></div>
+    <strong class="range-duration">{{ range.days === null ? 'Revisar fechas' : range.days + (range.days === 1 ? ' día' : ' días') }}</strong>
+  </div>
+  <div class="range-legend d-flex justify-content-between gap-3 flex-wrap small text-muted mt-3"><span>Una franja por contrato · instalación y recojo incluidos</span><span>← Viene de la semana anterior</span><span>→ Continúa la siguiente semana o mes</span></div>
+</div>
