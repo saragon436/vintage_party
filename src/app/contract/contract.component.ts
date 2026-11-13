@@ -812,7 +812,7 @@ export class ContractComponent {
 
   sumarValores() {
     this.total = this.arrayValuesAccessory.reduce(
-      (sum, item) => sum + item.price * item.amount,
+      (sum, item) => sum + Number(item.price ?? 0) * item.amount,
       0
     );
     this.form.get('amount')?.setValue(this.total);

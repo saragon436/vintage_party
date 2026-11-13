@@ -146,6 +146,20 @@ describe('ContractComponent', () => {
     // Totales
     // ==========================
     describe('sumarValores / sumarValoresOnAccount', () => {
+        [null, undefined, '', 0].forEach(price => {
+            it(`treats blank or zero prices (${String(price)}) as zero in totals and balance`, () => {
+                component.arrayAccessory.push(component['formBuilder'].group({ price, amount: 8 }));
+                component.arrayAccessory.push(component['formBuilder'].group({ price: 80, amount: 2 }));
+                component.arrayOnAccount.push(component['formBuilder'].group({ amount: 50 }));
+
+                component.sumarValores();
+
+                expect(component.total).toBe(160);
+                expect(component.totalBalance).toBe(110);
+                expect(component.form.get('amount')?.value).toBe(160);
+            });
+        });
+
         it('computes the accessories total, the paid total and the balance', () => {
             component.arrayAccessory.push(
                 component['formBuilder'].group({ price: 10, amount: 2 })
