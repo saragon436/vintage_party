@@ -29,6 +29,7 @@
                         <th>Código</th>
                         <th>Fecha</th>
                         <th>Cliente</th>
+                        <th>Creado por</th>
                         <th>Evento</th>
                         <th>Monto</th>
                         <th>Acciones</th>
@@ -39,6 +40,7 @@
                         <td>{{ item.codQuotation }}</td>
                         <td>{{ item.createDate | date:'dd/MM/yyyy':'UTC' }}</td>
                         <td>{{ item.customer?.name }}</td>
+                        <td>{{ creatorName(item.userCreate) }}</td>
                         <td>{{ item.eventDate | date:'dd/MM/yyyy':'UTC' }}</td>
                         <td>{{ item.amount | currency:'S/ ' }}</td>
                         <td>

@@ -27,6 +27,7 @@ import { NgSelectComponent } from '@ng-select/ng-select/public-api';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import { distritosLima } from '../utils/distritos-lima';
+import { Creator, creatorName } from '../utils/creator-name';
 import { environment } from 'src/environments/environment';
 import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
 import { AccessoryAvailabilityComponent } from '../accessory/accessory-availability/accessory-availability.component';
@@ -96,7 +97,7 @@ interface Contract {
   listAccessories: any[];
   onAccount: any[];
   customer: { name: string; documentNumber: string; phone: string };
-  userCreate: { userName: string };
+  userCreate: Creator;
   quotationCod?: string;
 }
 
@@ -106,6 +107,8 @@ interface Contract {
   styleUrls: ['./contract.component.css'],
 })
 export class ContractComponent {
+  readonly creatorName = creatorName;
+
   // 👇 NUEVO: cuando se usa en modal, el calendar pasa aquí el contrato seleccionado
   @Input() initialContract?: Contract | null;
 

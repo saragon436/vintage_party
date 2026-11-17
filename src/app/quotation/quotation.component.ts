@@ -22,6 +22,7 @@ import { QuotationService } from '../Servicios/quotation.service';
 import { ContractService } from '../Servicios/contract.service'; // To create contract from quotation
 import { CustomerComponent } from '../customer/customer.component';
 import { distritosLima } from '../utils/distritos-lima';
+import { Creator, creatorName } from '../utils/creator-name';
 import { environment } from 'src/environments/environment';
 import { ConfirmDialogService } from '../shared/confirm-dialog/confirm-dialog.service';
 import { AccessoryAvailabilityComponent } from '../accessory/accessory-availability/accessory-availability.component';
@@ -67,6 +68,7 @@ interface PendingBalance {
 }
 
 interface Quotation {
+    userCreate?: Creator;
     _id: string;
     codQuotation?: string;
     createDate: string;
@@ -88,6 +90,7 @@ interface Quotation {
     styleUrls: ['./quotation.component.css'],
 })
 export class QuotationComponent implements OnInit {
+    readonly creatorName = creatorName;
 
     quotations: Quotation[] = [];
     form: FormGroup;

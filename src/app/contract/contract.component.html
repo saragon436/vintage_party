@@ -720,6 +720,7 @@
             <th>Cotización</th>
             <th>Cliente</th>
             <th>Fe. Creación</th>
+            <th>Creado por</th>
             <th>Fe. Instalación</th>
             <th>Fe. Evento</th>
             <th>Fe. Recojo</th>
@@ -757,6 +758,7 @@
             <td>{{ item.quotationCod || '-' }}</td>
             <td>{{ item.customer.name }}</td>
             <td>{{ item.createDate.slice(0, 10) }}</td>
+            <td>{{ creatorName(item.userCreate) }}</td>
             <td>{{ item.installDate.slice(0, 10) }}</td>
             <td>{{ item.eventDate.slice(0, 10) }}</td>
             <td>{{ item.pickupDate.slice(0, 10) }}</td>
