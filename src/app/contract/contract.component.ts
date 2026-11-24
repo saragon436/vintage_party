@@ -1038,6 +1038,8 @@ export class ContractComponent {
       const payload = {
         _id: this.form.controls['_id'].value,
         comment: this.form.controls['comment'].value,
+        address: this.form.controls['address'].value,
+        district: this.form.controls['district'].value,
         hourIni: this.form.controls['hourIni'].value,
         hourFin: this.form.controls['hourFin'].value,
         hourIniPickup: this.form.controls['hourIniPickup'].value,

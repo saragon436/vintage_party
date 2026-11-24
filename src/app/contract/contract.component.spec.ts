@@ -418,6 +418,8 @@ describe('ContractComponent', () => {
                     _id: 'ct1',
                     installDate: '2024-05-01',
                     pickupDate: '2024-05-03',
+                    address: 'Av. Siempre Viva 123',
+                    district: 'Miraflores',
                 }),
                 jasmine.anything()
             );
