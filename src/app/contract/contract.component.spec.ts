@@ -361,6 +361,7 @@ describe('ContractComponent', () => {
 
     describe('onUpdate', () => {
         const fillValidForm = () => {
+            component.selectedCustomer = { id: 'c1', name: 'Juan', documentNumber: '12345678' };
             component.form.patchValue({
                 customer: { id: 'c1', name: 'Juan', documentNumber: '12345678' },
                 onAccountvalues: 0,
@@ -389,6 +390,61 @@ describe('ContractComponent', () => {
             await component.onUpdate();
 
             expect(contractServiceSpy.updateContract).not.toHaveBeenCalled();
+        });
+
+        it('confirms the mandatory quotation change and sends customer identity only', async () => {
+            fillValidForm();
+            component.originalQuotationCod = 'COT-2026-1';
+            component.form.patchValue({ customer: { _id: 'c2', name: 'María', documentNumber: '87654321' } });
+            confirmDialogSpy.confirm.and.returnValue(Promise.resolve(true));
+            contractServiceSpy.updateContract.and.returnValue(of({}));
+            spyOn(component, 'startTimer');
+
+            await component.onUpdate();
+
+            expect(confirmDialogSpy.confirm).toHaveBeenCalledWith(
+                jasmine.stringMatching(/Juan.*María.*cotización COT-2026-1.*adelantos/),
+                'Cambiar cliente', 'Aceptar', 'Cancelar');
+            const payload = contractServiceSpy.updateContract.calls.mostRecent().args[0];
+            expect(payload.customerId).toBe('c2');
+            expect(payload.expectedCustomerKey).toBe('c1');
+            expect(payload.expectedQuotationCod).toBe('COT-2026-1');
+            expect(payload.customer).toBeUndefined();
+            expect(payload.onAccount).toBeUndefined();
+            expect(payload.amount).toBeUndefined();
+            expect(component.customerName).toBe('María');
+            expect(component.documentNumber).toBe('87654321');
+        });
+
+        it('cancels the customer change without sending any update', async () => {
+            fillValidForm();
+            component.form.patchValue({ customer: { _id: 'c2', name: 'María' } });
+            confirmDialogSpy.confirm.and.returnValue(Promise.resolve(false));
+            await component.onUpdate();
+            expect(contractServiceSpy.updateContract).not.toHaveBeenCalled();
+            expect(component.isSaving).toBeFalse();
+        });
+
+        it('does not reassign when the selected customer has the same ID using the other legacy key', async () => {
+            fillValidForm();
+            component.form.patchValue({ customer: { _id: 'c1', name: 'Juan' } });
+            confirmDialogSpy.confirm.and.returnValue(Promise.resolve(true));
+            contractServiceSpy.updateContract.and.returnValue(of({}));
+            spyOn(component, 'startTimer');
+            await component.onUpdate();
+            expect(contractServiceSpy.updateContract.calls.mostRecent().args[0].customerId).toBeUndefined();
+        });
+
+        it('shows a backend conflict and leaves the form available for correction', async () => {
+            fillValidForm();
+            component.form.patchValue({ customer: { _id: 'c2', name: 'María' } });
+            confirmDialogSpy.confirm.and.returnValue(Promise.resolve(true));
+            contractServiceSpy.updateContract.and.returnValue(throwError(() => ({ status: 409, error: { message: 'Recarga el contrato' } })));
+            spyOn(component, 'startTimer');
+            await component.onUpdate();
+            expect(confirmDialogSpy.alert).toHaveBeenCalledWith('Recarga el contrato');
+            expect(component.startTimer).not.toHaveBeenCalled();
+            expect(component.isSaving).toBeFalse();
         });
 
         it('the comment field is not mandatory (a contract from a quotation often has none)', async () => {

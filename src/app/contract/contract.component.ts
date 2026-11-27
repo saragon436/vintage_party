@@ -146,7 +146,23 @@ export class ContractComponent {
   originalPickupDate = '';
   closeResult: string = '';
   searchValue: string = '';
-  selectedCustomer = {};
+  selectedCustomer: any = {};
+  originalQuotationCod = '';
+
+  private customerKey(customer: any): string {
+    return String(customer?._id || customer?.id || customer?.documentNumber || '');
+  }
+
+  readonly compareCustomer = (a: any, b: any): boolean => {
+    if (!a || !b) return a === b;
+    const aId = a._id || a.id;
+    const bId = b._id || b.id;
+    return aId && bId ? String(aId) === String(bId) :
+      !!a.documentNumber && a.documentNumber === b.documentNumber;
+  };
+
+  readonly searchCustomer = (term: string, customer: Customer): boolean =>
+    `${customer.documentNumber} ${customer.name}`.toLocaleLowerCase().includes(term.toLocaleLowerCase().trim());
 
   // 👇 Aviso de saldo pendiente al seleccionar cliente (solo informativo,
   // no bloquea guardar/actualizar el contrato).
@@ -1017,11 +1033,24 @@ export class ContractComponent {
 
   async onUpdate() {
     if (this.form.valid && this.isDisabled == false && this.isSaving == false) {
-      const confirmado = await this.confirmDialog.confirm(
-        '¿Desea actualizar este contrato?',
-        'Actualizar Contrato'
-      );
+      const customer = this.form.controls['customer'].value;
+      const changesCustomer = typeof customer === 'object' && customer !== null &&
+        !this.compareCustomer(customer, this.selectedCustomer);
+      if (changesCustomer && (!(customer._id || customer.id) || !this.customerKey(this.selectedCustomer))) {
+        await this.confirmDialog.alert('No se pudo identificar al cliente. Recarga el contrato y selecciona un cliente válido.');
+        return;
+      }
+      // Bloquear también durante la confirmación para evitar envíos duplicados.
+      this.isSaving = true;
+      const confirmado = changesCustomer
+        ? await this.confirmDialog.confirm(
+          `Se cambiará el cliente de ${this.selectedCustomer.name} a ${customer.name} en el contrato ${this.numberContract}. ` +
+          (this.originalQuotationCod ? `También se cambiará obligatoriamente en la cotización ${this.originalQuotationCod}. ` : '') +
+          'Los adelantos y el saldo del contrato se conservarán. ¿Deseas continuar?',
+          'Cambiar cliente', 'Aceptar', 'Cancelar')
+        : await this.confirmDialog.confirm('¿Desea actualizar este contrato?', 'Actualizar Contrato');
       if (!confirmado) {
+        this.isSaving = false;
         return;
       }
       const headers = new HttpHeaders().set(
@@ -1047,18 +1076,32 @@ export class ContractComponent {
         installDate: this.form.controls['installDate'].value,
         pickupDate: this.form.controls['pickupDate'].value,
         listAccessories: this.arrayValuesAccessory,
+        ...(changesCustomer ? {
+          customerId: String(customer._id || customer.id),
+          expectedCustomerKey: this.customerKey(this.selectedCustomer),
+          expectedQuotationCod: this.originalQuotationCod,
+        } : {}),
       };
       this.isSaving = true;
       this.contractService.updateContract(payload, headers).subscribe(
         () => {
           this.isSaving = false;
           this.isDisabled = true;
+          if (changesCustomer) {
+            this.selectedCustomer = customer;
+            this.customerName = customer.name;
+            this.documentNumber = customer.documentNumber;
+            this.phone = customer.phone || '';
+          }
           this.startTimer();
         },
         (error) => {
           this.isSaving = false;
           if (error?.status === 424) {
             this.confirmDialog.alert('No se pudo actualizar el contrato: el mobiliario seleccionado no tiene disponibilidad suficiente para las fechas indicadas.');
+          } else {
+            const message = error?.error?.message;
+            this.confirmDialog.alert(typeof message === 'string' ? message : 'No se pudo actualizar el contrato. Recarga el contrato e inténtalo nuevamente.');
           }
         }
       );
@@ -1128,9 +1171,8 @@ export class ContractComponent {
     this.idItemDelete = response._id;
     this.form.controls['_id'].setValue(response._id);
     this.selectedCustomer = response.customer;
-    this.form.controls['customer'].setValue(
-      response.customer.documentNumber + ' ' + response.customer.name
-    );
+    this.originalQuotationCod = response.quotationCod || '';
+    this.form.controls['customer'].setValue(response.customer);
     this.onCustomerChange(response.customer);
     this.numberContract = response.codContract;
     this.form.controls['hourIni'].setValue(response.hourIni);

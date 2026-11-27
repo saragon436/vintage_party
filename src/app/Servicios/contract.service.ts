@@ -43,7 +43,8 @@ export class ContractService {
 
   updateContract(body: any, headers: HttpHeaders): Observable<any> {
     var response: any;
-    return this.http.put(environment.apiUrl + "/contract/", body, { headers, observe: response }).pipe(
+    const path = body.customerId ? '/contract/customer' : '/contract/';
+    return this.http.put(environment.apiUrl + path, body, { headers, observe: response }).pipe(
       catchError(e => {
         //implementar aca la logica del error        
         console.error('Error de actualizar', e)

@@ -24,18 +24,19 @@
           class="customer-select"
           [ngClass]="{ 'has-pending-debt': pendingBalance?.hasPending }"
           [clearable]="false"
+          [items]="customer$ | async"
+          bindLabel="name"
+          [searchFn]="searchCustomer"
+          [compareWith]="compareCustomer"
           notFoundText="seleccione clientes"
           placeholder="Seleccione Cliente"
           formControlName="customer"
           (change)="onCustomerChange($event)"
           #ddlcustomer
         >
-          <ng-option
-            *ngFor="let item of customer$ | async"
-            [value]="item"
-          >
-            {{ item.documentNumber }} {{ item.name }}
-          </ng-option>
+          <ng-template ng-label-tmp let-item="item">
+            <span class="ng-value-label">{{ item.documentNumber }} {{ item.name }}</span>
+          </ng-template>
           <ng-template ng-option-tmp let-item="item">
             {{ item.documentNumber }} {{ item.name }}
             <span class="option-debt-flag" *ngIf="hasPendingDebt(item)">● saldo pendiente</span>
